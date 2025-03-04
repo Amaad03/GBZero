@@ -1,6 +1,6 @@
 #ifndef OPCODE_HANDLERS_H       
 #define OPCODE_HANDLERS_H
-#include "cpu.h"
+class CPU;
 
 // Declare opcode handler functions
 void NOP(CPU& cpu);
@@ -19,6 +19,14 @@ void INC_C(CPU& cpu);
 void DEC_C(CPU& cpu);
 void LD_C_d8(CPU& cpu);
 void RRCA(CPU& cpu);
+void RST_38(CPU& cpu);
+void JP_a16(CPU& cpu);
+void POP_HL(CPU& cpu);
+void POP_AF(CPU& cpu);
+void RETI(CPU& cpu);
+
+
+
 
 #endif // OPCODE_HANDLERS_H
 

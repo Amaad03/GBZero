@@ -11,51 +11,72 @@ CPU::CPU() {
     // Initialize 16-bit registers
     PC = 0x100;                      // Program Counter starts at 0x100 (Game starts here)
     SP = 0xFFFE;
-    
+    cycleCount = 0;
 
 
-    for (int i = 0; i < 0x10000; i++) {
-        memory[i] = 0;  // Optionally, you can initialize memory to zero (or some other state).
-    }
-    memory[0x0000] = 0xFE;  // Low byte of SP
-    memory[0x0001] = 0xFF;  // High byte of SP
+    std::fill(std::begin(memory), std::end(memory), 0);
+
     initOpcodeTable();
  
-    cycleCount = 0;
+
 }
 
 void CPU::initOpcodeTable() {
-    std::fill(std::begin(opcodeTable), std::end(opcodeTable), nullptr);  
-    opcodeTable[0x00] = NOP;
-    opcodeTable[0x01] = LD_BC_d16;
-    opcodeTable[0x02] = LD_BC_A;
-    opcodeTable[0x03] = INC_BC;
-    opcodeTable[0x04] = INC_B;
-    opcodeTable[0x05] = DEC_B;
-    opcodeTable[0x06] = LD_B_d8;
-    opcodeTable[0x07] = RLCA;
+    std::fill(std::begin(opcodeTable), std::end(opcodeTable),  &UNIMPLEMENTED);  
+    opcodeTable[0x00] = &NOP;
+    opcodeTable[0x01] = &LD_BC_d16;
+    opcodeTable[0x02] = &LD_BC_A;
+    opcodeTable[0x03] = &INC_BC;
+    opcodeTable[0x04] = &INC_B;
+    opcodeTable[0x05] = &DEC_B;
+    opcodeTable[0x06] = &LD_B_d8;
+    opcodeTable[0x07] = &RLCA;
+    opcodeTable[0xFF] = &RST_38;
+    opcodeTable[0xC3] = &JP_a16;
+    opcodeTable[0xE1] = &POP_HL;
+    opcodeTable[0xF1] = &POP_AF;
+    opcodeTable[0xD9] = &RETI;
     // Add more opcodes...
+
+
+}
+
+
+void UNIMPLEMENTED(CPU& cpu) {
+    std::cerr << "Unimplemented opcode: 0x" << std::hex << static_cast<int>(cpu.memory[cpu.PC]) << std::endl;
+    exit(1);
 }
 
 void CPU::executeOpcode(uint8_t opcode) {
-    std::cout << "Executing opcode: " << std::hex << int(opcode) << std::endl;
+    std::cout << "PC: 0x" << std::hex << PC 
+        << " | Opcode: 0x" << static_cast<int>(opcode) << std::endl;
+
     if (opcodeTable[opcode]) {
         opcodeTable[opcode](*this);  // Pass 'this' to the handler function
     } else {
         std::cout << "Unknown opcode: " << std::hex << int(opcode) << std::endl;
         exit(1);
     }
+    
 }
 
 uint8_t CPU::read(uint16_t addr) {
-    return memory[addr];  // Return the byte from the memory at the given address
+    if (addr >= 0x10000) {
+        std::cerr << "Invalid memory access at address: 0x" << std::hex << addr << std::endl;
+        exit(1);
+    }
+    return memory[addr];
 }
 
-
 uint16_t CPU::read16(uint16_t addr) {
+    if (addr >= 0xFFFF) {
+        std::cerr << "Invalid memory access at address: 0x" << std::hex << addr << std::endl;
+        exit(1);
+    }
     return memory[addr] | (memory[addr + 1] << 8);
 }
 
 void CPU::updateCycles(uint32_t cycles) {
     cycleCount += cycles;  // Increment total cycles by the amount specified by the opcode
 }
+

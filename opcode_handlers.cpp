@@ -3,6 +3,7 @@
 #include <iostream>
 // Define the opcode handler functions
 void NOP(CPU& cpu) {
+    std::cout << "[DEBUG] NOP executed" << std::endl;
     cpu.PC++;  // No operation; just increment the PC
     cpu.updateCycles(4);
     
@@ -26,7 +27,7 @@ void LD_BC_A(CPU& cpu) {
 void INC_BC(CPU& cpu) {
    uint16_t bc = (cpu.B << 8) | cpu.C;
    bc += 1;
-   cpu.B = bc >> 8;
+   cpu.B = (bc >> 8) & 0xFF; 
    cpu.C = bc & 0xFF;
    cpu.PC += 1;
    cpu.updateCycles(8);
@@ -72,3 +73,62 @@ void RLCA(CPU& cpu) {
     cpu.updateCycles(4);
 }
 
+
+void RST_38(CPU& cpu) {
+    cpu.memory[cpu.SP - 1] = (cpu.PC >> 8) & 0xFF;
+    cpu.memory[cpu.SP - 2] = cpu.PC & 0xFF;
+    cpu.SP -= 2;
+    cpu.PC = 0x0038;
+
+    cpu.updateCycles(16);
+
+}
+
+void JP_a16(CPU& cpu) {
+    uint16_t addr =  cpu.memory[cpu.PC + 1] | (cpu.memory[cpu.PC + 2] << 8);
+    std::cout << "JP to address: 0x" << std::hex << addr << std::endl;
+
+    cpu.PC = addr;
+
+    cpu.updateCycles(16);
+
+
+}
+
+void POP_HL(CPU& cpu) {
+    uint8_t low = cpu.memory[cpu.SP];     // Read low byte from stack
+    cpu.SP++;  
+    uint8_t high = cpu.memory[cpu.SP];    // Read high byte from stack
+    cpu.SP++;
+
+    cpu.H = high;  // Store into H register
+    cpu.L = low;   // Store into L register
+
+    cpu.updateCycles(12);  // POP HL takes 12 cycles
+
+    cpu.PC += 1;
+
+
+}
+
+void POP_AF(CPU& cpu) {
+    uint8_t low = cpu.memory[cpu.SP];
+    cpu.SP++;
+    uint8_t high = cpu.memory[cpu.SP];
+    cpu.SP++;
+
+    cpu.A = high;
+    cpu.F = low & 0xF0;
+
+
+    cpu.PC++;
+    cpu.updateCycles(12);
+}
+
+
+void RETI(CPU& cpu) {
+
+
+
+    
+}
