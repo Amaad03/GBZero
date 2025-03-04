@@ -37,10 +37,10 @@ void CPU::initOpcodeTable() {
     // Add more opcodes...
 }
 
-void CPU::executeOpcode(CPU& cpu,uint8_t opcode) {
+void CPU::executeOpcode(uint8_t opcode) {
     std::cout << "Executing opcode: " << std::hex << int(opcode) << std::endl;
     if (opcodeTable[opcode]) {
-        opcodeTable[opcode](cpu);  // Pass 'this' to the handler function
+        opcodeTable[opcode](*this);  // Pass 'this' to the handler function
     } else {
         std::cout << "Unknown opcode: " << std::hex << int(opcode) << std::endl;
         exit(1);
