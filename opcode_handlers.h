@@ -17,16 +17,17 @@ void LD_A_BC(CPU& cpu);
 void DEC_BC(CPU& cpu);
 void INC_C(CPU& cpu);
 void DEC_C(CPU& cpu);
-void LD_C_d8(CPU& cpu);
+void LD_C_n8(CPU& cpu);
 void RRCA(CPU& cpu);
 void RST_38(CPU& cpu);
 void JP_a16(CPU& cpu);
 void POP_HL(CPU& cpu);
 void POP_AF(CPU& cpu);
 void RETI(CPU& cpu);
-
-
-
+void ADD_HL_BC(CPU& cpu);
+void LD_A_BC(CPU& cpu);
+void LD_a16_SP(CPU& cpu);
+void LD_D_B(CPU& cpu);
 
 #endif // OPCODE_HANDLERS_H
 

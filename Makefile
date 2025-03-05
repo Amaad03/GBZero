@@ -2,7 +2,7 @@ CC = g++
 CFLAGS = -std=c++11 -g -Wall
 
 # List your source files here
-SRC = main.cpp cpu.cpp opcode_handlers.cpp
+SRC = main.cpp memory.cpp cpu.cpp opcode_handlers.cpp
 
 # The output executable
 OUTPUT = gb_zero
