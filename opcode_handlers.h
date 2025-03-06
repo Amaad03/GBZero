@@ -369,6 +369,6 @@ void CP_A_n8(CPU& cpu);
 
 // RST $38
 void RST_38(CPU& cpu);
-
+void SET_7_A(CPU& cpu);
 #endif // OPCODE_HANDLERS_H
 

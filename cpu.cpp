@@ -297,6 +297,9 @@ void CPU::initOpcodeTable() {
     opcodeTable[0xFB] = EI;
     opcodeTable[0xFE] = CP_A_n8;
     opcodeTable[0xFF] = RST_38;
+    std::fill(std::begin(prefixedOpcodeTable), std::end(prefixedOpcodeTable), &UNIMPLEMENTED);
+
+    prefixedOpcodeTable[0xFF] = SET_7_A;
     // Add more opcodes as needed...
 }
 
@@ -308,7 +311,7 @@ void CPU::reset() {
 
 void UNIMPLEMENTED(CPU& cpu) {
     std::cerr << "Unimplemented opcode: 0x" 
-              << std::hex << static_cast<int>(cpu.readMemory(cpu.PC)) << std::endl;
+              << std::hex << static_cast<int>(cpu.read8(cpu.PC)) << std::endl;
     exit(1);
 }
 
@@ -324,7 +327,7 @@ void CPU::executeOpcode(uint8_t opcode) {
     }
 }
 void CPU::executeNextInstruction() {
-    uint8_t opcode = readMemory(PC);  // Fetch the opcode from memory
+    uint8_t opcode = read8(PC);  // Fetch the opcode from memory
     PC++;  // Increment the program counter to point to the next instruction
     executeOpcode(opcode);  // Execute the opcode
     updateCycles(4);  // Update the cycle count (adjust the cycle count as needed based on the opcode)
@@ -346,24 +349,6 @@ void CPU::disableInterrupts() {
     std::cout << "[DEBUG] Interrupts Disabled" << std::endl;
 }
 
-
-
-void CPU::updateAF() { AF = (A << 8) | F; }
-
-void CPU::updateBC() { BC = (B << 8) | C; }
-
-void CPU::updateDE() { DE = (D << 8) | E; }
-
-void CPU::updateHL() { HL = (H << 8) | L; }
-
-
-void CPU::updateA_F() { A = (AF >> 8) & 0xFF; F = AF & 0xFF; }
-
-void CPU::updateB_C() { B = (BC >> 8) & 0xFF; C = BC & 0xFF; }
-
-void CPU::updateD_E() { D = (DE >> 8) & 0xFF; E = DE & 0xFF; }
-
-void CPU::updateH_L() { H = (HL >> 8) & 0xFF; L = HL & 0xFF; }
 
 void CPU::setZeroFlag(bool value) {
     if (value) F |= (1 << 7);  // Set bit 7 (Zero Flag)
@@ -407,34 +392,36 @@ bool CPU::getCarryFlag() {
 
 
 void CPU::increment8(uint8_t& reg) {
-    reg++;
+    uint8_t result = reg + 1;
     setZeroFlag(reg == 0);  
     setSubtractFlag(false);   
     setHalfCarryFlag((reg & 0x0F) == 0x0F);  // Half-carry occurs when lower nibble overflows
+    reg = result;
 }
 
 void CPU::decrement8(uint8_t& reg) {
-    reg--;  
+    uint8_t result = reg - 1;  
     setZeroFlag(reg == 0);  
     setSubtractFlag(true);   
     setHalfCarryFlag((reg & 0x0F) == 0x00); // Half-carry occurs when lower nibble underflows
+    reg = result;
 }
 
-void CPU::increment16(uint16_t& reg, uint8_t& high, uint8_t& low) {
-    reg++;
-    high = (reg >> 8) & 0xFF;
-    low = reg & 0xFF;
+void CPU::increment16(uint8_t& high, uint8_t& low) {
+    uint16_t value = ((high << 8 ) + low) + 1;
+    high = value >> 8;
+    low = value & 0x00FF;
 }
 
-void CPU::decrement16(uint16_t& reg, uint8_t& high, uint8_t& low) {
-    reg--;
-    high = (reg >> 8) & 0xFF;
-    low = reg & 0xFF;
+void CPU::decrement16(uint8_t& high, uint8_t& low) {
+    uint16_t value = ((high << 8 ) + low) - 1;
+    high = value >> 8;
+    low = value & 0x00FF;
 
 }
 
 uint16_t CPU::pop16() {
-    uint16_t value = readMemory(SP) | (readMemory(SP + 1) << 8);
+    uint16_t value = read8(SP) | (read8(SP + 1) << 8);
     SP += 2;  // Stack pointer increases by 2 (16-bit value)
     return value;
 }
@@ -446,7 +433,7 @@ void CPU::push16(uint16_t value) {
     SP -= 2; 
      // Stack pointer decreases by 2 (16-bit value)
 }
-uint8_t CPU::readMemory(uint16_t addr) {
+uint8_t CPU::read8(uint16_t addr) {
     return memory.read(addr);
 }
 
@@ -460,4 +447,42 @@ uint16_t CPU::read16(uint16_t addr) {
 void CPU::write16(uint16_t addr, uint16_t value) {
     memory.write(addr, value & 0xFF);
     memory.write(addr + 1, (value >> 8) & 0xFF);
+}
+
+
+uint16_t CPU::getBC() const { 
+    return (B << 8) | C; 
+}
+
+uint16_t CPU::getDE() const { 
+    return (D << 8) | E; 
+}
+
+uint16_t CPU::getHL() const { 
+    return (H << 8) | L; 
+}
+
+uint16_t CPU::getAF() const { 
+    return (A << 8) | F; 
+}
+
+// Setter functions for 16-bit registers
+void CPU::setBC(uint16_t value) { 
+    B = value >> 8; 
+    C = value & 0xFF; 
+}
+
+void CPU::setDE(uint16_t value) { 
+    D = value >> 8; 
+    E = value & 0xFF; 
+}
+
+void CPU::setHL(uint16_t value) { 
+    H = value >> 8; 
+    L = value & 0xFF; 
+}
+
+void CPU::setAF(uint16_t value) { 
+    A = value >> 8; 
+    F = value & 0xFF; 
 }
