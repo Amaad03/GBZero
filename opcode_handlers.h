@@ -60,6 +60,8 @@ void LD_SP_n16(CPU& cpu);
 void LD_HL_minus_A(CPU& cpu);
 void INC_SP(CPU& cpu);
 void INC_HL(CPU& cpu);
+void INC_HL_mem(CPU& cpu);
+void DEC_HL_mem(CPU& cpu);
 void DEC_HL(CPU& cpu);
 void LD_HL_n8(CPU& cpu);
 void SCF(CPU& cpu);

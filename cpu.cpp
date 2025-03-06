@@ -3,9 +3,9 @@
 #include <iostream>
 
 CPU::CPU() {
-    A = B = C = D = E = H = L = 0;  // Initialize 8-bit registers
-    F = 0;  // Flags register
-
+    A = B = C = F = D = E = H = L = 0;  // Initialize 8-bit registers and Flag
+    SP = 0xFFFE;  // Stack Pointer
+    PC = 0x0100;
     cycleCount = 0;
     interruptsEnabled = false;
 
@@ -37,7 +37,6 @@ void CPU::initOpcodeTable() {
     opcodeTable[0xE1] = &POP_HL;
     opcodeTable[0xF1] = &POP_AF;
     opcodeTable[0xFF] = &RST_38;
-    opcodeTable[0x50] = &LD_D_B;
     opcodeTable[0x10] = &STOP_n8; //0x10
     opcodeTable[0x11] = LD_DE_n16; //0x11
     opcodeTable[0x12] = LD_DE_A;//0x12
@@ -77,8 +76,8 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x31] = LD_SP_n16;  // 0x31 - LD SP, n16
     opcodeTable[0x32] = LD_HL_minus_A; // 0x32 - LD (HL-), A
     opcodeTable[0x33] = INC_SP;     // 0x33 - INC SP
-    opcodeTable[0x34] = INC_HL;     // 0x34 - INC HL
-    opcodeTable[0x35] = DEC_HL;     // 0x35 - DEC HL
+    opcodeTable[0x34] = INC_HL_mem;     // 0x34 - INC HL
+    opcodeTable[0x35] = DEC_HL_mem;     // 0x35 - DEC HL
     opcodeTable[0x36] = LD_HL_n8;   // 0x36 - LD HL, n8
     opcodeTable[0x37] = SCF;        // 0x37 - SCF
     opcodeTable[0x38] = JR_C_e8;    // 0x38 - JR C, e8
@@ -89,6 +88,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x3D] = DEC_A;      // 0x3D - DEC A
     opcodeTable[0x3E] = LD_A_n8;    // 0x3E - LD A, n8
     opcodeTable[0x3F] = CCF;        // 0x3F - CCF
+    //-------------------- 
     opcodeTable[0x40] = LD_B_B;
     opcodeTable[0x41] = LD_B_C;
     opcodeTable[0x42] = LD_B_D;
@@ -153,8 +153,6 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x75] = LD_HL_L;
     opcodeTable[0x76] = HALT;  // HALT instruction
     opcodeTable[0x77] = LD_HL_A;
-
-    // LD A, B to LD A, A
     opcodeTable[0x78] = LD_A_B;
     opcodeTable[0x79] = LD_A_C;
     opcodeTable[0x7A] = LD_A_D;
@@ -164,6 +162,25 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x7E] = LD_A_HL;
     opcodeTable[0x7F] = LD_A_A;
 
+
+   
+    //8x row
+    opcodeTable[0x80] = ADD_A_B;  
+    opcodeTable[0x81] = ADD_A_C; 
+    opcodeTable[0x82] = ADD_A_D;    
+    opcodeTable[0x83] = ADD_A_E;    
+    opcodeTable[0x84] = ADD_A_H;
+    opcodeTable[0x85] = ADD_A_L;   
+    opcodeTable[0x86] = ADD_A_HL;  
+    opcodeTable[0x87] = ADD_A_A;   
+    opcodeTable[0x88] = ADC_A_B;  
+    opcodeTable[0x89] = ADC_A_C ;   
+    opcodeTable[0x8A] = ADC_A_D  ; 
+    opcodeTable[0x8B] = ADC_A_E  ;
+    opcodeTable[0x8C] = ADC_A_H  ; 
+    opcodeTable[0x8D] = ADC_A_L   ; 
+    opcodeTable[0x8E] = ADC_A_HL  ; 
+    opcodeTable[0x8F] = ADC_A_A   ;
     
     opcodeTable[0xED] = no_opcode;
     opcodeTable[0xCE] = ADC_A_n8;
@@ -208,18 +225,11 @@ void CPU::writeMemory(uint16_t addr, uint8_t value) {
 }
 
 uint16_t CPU::read16(uint16_t addr) {
-    uint8_t low = readMemory(addr);
-    uint8_t high = readMemory(addr + 1);
-    return (high << 8) | low;
+    return memory.read(addr) | (memory.read(addr + 1) << 8);
 }
-
 void CPU::write16(uint16_t addr, uint16_t value) {
-    if (addr < 0xFF00 || addr > 0xFFFF) {
-        std::cerr << "Invalid memory write at address: 0x" << std::hex << addr << std::endl;
-        exit(1);
-    }
-    writeMemory(addr, value & 0xFF);
-    writeMemory(addr + 1, (value >> 8) & 0xFF);
+    memory.write(addr, value & 0xFF);
+    memory.write(addr + 1, (value >> 8) & 0xFF);
 }
 
 void CPU::updateCycles(uint32_t cycles) {
@@ -259,4 +269,90 @@ uint16_t CPU::popFromStack() {
               << " from SP: 0x" << SP << std::endl;
 
     return value;
+}
+
+
+void CPU::updateAF() { AF = (A << 8) | F; }
+
+void CPU::updateBC() { BC = (B << 8) | C; }
+
+void CPU::updateDE() { DE = (D << 8) | E; }
+
+void CPU::updateHL() { HL = (H << 8) | L; }
+
+
+void CPU::updateA_F() { A = (AF >> 8) & 0xFF; F = AF & 0xFF; }
+
+void CPU::updateB_C() { B = (BC >> 8) & 0xFF; C = BC & 0xFF; }
+
+void CPU::updateD_E() { D = (DE >> 8) & 0xFF; E = DE & 0xFF; }
+
+void CPU::updateH_L() { H = (HL >> 8) & 0xFF; L = HL & 0xFF; }
+
+void CPU::setZeroFlag(bool value) {
+    if (value) F |= (1 << 7);  // Set bit 7 (Zero Flag)
+    else F &= ~(1 << 7);       // Clear bit 7
+}
+
+void CPU::setSubtractFlag(bool value) {
+    if (value) F |= (1 << 6);  // Set bit 6 (Subtract Flag)
+    else F &= ~(1 << 6);       // Clear bit 6
+}
+
+void CPU::setHalfCarryFlag(bool value) {
+    if (value) F |= (1 << 5);  // Set bit 5 (Half Carry Flag)
+    else F &= ~(1 << 5);       // Clear bit 5
+}
+
+void CPU::setCarryFlag(bool value) {
+    if (value) F |= (1 << 4);  // Set bit 4 (Carry Flag)
+    else F &= ~(1 << 4);       // Clear bit 4
+}
+
+
+
+bool CPU::getZeroFlag(bool value) {
+    return (F & (1 << 7)) != 0;  // Check if Zero flag (bit 7) is set
+}
+
+bool CPU::getSubtractFlag(bool value) {
+    return (F & (1 << 6)) != 0;  // Check if Subtract flag (bit 6) is set
+}
+
+bool CPU::getHalfCarryFlag(bool value) {
+    return (F & (1 << 5)) != 0;  // Check if Half Carry flag (bit 5) is set
+}
+
+bool CPU::getCarryFlag() {
+    return (F & (1 << 4)) != 0;  // Check if Carry flag (bit 4) is set
+}
+
+
+
+
+void CPU::increment8(uint8_t& reg) {
+    reg++;
+    setZeroFlag(reg == 0);  
+    setSubtractFlag(false);   
+    setHalfCarryFlag((reg & 0x0F) == 0x0F);  // Half-carry occurs when lower nibble overflows
+}
+
+void CPU::decrement8(uint8_t& reg) {
+    reg--;  
+    setZeroFlag(reg == 0);  
+    setSubtractFlag(true);   
+    setHalfCarryFlag((reg & 0x0F) == 0x00); // Half-carry occurs when lower nibble underflows
+}
+
+void CPU::increment16(uint16_t& reg, uint8_t& high, uint8_t& low) {
+    reg++;
+    high = (reg >> 8) & 0xFF;
+    low = reg & 0xFF;
+}
+
+void CPU::decrement16(uint16_t& reg, uint8_t& high, uint8_t& low) {
+    reg--;
+    high = (reg >> 8) & 0xFF;
+    low = reg & 0xFF;
+
 }

@@ -1,33 +1,3 @@
-/*
-
-left shift operator <<
-- shifts the bits of a number to the left by a specified number of postions
-    - each shift to the left effectively multiples the number by 2
-    - zeros are shifted into the lower bits as the number shifts
-
-5 << 1 will shift the bits to the left by 1 position:
-0000 0101 (5)
-<< 1
----------
-0000 1010 (10)
-
-
- Right Shift Operator (>>)
-
-The right shift operator shifts the bits of a number to the right by a specified number of positions.
-Each shift to the right effectively divides the number by 2 (with integer division).
-For unsigned numbers, zeros are shifted into the higher bits.
-For signed numbers (in some programming languages), the sign bit (the leftmost bit) might be shifted in to 
-preserve the sign of the number (this is called "arithmetic shift").
-
-20 >> 1 will shift the bits to the right by 1 position:
-0001 0100 (20)
->> 1
----------
-0000 1010 (10)
-*/
-
-
 
 #include "opcode_handlers.h"
 #include "cpu.h"  // Include the CPU class to access registers
@@ -56,34 +26,34 @@ void LD_BC_A(CPU& cpu) {
 
 
 void INC_BC(CPU& cpu) {
-   uint16_t bc = (cpu.B << 8) | cpu.C;
-   bc += 1;
-   cpu.B = (bc >> 8) & 0xFF; 
-   cpu.C = bc & 0xFF;
-   cpu.PC += 1;
-   cpu.updateCycles(8);
-
+    cpu.increment16(cpu.BC, cpu.B, cpu.C);
+    cpu.PC++;
+    cpu.updateCycles(8);
 }
+
+
 void INC_B(CPU& cpu) {
-    uint8_t b = cpu.B;
-    cpu.B++;
-
-    cpu.F = (cpu.B == 0) ? (cpu.F | 0x80) : (cpu.F & ~0x80);
-    cpu.F &= ~0x40; 
-    cpu.F = ((b & 0xF) + 1 > 0xF) ? (cpu.F | 0x20) : (cpu.F & ~0x20);
-
+    uint8_t result = cpu.B + 1;
+    cpu.setZeroFlag(result == 0);  // Zero flag if result is 0
+    cpu.setSubtractFlag(false);    // Subtract flag is cleared for INC
+    cpu.setHalfCarryFlag(((cpu.B & 0x0F) + 1) > 0x0F);  // Half carry flag (check lower nibble)
+    cpu.setCarryFlag(false);  
+    cpu.B = result;
     cpu.PC++;
     cpu.updateCycles(4);
 } 
 void DEC_B(CPU& cpu) {
-    
-    cpu.B--;
-    cpu.F = (cpu.B == 0) ? (cpu.F | 0x80) : (cpu.F & ~0x80);
-    cpu.F = ((cpu.B & 0x0F) == 0x0) ? (cpu.F | 0x20) : (cpu.F & ~0x20);
-    cpu.F |= 0x40;  
-    cpu.PC++;
-    cpu.updateCycles(4);
+    uint8_t result = cpu.B - 1;
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.B & 0x0F) == 0); 
+    cpu.setCarryFlag(false); 
+    cpu.B = result;
+    cpu.PC++;  
+    cpu.updateCycles(4);  
 }
+
+
 void LD_B_d8(CPU& cpu) {
     uint8_t value = cpu.readMemory(cpu.PC + 1);
     cpu.B = value;
@@ -112,104 +82,86 @@ void LD_a16_SP(CPU& cpu) {  // 0x08
     cpu.updateCycles(20);
 
 }
-void ADD_HL_BC(CPU& cpu) { //0x09
-
-    uint16_t bc = (cpu.B << 8) | cpu.C;
-    uint16_t hl = (cpu.H << 8) | cpu.L;
-
-    uint16_t result = hl + bc;
-    cpu.H = (result >> 8) & 0xFF; // these are the upper bits
-    cpu.L = result & 0xFF; // lower bits
+void ADD_HL_BC(CPU& cpu) {  // 0x09
+    uint16_t result = cpu.HL + cpu.BC;
     
-    cpu.F &= ~0x80;  // Zero flag unaffected
-    cpu.F &= ~0x40;  // Subtract flag (N) cleared
-    cpu.F = (((hl & 0x0FFF) + (bc & 0x0FFF)) > 0x0FFF) ? (cpu.F | 0x20) : (cpu.F & ~0x20);  // Half carry flag
-    cpu.F = (result < hl) ? (cpu.F | 0x10) : (cpu.F & ~0x10);  // Carry flag
+    // Update HL with the result
+    cpu.H = (result >> 8) & 0xFF;  // Update high byte (H register)
+    cpu.L = result & 0xFF;         // Update low byte (L register)
 
-    cpu.PC++;
-    cpu.updateCycles(8);
+ 
+    cpu.F &= ~0x80; 
+    cpu.F &= ~0x40; 
+
+    // Half carry flag
+    if (((cpu.HL & 0xFFF) + (cpu.BC & 0xFFF)) > 0xFFF) {
+        cpu.F |= 0x20;  // Set the Half Carry flag
+    } else {
+        cpu.F &= ~0x20; // Clear the Half Carry flag
+    }
+
+    if (result < cpu.HL) {
+        cpu.F |= 0x10;  // Set the Carry flag
+    } else {
+        cpu.F &= ~0x10; // Clear the Carry flag
+    }
+
+    cpu.PC++;  // Increment program counter
+    cpu.updateCycles(8);  // Update the cycle count
 }
-
 
 void LD_A_BC(CPU& cpu) { //0x0A
     uint16_t address = (cpu.B << 8) | cpu.C;
     cpu.A = cpu.readMemory(address);
     cpu.PC += 1;
     cpu.updateCycles(8);
-
-
 }
 
 void DEC_BC(CPU& cpu) { //0x0B
-    uint16_t bc = (cpu.B << 8) | cpu.C; 
-    bc--;
-    cpu.B = (bc >> 8) & 0xFF;
-    cpu.C = bc & 0xFF;
+    cpu.BC--;
     cpu.PC++;
     cpu.updateCycles(8);
 
 }
+
 void INC_C(CPU& cpu) { //0x0C
     cpu.C++;
-
-    //zero flag
-    cpu.F = (cpu.C == 0) ? (cpu.F | 0x80) : (cpu.F & ~0x80);
-    //half carry flag
-    cpu.F = ((cpu.C & 0xF) + 1 > 0xF) ? (cpu.F | 0x20) : (cpu.F & ~0x20);
-    //Subtract flag (N) 
-    cpu.F = ~0x40;// Clear the N flag
-
+    cpu.setZeroFlag(cpu.C == 0);
+    cpu.setHalfCarryFlag((cpu.C & 0xF) == 0);
+    cpu.setSubtractFlag(false);
     cpu.PC++;
     cpu.updateCycles(4);
-
 }
+
 void DEC_C(CPU& cpu) { //0x0D
     cpu.C--;
-    
-    cpu.F = (cpu.C == 0) ? (cpu.F | 0x80) : (cpu.F & ~0x80);
-    cpu.F = ((cpu.C & 0x0F) == 0x0F) ? (cpu.F | 0x20) : (cpu.F & ~0x20);
-    cpu.F = cpu.F | 0x40;
-
-
+    cpu.setZeroFlag(cpu.C == 0);
+    cpu.setHalfCarryFlag((cpu.C & 0xF) == 0x0F);
+    cpu.setSubtractFlag(true);
     cpu.PC++;
     cpu.updateCycles(4);
 }
 
 void LD_C_n8(CPU& cpu) { //0x0E
     cpu.C = cpu.readMemory(cpu.PC + 1);
-
     cpu.PC += 2;
     cpu.updateCycles(8);
 
-    
 }
 
 void RRCA(CPU& cpu) { //0x0F
-    bool carryBit = cpu.F & 0x10;  // Get the carry flag from the F register
-    cpu.F = (cpu.F & ~0x10);  // Clear the carry flag before we rotate
-
-    // Shift A register right and insert the carry bit in the MSB
-    cpu.F |= (cpu.A & 0x01) ? 0x10 : 0;  // Set carry flag if LSB of A is 1
-    cpu.A = (cpu.A >> 1) | (carryBit ? 0x80 : 0); // Perform the right shift with the carry bit
-
-    // Zero flag is cleared as it's not affected by RRCA
-    cpu.F &= ~0x80;  // Clear zero flag (Z) for this operation
-
-    // Half carry flag is unaffected
-    cpu.F &= ~0x20;  // Clear half carry flag (H)
-
-    // Subtract flag is unaffected
-    cpu.F &= ~0x40;  // Clear subtract flag (N)
-
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(4);  // RRCA takes 4 cycles
+    bool carryBit = cpu.F & 0x10;  
+    cpu.setCarryFlag(false);
+    cpu.setCarryFlag((cpu.A & 0x01) != 0);
+    cpu.A = (cpu.A >> 1) | (carryBit ? 0x80 : 0); 
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setHalfCarryFlag(false);  
+    cpu.setSubtractFlag(false); 
+    cpu.PC++; 
+    cpu.updateCycles(4);  
 }
 
-
 void STOP_n8(CPU& cpu) {
-
-
-
     cpu.PC += 2;
     cpu.updateCycles(4);
 }
@@ -217,50 +169,46 @@ void STOP_n8(CPU& cpu) {
 
 void LD_DE_n16(CPU& cpu) {
     uint16_t value = cpu.read16(cpu.PC + 1);
-    cpu.D = (value >> 8) & 0xFF;
-    cpu.E = value & 0xFF;
-
-
-
+    cpu.DE = value;
+    cpu.updateD_E();
     cpu.PC += 3;
     cpu.updateCycles(12);
 }
 
 void LD_DE_A(CPU& cpu) {
-    uint16_t address = (cpu.D << 8) | cpu.E;
-    cpu.writeMemory(address, cpu.A);
+    cpu.writeMemory(cpu.DE, cpu.A); 
     cpu.PC++;
     cpu.updateCycles(8);
 }
 
 void INC_DE(CPU& cpu) {
-    uint16_t de = (cpu.D << 8) | cpu.E;
-    de++;
-    cpu.D = (de >> 8) & 0xFF;
-    cpu.E = de & 0xFF;
-    cpu.PC++;
-    cpu.updateCycles(8);
+    cpu.DE++;  
+    cpu.updateD_E();  
+    cpu.PC++;  
+    cpu.updateCycles(8); 
 }
 
 void INC_D(CPU& cpu) {
-    cpu.D++;
-    cpu.F = (cpu.D == 0) ? (cpu.F | 0x80) : (cpu.F & ~0x80);
-    cpu.F &= ~0x40; 
-    cpu.F = ((cpu.D & 0xF) + 1 > 0xF) ? (cpu.F | 0x20) : (cpu.F & ~0x20);
-    cpu.PC++;
-    cpu.updateCycles(8);
+    uint8_t result = cpu.D + 1;  
+    cpu.setZeroFlag(result == 0);  
+    cpu.setSubtractFlag(false);   
+    cpu.setHalfCarryFlag((cpu.D & 0x0F) + 1 > 0x0F);  
+    cpu.setCarryFlag(false);     
+    cpu.D = result;               
+    cpu.PC++;                      
+    cpu.updateCycles(4);           
 }
 
 void DEC_D(CPU& cpu) {
-    cpu.D--;
-    cpu.F = (cpu.B == 0) ? (cpu.F | 0x80) : (cpu.F & ~0x80);
-    cpu.F = ((cpu.B & 0x0F) == 0x0) ? (cpu.F | 0x20) : (cpu.F & ~0x20);
-    cpu.F |= 0x40;  
-    cpu.PC++;
-    cpu.updateCycles(4);
-
+    uint8_t result = cpu.D - 1;  
+    cpu.setZeroFlag(result == 0);  
+    cpu.setSubtractFlag(true);   
+    cpu.setHalfCarryFlag((cpu.D & 0x0F) == 0x00);  
+    cpu.setCarryFlag(false);     
+    cpu.D = result;               
+    cpu.PC++;                      
+    cpu.updateCycles(4);          
 }
-
 
 void LD_D_n8(CPU& cpu) {
     uint8_t value = cpu.readMemory(cpu.PC + 1);
@@ -285,371 +233,328 @@ void JR_e8(CPU& cpu) {
 }
 
 void ADD_HL_DE(CPU& cpu) {
-    uint16_t hl = (cpu.H << 8) | cpu.L; 
-    uint16_t de = (cpu.D << 8) | cpu.E; 
-    uint16_t result = hl + de;
-    if ((hl & 0x0FFF) + (de & 0x0FFF) > 0x0FFF) {
-        cpu.F |= 0x20;  // Set the H flag (bit 5 in F register)
-    } else {
-        cpu.F &= ~0x20;  // Clear the H flag
-    }
-
-    // Set the Carry flag (C) if there is a carry from bit 15
-    if (result > 0xFFFF) {
-        cpu.F |= 0x10;  // Set the C flag (bit 4 in F register)
-    } else {
-        cpu.F &= ~0x10;  // Clear the C flag
-    }
-
-    // Store the result in HL
-    cpu.H = (result >> 8) & 0xFF;  
-    cpu.L = result & 0xFF; 
-    // Update the program counter by 1 to skip the opcode
-    cpu.PC += 1;
-
-    // Update cycles for the instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
+    uint16_t result = cpu.HL + cpu.DE;  
+    cpu.setHalfCarryFlag((cpu.HL & 0x0FFF) + (cpu.DE & 0x0FFF) > 0x0FFF);
+    cpu.setCarryFlag(result > 0xFFFF); 
+    cpu.HL = result;
+    cpu.setZeroFlag(false);  
+    cpu.setSubtractFlag(false);  
+    cpu.PC++;
+    cpu.updateCycles(8);
 }
 
 void LD_A_DE(CPU& cpu) {
-    uint16_t address = (cpu.D << 8) | cpu.E;
-
+    uint16_t address = cpu.DE; 
     cpu.A = cpu.readMemory(address);
     cpu.PC++;
     cpu.updateCycles(8);
-
 }
 
 void DEC_DE(CPU& cpu) {
-    uint16_t de = (cpu.D << 8) | cpu.E;
-    de--;
-
-    cpu.D = (de >> 8) & 0xFF;
-    cpu.E = de & 0xFF;
+    cpu.decrement16(cpu.DE, cpu.D, cpu.E); 
     cpu.PC++;
     cpu.updateCycles(8);
-
 }
 
 void INC_E(CPU& cpu) {
-    cpu.E++;
-
-    cpu.F = (cpu.E == 0) ? (cpu.F | 0x80) : (cpu.F & ~0x80);
-    //half carry flag
-    cpu.F = ((cpu.E & 0xF) + 1 > 0xF) ? (cpu.F | 0x20) : (cpu.F & ~0x20);
-    //Subtract flag (N) 
-    cpu.F = ~0x40;// Clear the N flag
-
-
+    cpu.increment8(cpu.D);
     cpu.PC++;
     cpu.updateCycles(8);
 }
 
 void DEC_E(CPU& cpu) {
-    cpu.E--;
-    cpu.F = (cpu.E == 0) ? (cpu.F | 0x80) : (cpu.F & ~0x80);
-    cpu.F = ((cpu.E & 0x0F) == 0x0F) ? (cpu.F | 0x20) : (cpu.F & ~0x20);
-    cpu.F = cpu.F | 0x40;
-
+    cpu.decrement8(cpu.E);
     cpu.PC++;
     cpu.updateCycles(4);
-
 }
 
 void LD_E_n8(CPU& cpu) {
     cpu.E = cpu.readMemory(cpu.PC + 1);
-
     cpu.PC += 2;
     cpu.updateCycles(8);
 }
 
 void RRA(CPU& cpu) {
-    bool carry = cpu.F & 0x10;  // C flag is bit 4 in the F register
+    bool carry = cpu.F & 0x10;  
     uint8_t oldA = cpu.A;
-    cpu.A = (cpu.A >> 1) | (carry << 7);  // Shift right and place the old carry in the MSB
-
+    cpu.A = (cpu.A >> 1) | (carry << 7);  
     if (oldA & 0x01) {
-        cpu.F |= 0x10;  // Set the C flag if the least significant bit of A was 1
+        cpu.setCarryFlag(true); 
     } else {
-        cpu.F &= ~0x10; // Clear the C flag if the least significant bit of A was 0
+        cpu.setCarryFlag(false);
     }
-
-    cpu.F &= ~(0x20 | 0x40); // Clear the H and N flags
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
     cpu.PC++;
     cpu.updateCycles(4);
 }
 
-
 void LD_HL_n16(CPU& cpu) {
-    uint16_t value = cpu.read16(cpu.PC + 1);  // Read 16-bit value from memory
-    cpu.H = (value >> 8) & 0xFF;  // Set high byte of HL
-    cpu.L = value & 0xFF;         // Set low byte of HL
-    cpu.PC += 3;  // Move program counter to the next instruction
-    cpu.updateCycles(12);  // 12 cycles for this instruction
+    uint16_t value = cpu.read16(cpu.PC + 1);  
+    cpu.HL = value;
+    cpu.PC += 3; 
+    cpu.updateCycles(12); 
 }
+
 void LD_HLplus_A(CPU& cpu) {
-    uint16_t address = (cpu.H << 8) | cpu.L;  // Get the address from HL
-    cpu.writeMemory(address, cpu.A);           // Write A to memory at address HL
-    cpu.L++;                                  // Increment HL
-    if (cpu.L == 0) cpu.H++;                  // Handle overflow from L to H
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
+    cpu.writeMemory(cpu.HL, cpu.A);        
+    cpu.HL++;
+    cpu.PC++;  
+    cpu.updateCycles(8);  
+}
+
+void INC_HL(CPU& cpu) {
+    cpu.increment16(cpu.HL, cpu.H, cpu.L);
+    cpu.PC++;
+    cpu.updateCycles(8);
 }
 
 void INC_H(CPU& cpu) {
-    cpu.H++;
-    cpu.F = (cpu.H == 0) ? (cpu.F | 0x80) : (cpu.F & ~0x80);
-    cpu.F &= ~0x40; 
-    cpu.F = ((cpu.H & 0xF) + 1 > 0xF) ? (cpu.F | 0x20) : (cpu.F & ~0x20);
-    cpu.PC++;
-    cpu.updateCycles(4);
+    cpu.increment8(cpu.H);
+    cpu.PC++;  
+    cpu.updateCycles(4); 
 }
-
-
 
 void DEC_H(CPU& cpu) {
-    cpu.H--;  // Decrement the H register
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(4);  // 4 cycles for this instruction
+    cpu.decrement8(cpu.H);
+    cpu.PC++;  
+    cpu.updateCycles(4); 
 }
+
 void LD_H_n8(CPU& cpu) {
     cpu.H = cpu.readMemory(cpu.PC + 1);  // Load immediate 8-bit value into H
     cpu.PC += 2;  // Move program counter to the next instruction
     cpu.updateCycles(8);  // 8 cycles for this instruction
 }
 void DAA(CPU& cpu) {
-    if (cpu.F & 0x10) {  // If carry flag is set
-        if ((cpu.A & 0x0F) > 9) {
-            cpu.A += 6;  // Adjust for BCD
+    if ((cpu.F & 0x40)  == 0) {  
+        if ((cpu.A & 0x0F) > 9 || (cpu.F & 0x20)) { 
+            cpu.A += 0x06;
+        }
+        if (cpu.A > 0x99 || (cpu.F & 0x10)) { 
+            cpu.A += 0x60;
+            cpu.setCarryFlag(true);  
+        }
+    } else {  
+        if ((cpu.A & 0x0F) < 6) {  
+            cpu.A -= 0x06;
+        }
+        if (cpu.A < 0x60) { 
+            cpu.A -= 0x60;
+            cpu.setCarryFlag(true); 
         }
     }
-
-    if (cpu.F & 0x80) {  // If zero flag is set
-        cpu.A += 6;  // Adjust for BCD
-    }
-
-    // Update the Zero, Negative, Half Carry, and Carry flags
-    if (cpu.A == 0) {
-        cpu.F |= 0x80;  // Set Z flag
-    } else {
-        cpu.F &= ~0x80;  // Clear Z flag
-    }
-
-    if ((cpu.A & 0x10) > 0xF) {
-        cpu.F |= 0x10;  // Set the C flag (carry)
-    }
-
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(4);  // 4 cycles for this instruction
+    cpu.setHalfCarryFlag(false);
+    cpu.setZeroFlag(cpu.A == 0);  
+    cpu.PC++;
+    cpu.updateCycles(4);  
 }
+
 void JRZ_e8(CPU& cpu) {
-    if (cpu.F & 0x80) {  // Check if the Zero flag (Z) is set
-        int8_t offset = cpu.readMemory(cpu.PC + 1);  // Get the signed offset
-        cpu.PC += offset;  // Jump by the offset
-        cpu.updateCycles(12);  // 12 cycles for this instruction
+    if (cpu.F & 0x80) {  
+        int8_t offset = cpu.readMemory(cpu.PC + 1); 
+        cpu.PC += offset; 
+        cpu.updateCycles(12);  
     } else {
-        cpu.PC += 2;  // Skip the offset if Zero flag is not set
-        cpu.updateCycles(8);  // 8 cycles for this instruction
+        cpu.PC += 2;
+        cpu.updateCycles(8);  
     }
 }
 void ADD_HL_HL(CPU& cpu) {
-    uint16_t hl = (cpu.H << 8) | cpu.L;  // Get the HL register value
-    uint16_t result = hl + hl;           // Add HL to itself
-
-    // Set the carry flag (C) if there is a carry from bit 15
+    uint16_t hl = (cpu.H << 8) | cpu.L;  
+    uint16_t result = hl + hl;           
     if (result > 0xFFFF) {
-        cpu.F |= 0x10;  // Set carry flag
+        cpu.F |= 0x10;  
     } else {
-        cpu.F &= ~0x10;  // Clear carry flag
+        cpu.F &= ~0x10;  
     }
 
-    // Set the half-carry flag (H) if there is a carry from bit 11
     if ((hl & 0x0FFF) + (hl & 0x0FFF) > 0x0FFF) {
-        cpu.F |= 0x20;  // Set half-carry flag
+        cpu.F |= 0x20;  
     } else {
-        cpu.F &= ~0x20;  // Clear half-carry flag
+        cpu.F &= ~0x20;  
     }
-
-    // Store the result back into HL
     cpu.H = (result >> 8) & 0xFF;
     cpu.L = result & 0xFF;
 
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
+    cpu.PC++;  
+    cpu.updateCycles(8); 
 }
 void LD_A_HLplus(CPU& cpu) {
-    uint16_t address = (cpu.H << 8) | cpu.L;  // Get the address from HL
-    cpu.A = cpu.readMemory(address);  // Load memory value at address into A
-    cpu.L++;                          // Increment L
-    if (cpu.L == 0) cpu.H++;          // Handle overflow from L to H
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
+    uint16_t address = (cpu.H << 8) | cpu.L;  
+    cpu.A = cpu.readMemory(address); 
+    cpu.L++;                       
+    if (cpu.L == 0) cpu.H++;         
+    cpu.PC++;  
+    cpu.updateCycles(8); 
+}
+void DEC_HL(CPU& cpu) {
+    cpu.decrement16(cpu.HL, cpu.H, cpu.L);
+    cpu.PC++;  
+    cpu.updateCycles(8); 
+}
+void INC_L(CPU& cpu) {
+    cpu.increment8(cpu.L);
+    cpu.PC++; 
+    cpu.updateCycles(4); 
 }
 
-void INC_L(CPU& cpu) {
-    cpu.L++;  // Increment the L register
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(4);  // 4 cycles for this instruction
-}
 void DEC_L(CPU& cpu) {
-    cpu.L--;  // Decrement the L register
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(4);  // 4 cycles for this instruction
+    cpu.decrement8(cpu.L);
+    cpu.PC++;  
+    cpu.updateCycles(4);  
 }
+
 void LD_L_n8(CPU& cpu) {
-    cpu.L = cpu.readMemory(cpu.PC + 1);  // Load immediate 8-bit value into L
-    cpu.PC += 2;  // Move program counter to the next instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
+    cpu.L = cpu.readMemory(cpu.PC + 1);  
+    cpu.PC += 2;  
+    cpu.updateCycles(8);  
 }
+
 void CPL(CPU& cpu) {
-    cpu.A = ~cpu.A;  // Complement (invert) all bits of A
-    cpu.F |= 0x20;   // Set the N flag (negative flag)
-    cpu.PC+=2;
+    cpu.A = ~cpu.A;  
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag(true);
+    cpu.PC++;
     cpu.updateCycles(4);
 }
 
 void JR_NZ_e8(CPU& cpu) {
-    // Check if Zero flag (Z) is not set
     if (!(cpu.F & 0x80)) {
-        int8_t offset = cpu.readMemory(cpu.PC + 1);  // Get the signed 8-bit offset
-        cpu.PC += offset;  // Jump to the new address
-        cpu.updateCycles(12);  // 12 cycles for this instruction
+        int8_t offset = cpu.readMemory(cpu.PC + 1);  
+        cpu.PC += offset;  
+        cpu.updateCycles(12);  
     } else {
-        cpu.PC += 2;  // Skip the offset if Zero flag is set
-        cpu.updateCycles(8);  // 8 cycles for this instruction
+        cpu.PC += 2; 
+        cpu.updateCycles(8);  
     }
 }
 
 void LD_SP_n16(CPU& cpu) {
-    uint16_t value = cpu.read16(cpu.PC + 1);  // Read 16-bit immediate value
-    cpu.SP = value;  // Set SP register
-    cpu.PC += 3;  // Move program counter to the next instruction
-    cpu.updateCycles(12);  // 12 cycles for this instruction
+    uint16_t value = cpu.read16(cpu.PC + 1);  
+    cpu.SP = value; 
+    cpu.PC += 3;  
+    cpu.updateCycles(12);  
 }
 
-
 void LD_HL_minus_A(CPU& cpu) {
-    uint16_t address = (cpu.H << 8) | cpu.L;  // Get the address from HL
-    cpu.writeMemory(address, cpu.A);           // Write A to memory at address HL
-    cpu.L--;                                  // Decrement HL
-    if (cpu.L == 0xFF) cpu.H--;                // Handle overflow from L to H
-    cpu.PC++;                                  // Move program counter to the next instruction
-    cpu.updateCycles(8);                       // 8 cycles for this instruction
+    uint16_t address = (cpu.H << 8) | cpu.L;  
+    cpu.writeMemory(address, cpu.A);          
+    cpu.L--;                                
+    if (cpu.L == 0xFF) cpu.H--;              
+    cpu.PC++;                                 
+    cpu.updateCycles(8);                       
 }
 
 void INC_SP(CPU& cpu) {
-    cpu.SP++;  // Increment SP
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
-}
-void INC_HL(CPU& cpu) {
-    uint16_t hl = (cpu.H << 8) | cpu.L;  // Combine H and L into a 16-bit value
-    hl++;                                 // Increment HL
-    cpu.H = (hl >> 8) & 0xFF;             // Update H with the high byte of HL
-    cpu.L = hl & 0xFF;                    // Update L with the low byte of HL
-    cpu.PC++;                              // Move program counter to the next instruction
-    cpu.updateCycles(8);                   // 8 cycles for this instruction
+    cpu.SP++;  
+    cpu.PC++;  
+    cpu.updateCycles(8);  
 }
 
-
-void DEC_HL(CPU& cpu) {
-    uint16_t hl = (cpu.H << 8) | cpu.L;  // Combine H and L into a 16-bit value
-    hl--;                                 // Decrement HL
-    cpu.H = (hl >> 8) & 0xFF;             // Update H with the high byte of HL
-    cpu.L = hl & 0xFF;                    // Update L with the low byte of HL
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
+void INC_HL_mem(CPU& cpu) {
+    uint16_t address = (cpu.H << 8) | cpu.L;  
+    uint8_t value = cpu.readMemory(address);                     
+    uint8_t result = value + 1;    
+    cpu.writeMemory(address, result);       
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag((value & 0x0F) + 1 > 0x0F);
+    cpu.PC++;                          
+    cpu.updateCycles(12);               
 }
+void DEC_HL_mem(CPU& cpu) {
+    uint16_t address = (cpu.H << 8) | cpu.L;  
+    uint8_t value = cpu.readMemory(address);   
+    uint8_t result = value - 1;         
+    cpu.writeMemory(address, result);   
+
+    cpu.setZeroFlag(result==0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((value & 0x0F) == 0); 
+    cpu.PC++;  
+    cpu.updateCycles(12);    
+}   
+
+
+
 void LD_HL_n8(CPU& cpu) {
-    uint8_t value = cpu.readMemory(cpu.PC + 1);  // Read immediate 8-bit value
-    cpu.H = (value >> 4) & 0xF0;                  // Set high nibble of H
-    cpu.L = value & 0x0F;                         // Set low nibble of L
-    cpu.PC += 2;  // Move program counter to the next instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
+    uint8_t value = cpu.readMemory(cpu.PC + 1);  
+    cpu.writeMemory((cpu.H << 8) | cpu.L, value);               
+    cpu.PC += 2;  
+    cpu.updateCycles(8);  
 }
 
 void SCF(CPU& cpu) {
-    cpu.F |= 0x10;  // Set the Carry flag (C)
-    cpu.F &= ~0x20; // Clear the Half Carry flag (H)
-    cpu.F &= ~0x40; // Clear the Negative flag (N)
-    cpu.PC++;       // Move program counter to the next instruction
-    cpu.updateCycles(4);  // 4 cycles for this instruction
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false); 
+    cpu.setCarryFlag(true);   
+    cpu.PC++;     
+    cpu.updateCycles(4);  
 }
 
 void JR_C_e8(CPU& cpu) {
-    if (cpu.F & 0x10) {  // Check if Carry flag (C) is set
-        int8_t offset = cpu.readMemory(cpu.PC + 1);  // Get the signed 8-bit offset
-        cpu.PC += offset;  // Jump to the new address
-        cpu.updateCycles(12);  // 12 cycles for this instruction
+    if (cpu.F & 0x10) { 
+        int8_t offset = cpu.readMemory(cpu.PC + 1); 
+        cpu.PC += offset;  
+        cpu.updateCycles(12);  
     } else {
-        cpu.PC += 2;  // Skip the offset if Carry flag is not set
-        cpu.updateCycles(8);  // 8 cycles for this instruction
+        cpu.PC += 2;  
+        cpu.updateCycles(8);  
     }
 }
+
 void ADD_HL_SP(CPU& cpu) {
-    uint16_t hl = (cpu.H << 8) | cpu.L;  // Get HL as a 16-bit value
-    uint16_t result = hl + cpu.SP;       // Add SP to HL
-
-    // Set the carry and half-carry flags
+    uint16_t hl = (cpu.H << 8) | cpu.L;  
+    uint16_t result = hl + cpu.SP;       
     if ((hl & 0x0FFF) + (cpu.SP & 0x0FFF) > 0x0FFF) {
-        cpu.F |= 0x20;  // Set Half Carry flag
+        cpu.F |= 0x20;  
     } else {
-        cpu.F &= ~0x20;  // Clear Half Carry flag
+        cpu.F &= ~0x20; 
     }
-
     if (result > 0xFFFF) {
-        cpu.F |= 0x10;  // Set Carry flag
+        cpu.F |= 0x10;  
     } else {
-        cpu.F &= ~0x10;  // Clear Carry flag
+        cpu.F &= ~0x10;  
     }
-
-    // Store the result in HL
     cpu.H = (result >> 8) & 0xFF;
     cpu.L = result & 0xFF;
-
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
+    cpu.PC++;  
+    cpu.updateCycles(8);  
 }
 
 void LD_A_HL_minus(CPU& cpu) {
-    uint16_t address = (cpu.H << 8) | cpu.L;  // Get the address from HL
-    cpu.A = cpu.readMemory(address);           // Load memory value at address into A
-    cpu.L--;                                  // Decrement L
-    if (cpu.L == 0xFF) cpu.H--;                // Handle overflow from L to H
-    cpu.PC++;                                  // Move program counter to the next instruction
-    cpu.updateCycles(8);                       // 8 cycles for this instruction
+    uint16_t address = (cpu.H << 8) | cpu.L; 
+    cpu.A = cpu.readMemory(address);        
+    cpu.L--;                               
+    if (cpu.L == 0xFF) cpu.H--;               
+    cpu.PC++;                               
+    cpu.updateCycles(8);                     
 }
 
 void DEC_SP(CPU& cpu) {
-    cpu.SP--;  // Decrement SP
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
+    cpu.SP--; 
+    cpu.PC++;  
+    cpu.updateCycles(8);  
 }
 
 void INC_A(CPU& cpu) {
-    cpu.A++;  // Increment the A register
-    cpu.F &= ~0x80;  // Clear the Zero flag (Z)
-    if (cpu.A == 0) {
-        cpu.F |= 0x80;  // Set Zero flag (Z) if A is zero
-    }
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(4);  // 4 cycles for this instruction
+    cpu.increment8(cpu.A);
+    cpu.PC++;  
+    cpu.updateCycles(4);  
 }
 
 void DEC_A(CPU& cpu) {
-    cpu.A--;  // Decrement the A register
-    cpu.F |= 0x40;  // Set the Negative flag (N)
-    if (cpu.A == 0) {
-        cpu.F |= 0x80;  // Set Zero flag (Z) if A is zero
-    }
-    cpu.PC++;  // Move program counter to the next instruction
-    cpu.updateCycles(4);  // 4 cycles for this instruction
+    cpu.increment8(cpu.A);
+    cpu.PC++;  
+    cpu.updateCycles(4);  
 }
 
+
 void LD_A_n8(CPU& cpu) {
-    cpu.A = cpu.readMemory(cpu.PC + 1);  // Load immediate 8-bit value into A
-    cpu.PC += 2;  // Move program counter to the next instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
+    cpu.A = cpu.readMemory(cpu.PC + 1);
+    cpu.PC += 2;  
+    cpu.updateCycles(8);  
 }
 
 void CCF(CPU& cpu) {
@@ -659,8 +564,6 @@ void CCF(CPU& cpu) {
     cpu.PC++;       // Move program counter to the next instruction
     cpu.updateCycles(4);  // 4 cycles for this instruction
 }
-
-
 
 void LD_B_B(CPU& cpu) {
     cpu.B = cpu.B;  // No change, just copy B to B
@@ -1062,10 +965,9 @@ void LD_A_A(CPU& cpu) {
 
 void ADD_A_B(CPU& cpu) {
     uint16_t result = cpu.A + cpu.B;
-    cpu.Z = (result & 0xFF) == 0;  // Zero flag
-    cpu.N = 0;  // Subtraction flag is reset (ADD)
-    cpu.H = ((cpu.A & 0xF) + (cpu.B & 0xF)) > 0xF;  // Half-carry flag
-    cpu.C = result > 0xFF;  // Carry flag
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) + 1 > 0x0F);
     cpu.A = result & 0xFF;  // Store the lower byte of the result in A
     cpu.PC++;
     cpu.updateCycles(4);  // 4 cycles for register-to-register addition
@@ -1073,10 +975,10 @@ void ADD_A_B(CPU& cpu) {
 
 void ADD_A_C(CPU& cpu) {
     uint16_t result = cpu.A + cpu.C;
-    cpu.Z = (result & 0xFF) == 0;
-    cpu.N = 0;
-    cpu.H = ((cpu.A & 0xF) + (cpu.C & 0xF)) > 0xF;
-    cpu.C = result > 0xFF;
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.C & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
     cpu.A = result & 0xFF;
     cpu.PC++;
     cpu.updateCycles(4);
@@ -1084,10 +986,10 @@ void ADD_A_C(CPU& cpu) {
 
 void ADD_A_D(CPU& cpu) {
     uint16_t result = cpu.A + cpu.D;
-    cpu.Z = (result & 0xFF) == 0;
-    cpu.N = 0;
-    cpu.H = ((cpu.A & 0xF) + (cpu.D & 0xF)) > 0xF;
-    cpu.C = result > 0xFF;
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.D & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
     cpu.A = result & 0xFF;
     cpu.PC++;
     cpu.updateCycles(4);
@@ -1095,10 +997,10 @@ void ADD_A_D(CPU& cpu) {
 
 void ADD_A_E(CPU& cpu) {
     uint16_t result = cpu.A + cpu.E;
-    cpu.Z = (result & 0xFF) == 0;
-    cpu.N = 0;
-    cpu.H = ((cpu.A & 0xF) + (cpu.E & 0xF)) > 0xF;
-    cpu.C = result > 0xFF;
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.E & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
     cpu.A = result & 0xFF;
     cpu.PC++;
     cpu.updateCycles(4);
@@ -1106,10 +1008,10 @@ void ADD_A_E(CPU& cpu) {
 
 void ADD_A_H(CPU& cpu) {
     uint16_t result = cpu.A + cpu.H;
-    cpu.Z = (result & 0xFF) == 0;
-    cpu.N = 0;
-    cpu.H = ((cpu.A & 0xF) + (cpu.H & 0xF)) > 0xF;
-    cpu.C = result > 0xFF;
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.H & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
     cpu.A = result & 0xFF;
     cpu.PC++;
     cpu.updateCycles(4);
@@ -1117,22 +1019,22 @@ void ADD_A_H(CPU& cpu) {
 
 void ADD_A_L(CPU& cpu) {
     uint16_t result = cpu.A + cpu.L;
-    cpu.Z = (result & 0xFF) == 0;
-    cpu.N = 0;
-    cpu.H = ((cpu.A & 0xF) + (cpu.L & 0xF)) > 0xF;
-    cpu.C = result > 0xFF;
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.L & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
     cpu.A = result & 0xFF;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 
 void ADD_A_HL(CPU& cpu) {
-    uint16_t hl = (cpu.H << 8) | cpu.L;
-    uint16_t result = cpu.A + cpu.readMemory(hl);
-    cpu.Z = (result & 0xFF) == 0;
-    cpu.N = 0;
-    cpu.H = ((cpu.A & 0xF) + (cpu.readMemory(hl) & 0xF)) > 0xF;
-    cpu.C = result > 0xFF;
+    uint8_t valueFromHL = cpu.readMemory(cpu.HL);
+    uint16_t result = cpu.A + valueFromHL + (cpu.getCarryFlag() ? 1 : 0); 
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (valueFromHL & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
     cpu.A = result & 0xFF;
     cpu.PC++;
     cpu.updateCycles(8);  // Memory access takes 8 cycles
@@ -1140,14 +1042,103 @@ void ADD_A_HL(CPU& cpu) {
 
 void ADD_A_A(CPU& cpu) {
     uint16_t result = cpu.A + cpu.A;
-    cpu.Z = (result & 0xFF) == 0;
-    cpu.N = 0;
-    cpu.H = ((cpu.A & 0xF) + (cpu.A & 0xF)) > 0xF;
-    cpu.C = result > 0xFF;
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.A & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
     cpu.A = result & 0xFF;
     cpu.PC++;
     cpu.updateCycles(4);
 }
+
+void ADC_A_B(CPU& cpu) {
+    uint16_t result = cpu.A + cpu.B + (cpu.getCarryFlag() ? 1 : 0);
+   
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.B & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
+    cpu.A = result & 0xFF;
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void ADC_A_C(CPU& cpu) {
+    uint16_t result = cpu.A + cpu.C + (cpu.getCarryFlag() ? 1 : 0);
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.C & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
+    cpu.A = result & 0xFF;
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void ADC_A_D(CPU& cpu) {
+    uint16_t result = cpu.A + cpu.D + (cpu.getCarryFlag() ? 1 : 0);
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.D & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
+    cpu.A = result & 0xFF;
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void ADC_A_E(CPU& cpu) {
+    uint16_t result = cpu.A + cpu.E + (cpu.getCarryFlag() ? 1 : 0);
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.E & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
+    cpu.A = result & 0xFF;
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void ADC_A_H(CPU& cpu) {
+    uint16_t result = cpu.A + cpu.H+ (cpu.getCarryFlag() ? 1 : 0);
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.H & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
+    cpu.A = result & 0xFF;
+    cpu.PC++;
+    cpu.updateCycles(4);
+    
+}
+
+
+void ADC_A_L(CPU& cpu) {
+    uint16_t result = cpu.A + cpu.L+ (cpu.getCarryFlag() ? 1 : 0);
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.L & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
+    cpu.A = result & 0xFF;
+    cpu.PC++;
+    cpu.updateCycles(4);
+    
+}
+void ADC_A_HL(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.HL); 
+    uint16_t result = cpu.A + value + (cpu.getCarryFlag() ? 1 : 0); 
+    cpu.A = result & 0xFF; 
+    cpu.setZeroFlag((result & 0xFF) == 0); 
+    cpu.setSubtractFlag(false);  
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (value & 0x0F) + (cpu.getCarryFlag() ? 1 : 0)) > 0x0F);  
+    cpu.setCarryFlag(result > 0xFF);  
+    cpu.PC++; 
+    cpu.updateCycles(4); 
+}
+void ADC_A_A(CPU& cpu) {
+    uint16_t result = cpu.A + cpu.A+ (cpu.getCarryFlag() ? 1 : 0);
+    cpu.setZeroFlag((result & 0xFF) == 0);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (cpu.A & 0x0F)) > 0x0F); 
+    cpu.setCarryFlag(result > 0xFF); 
+    cpu.A = result & 0xFF;
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
 
 void RST_38(CPU& cpu) {
     cpu.pushToStack(cpu.PC);
