@@ -329,21 +329,7 @@ void CPU::executeNextInstruction() {
     executeOpcode(opcode);  // Execute the opcode
     updateCycles(4);  // Update the cycle count (adjust the cycle count as needed based on the opcode)
 }
-uint8_t CPU::readMemory(uint16_t addr) {
-    return memory.read(addr);
-}
 
-void CPU::writeMemory(uint16_t addr, uint8_t value) {
-    memory.write(addr, value);
-}
-
-uint16_t CPU::read16(uint16_t addr) {
-    return memory.read(addr) | (memory.read(addr + 1) << 8);
-}
-void CPU::write16(uint16_t addr, uint16_t value) {
-    memory.write(addr, value & 0xFF);
-    memory.write(addr + 1, (value >> 8) & 0xFF);
-}
 
 void CPU::updateCycles(uint32_t cycles) {
     cycleCount += cycles;
@@ -360,29 +346,6 @@ void CPU::disableInterrupts() {
     std::cout << "[DEBUG] Interrupts Disabled" << std::endl;
 }
 
-void CPU::pushToStack(uint16_t value) {
-    if (SP < 0xFF80) {
-        std::cerr << "Stack underflow! SP: 0x" << std::hex << SP << std::endl;
-        exit(1);
-    }
-    SP -= 2;
-    write16(SP, value);
-}
-
-uint16_t CPU::popFromStack() {
-    if (SP >= 0xFFFF) {
-        std::cerr << "Stack overflow! SP: 0x" << std::hex << SP << std::endl;
-        exit(1);
-    }
-
-    uint16_t value = read16(SP);
-    SP += 2;
-
-    std::cout << "[DEBUG] Popped 0x" << std::hex << value 
-              << " from SP: 0x" << SP << std::endl;
-
-    return value;
-}
 
 
 void CPU::updateAF() { AF = (A << 8) | F; }
@@ -478,7 +441,23 @@ uint16_t CPU::pop16() {
 
 // PUSH16: Pushes a 16-bit value onto the stack.
 void CPU::push16(uint16_t value) {
-    writeMemory(SP - 1, value & 0xFF);
-    writeMemory(SP - 2, (value >> 8) & 0xFF);
-    SP -= 2;  // Stack pointer decreases by 2 (16-bit value)
+    writeMemory(SP - 1, value >> 8);
+    writeMemory(SP - 2, value & 0xFF);
+    SP -= 2; 
+     // Stack pointer decreases by 2 (16-bit value)
+}
+uint8_t CPU::readMemory(uint16_t addr) {
+    return memory.read(addr);
+}
+
+void CPU::writeMemory(uint16_t addr, uint8_t value) {
+    memory.write(addr, value);
+}
+
+uint16_t CPU::read16(uint16_t addr) {
+    return memory.read(addr) | (memory.read(addr + 1) << 8);
+}
+void CPU::write16(uint16_t addr, uint16_t value) {
+    memory.write(addr, value & 0xFF);
+    memory.write(addr + 1, (value >> 8) & 0xFF);
 }

@@ -34,9 +34,6 @@ public:
     uint16_t read16(uint16_t addr);
     void write16(uint16_t addr, uint16_t value);
 
-    void pushToStack(uint16_t value);
-    uint16_t popFromStack();
-
     void updateCycles(uint32_t cycles);
 
     bool getZeroFlag();
