@@ -39,9 +39,9 @@ public:
 
     void updateCycles(uint32_t cycles);
 
-    bool getZeroFlag(bool value);
-    bool getSubtractFlag(bool value);
-    bool getHalfCarryFlag(bool value);
+    bool getZeroFlag();
+    bool getSubtractFlag();
+    bool getHalfCarryFlag();
     bool getCarryFlag();
 
     void updateAF();  // Update AF based on A and F
@@ -67,7 +67,8 @@ public:
     void setCarryFlag(bool value);
 
 
-
+    uint16_t pop16();
+    void push16(uint16_t value);
     //arithmetic
     void increment8(uint8_t& reg);
     void increment16(uint16_t& reg, uint8_t& high, uint8_t& low);

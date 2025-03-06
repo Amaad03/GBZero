@@ -1140,92 +1140,878 @@ void ADC_A_A(CPU& cpu) {
 }
 
 
-void RST_38(CPU& cpu) {
-    cpu.pushToStack(cpu.PC);
-    cpu.PC = 0x0038;
-    cpu.updateCycles(16);
+void SUB_A_B(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.B;
+    cpu.A = result & 0xFF;  // Update A
+    cpu.setZeroFlag(cpu.A == 0);  // Zero flag if A becomes 0
+    cpu.setSubtractFlag(true);  // Subtraction occurred
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.B & 0x0F));  // Half-carry flag
+    cpu.setCarryFlag(result > 0xFF);  // Carry flag is set if result overflows
+    cpu.PC++;
+    cpu.updateCycles(4);  // 4 cycles for this operation
+}
+
+void SUB_A_C(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.C;
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.C & 0x0F));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void SUB_A_D(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.D;
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.D & 0x0F));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void SUB_A_E(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.E;
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.E & 0x0F));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void SUB_A_H(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.H;
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.H & 0x0F));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void SUB_A_L(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.L;
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.L & 0x0F));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void SUB_A_memHL(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.HL);
+    uint16_t result = cpu.A - value;
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (value & 0x0F));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(8);  // Memory access takes 8 cycles
+}
+
+void SUB_A_A(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.A;
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.A & 0x0F));  // This will always be true
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+
+void SBC_A_B(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.B - (cpu.getCarryFlag() ? 1 : 0);
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.B & 0x0F) + (cpu.getCarryFlag() ? 1 : 0));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void SBC_A_C(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.C - (cpu.getCarryFlag() ? 1 : 0);
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.C & 0x0F) + (cpu.getCarryFlag() ? 1 : 0));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void SBC_A_D(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.D - (cpu.getCarryFlag() ? 1 : 0);
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.D & 0x0F) + (cpu.getCarryFlag() ? 1 : 0));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void SBC_A_E(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.E - (cpu.getCarryFlag() ? 1 : 0);
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.E & 0x0F) + (cpu.getCarryFlag() ? 1 : 0));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void SBC_A_H(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.H - (cpu.getCarryFlag() ? 1 : 0);
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.H & 0x0F) + (cpu.getCarryFlag() ? 1 : 0));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void SBC_A_L(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.L - (cpu.getCarryFlag() ? 1 : 0);
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.L & 0x0F) + (cpu.getCarryFlag() ? 1 : 0));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void SBC_A_memHL(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.HL);
+    uint16_t result = cpu.A - value - (cpu.getCarryFlag() ? 1 : 0);
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (value & 0x0F) + (cpu.getCarryFlag() ? 1 : 0));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(8);  // Memory access takes 8 cycles
+}
+
+void SBC_A_A(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.A - (cpu.getCarryFlag() ? 1 : 0);
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) > (cpu.A & 0x0F) + (cpu.getCarryFlag() ? 1 : 0));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void AND_A_B(CPU& cpu) {
+    cpu.A &= cpu.B;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(true);    
+    cpu.setCarryFlag(false);  
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+
+void AND_A_C(CPU& cpu) {
+    cpu.A &= cpu.C;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(true);    
+    cpu.setCarryFlag(false);  
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+
+void AND_A_D(CPU& cpu) {
+    cpu.A &= cpu.D;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(true);    
+    cpu.setCarryFlag(false);  
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+
+
+void AND_A_E(CPU& cpu) {
+    cpu.A &= cpu.E;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(true);    
+    cpu.setCarryFlag(false);  
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void AND_A_H(CPU& cpu) {
+    cpu.A &= cpu.H;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(true);    
+    cpu.setCarryFlag(false);  
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+
+void AND_A_L(CPU& cpu) {
+    cpu.A &= cpu.L;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(true);    
+    cpu.setCarryFlag(false);  
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void AND_A_memHL(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.HL);
+    cpu.A &= value;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(true);
+    cpu.setCarryFlag(false);
+    cpu.PC++;
+    cpu.updateCycles(8);
+}
+void AND_A_A(CPU& cpu) {
+    cpu.A &= cpu.A;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(true);    
+    cpu.setCarryFlag(false);  
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void XOR_A_B(CPU& cpu) {
+    cpu.A ^=cpu.B;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);    
+    cpu.setCarryFlag(false);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void XOR_A_C(CPU& cpu) {
+    cpu.A ^=cpu.C;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);    
+    cpu.setCarryFlag(false);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void XOR_A_D(CPU& cpu) {
+    cpu.A ^=cpu.D;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);    
+    cpu.setCarryFlag(false);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void XOR_A_E(CPU& cpu) {
+    cpu.A ^=cpu.E;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);    
+    cpu.setCarryFlag(false);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void XOR_A_H(CPU& cpu) {
+    cpu.A ^=cpu.H;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);    
+    cpu.setCarryFlag(false);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void XOR_A_L(CPU& cpu) {
+    cpu.A ^=cpu.L;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);    
+    cpu.setCarryFlag(false);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void XOR_A_memHL(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.HL);
+    cpu.A ^= value;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);    
+    cpu.setCarryFlag(false);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void XOR_A_A(CPU& cpu) {
+    cpu.A ^=cpu.A;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);    
+    cpu.setCarryFlag(false);
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void OR_A_B(CPU& cpu) {
+    cpu.A |= cpu.B;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(false);
+}
+void OR_A_C(CPU& cpu) {
+    cpu.A |= cpu.C;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(false);
+}
+void OR_A_D(CPU& cpu) {
+    cpu.A |= cpu.D;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(false);
+}
+void OR_A_E(CPU& cpu) {
+    cpu.A |= cpu.E;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(false);
+}
+
+
+void OR_A_H(CPU& cpu) {
+    cpu.A |= cpu.H;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(false);
+}
+void OR_A_L(CPU& cpu) {
+    cpu.A |= cpu.L;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(false);
+}
+void OR_A_memHL(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.HL);
+    cpu.A |= value;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(false);
+}
+
+void OR_A_A(CPU& cpu) {
+    cpu.A |= cpu.A;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(false);
+}
+
+void CP_A_B(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.B;
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (cpu.B & 0x0F));
+    cpu.setCarryFlag(cpu.A < cpu.B);
+}
+
+void CP_A_C(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.C;
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (cpu.C & 0x0F));
+    cpu.setCarryFlag(cpu.A < cpu.C);
+}
+
+void CP_A_D(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.D;
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (cpu.D & 0x0F));
+    cpu.setCarryFlag(cpu.A < cpu.D);
+}
+
+void CP_A_E(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.E;
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (cpu.E & 0x0F));
+    cpu.setCarryFlag(cpu.A < cpu.E);
+}
+
+void CP_A_H(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.H;
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (cpu.L & 0x0F));
+    cpu.setCarryFlag(cpu.A < cpu.L);
+}
+
+void CP_A_L(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.L;
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (cpu.L & 0x0F));
+    cpu.setCarryFlag(cpu.A < cpu.L);
+}
+
+void CP_A_memHL(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.HL);
+    uint16_t result = cpu.A - value;
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (value & 0x0F));
+    cpu.setCarryFlag(cpu.A < value);
+}
+
+void CP_A_A(CPU& cpu) {
+    uint16_t result = cpu.A - cpu.A;
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(false);
+}
+void RET_NZ(CPU& cpu) {
+    if (!cpu.getZeroFlag()) {
+        cpu.PC = cpu.pop16();  // Call POP16 without cpu as argument
+    } else {
+        cpu.PC++;
+    }
+    cpu.updateCycles(20);  // 8 cycles if taken, 12 cycles otherwise
+}
+void POP_BC(CPU& cpu) {
+    cpu.BC = cpu.pop16();
+    cpu.updateCycles(12);
+}
+
+void JP_NZ_a16(CPU& cpu) {
+    if (!cpu.getZeroFlag()) {
+        cpu.PC = cpu.read16(cpu.PC + 1);
+        cpu.updateCycles(16);  // or 12 cycles if not taken
+    } else {
+        cpu.PC += 3;
+        cpu.updateCycles(12);
+    }
 }
 
 void JP_a16(CPU& cpu) {
-    uint16_t addr = cpu.read16(cpu.PC +1 );
-    std::cout << "JP to address: 0x" << std::hex << addr << std::endl;
-
-    cpu.PC = addr;
-
+    cpu.PC = cpu.read16(cpu.PC + 1);
     cpu.updateCycles(16);
+}
+void CALL_NZ_a16(CPU& cpu) {
+    if (!cpu.getZeroFlag()) {
+        cpu.push16(cpu.PC + 3);  // Push PC + 3 onto the stack
+        cpu.PC = cpu.read16(cpu.PC + 1);  // Set PC to the address at PC+1 (next instruction)
+        cpu.updateCycles(24);  // 24 cycles for CALL instruction
+    } else {
+        cpu.PC += 3;  // Skip the instruction (3 bytes)
+        cpu.updateCycles(12);  // 12 cycles for the non-taken branch
+    }
+}
+
+void PUSH_BC(CPU& cpu) {
+    cpu.push16(cpu.PC);
+    cpu.updateCycles(16);
+}
+void ADD_A_n8(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.PC + 1);
+    uint16_t result = cpu.A + value;
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (value & 0x0F)) > 0x0F);
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+void RST_00(CPU& cpu) {
+    cpu.push16(cpu.PC);
+    cpu.PC = 0x00;
+    cpu.updateCycles(16);
+}
+void RET_Z(CPU& cpu) {
+    if (cpu.getZeroFlag()) {
+        cpu.PC = cpu.pop16();
+    } else {
+        cpu.PC++;
+    }
+    cpu.updateCycles(20);  // or 8 cycles if taken
+}
+void RET(CPU& cpu) {
+    cpu.PC = cpu.pop16();
+    cpu.updateCycles(16);
+}
+
+void JP_Z_a16(CPU& cpu) {
+    if (cpu.getZeroFlag()) {
+        cpu.PC = cpu.read16(cpu.PC + 1);
+        cpu.updateCycles(16);
+    } else {
+        cpu.PC += 3;
+        cpu.updateCycles(12);
+    }
+}
+
+void PREFIX(CPU& cpu) {
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+void CALL_Z_a16(CPU& cpu) {
+    if (cpu.getZeroFlag()) {
+        cpu.push16(cpu.PC + 3);
+        cpu.PC = cpu.read16(cpu.PC + 1);
+        cpu.updateCycles(24);
+    } else {
+        cpu.PC += 3;
+        cpu.updateCycles(12);
+    }
+}
+void CALL_a16(CPU& cpu) {
+    cpu.push16(cpu.PC + 3);
+    cpu.PC = cpu.read16(cpu.PC + 1);
+    cpu.updateCycles(24);
+}
+void ADC_A_n8(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.PC + 1);
+    uint16_t result = cpu.A + value + (cpu.getCarryFlag() ? 1 : 0);
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (value & 0x0F) + (cpu.getCarryFlag() ? 1 : 0)) > 0x0F);
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
 
 
+void RST_08(CPU& cpu) {
+    cpu.push16(cpu.PC);
+    cpu.PC = 0x08;
+    cpu.updateCycles(16);
+}
+
+
+void RET_NC(CPU& cpu) {
+    if (!cpu.getCarryFlag()) {
+        cpu.PC = cpu.pop16();
+    } else {
+        cpu.PC++;
+    }
+    cpu.updateCycles(20);  // or 8 cycles if taken
+}
+
+void POP_DE(CPU& cpu) {
+    cpu.DE = cpu.pop16();
+    cpu.updateCycles(12);
+}
+
+void JP_NC_a16(CPU& cpu) {
+    if (!cpu.getCarryFlag()) {
+        cpu.PC = cpu.read16(cpu.PC + 1);
+        cpu.updateCycles(16);
+    } else {
+        cpu.PC += 3;
+        cpu.updateCycles(12);
+    }
+}
+
+void CALL_NC_a16(CPU& cpu) {
+    if (!cpu.getCarryFlag()) {
+        cpu.push16(cpu.PC + 3);
+        cpu.PC = cpu.read16(cpu.PC + 1);
+        cpu.updateCycles(24);
+    } else {
+        cpu.PC += 3;
+        cpu.updateCycles(12);
+    }
+}
+
+void PUSH_DE(CPU& cpu) {
+    cpu.push16(cpu.DE);
+    cpu.updateCycles(16);
+}
+
+void SUB_A_n8(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.PC + 1);
+    uint16_t result = cpu.A - value;
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (value & 0x0F));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void RST_10(CPU& cpu) {
+    cpu.push16(cpu.PC);
+    cpu.PC = 0x10;
+    cpu.updateCycles(16);
+}
+
+void RET_C(CPU& cpu) {
+    if (cpu.getCarryFlag()) {
+        cpu.PC = cpu.pop16();
+    } else {
+        cpu.PC++;
+    }
+    cpu.updateCycles(20);  // or 8 cycles if taken
+}
+
+void RETI(CPU& cpu) {
+    cpu.PC = cpu.pop16();
+    cpu.updateCycles(16);
+}
+
+void JP_C_a16(CPU& cpu) {
+    if (cpu.getCarryFlag()) {
+        cpu.PC = cpu.read16(cpu.PC + 1);
+        cpu.updateCycles(16);
+    } else {
+        cpu.PC += 3;
+        cpu.updateCycles(12);
+    }
+}
+
+void CALL_C_a16(CPU& cpu) {
+    if (cpu.getCarryFlag()) {
+        cpu.push16(cpu.PC + 3);
+        cpu.PC = cpu.read16(cpu.PC + 1);
+        cpu.updateCycles(24);
+    } else {
+        cpu.PC += 3;
+        cpu.updateCycles(12);
+    }
+}
+
+void SBC_A_n8(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.PC + 1);
+    uint16_t result = cpu.A - value - (cpu.getCarryFlag() ? 0 : 1);
+    cpu.A = result & 0xFF;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (value & 0x0F) + (cpu.getCarryFlag() ? 0 : 1));
+    cpu.setCarryFlag(result > 0xFF);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void RST_18(CPU& cpu) {
+    cpu.push16(cpu.PC);
+    cpu.PC = 0x18;
+    cpu.updateCycles(16);
+}
+void LDH_a8_A(CPU& cpu) {
+    uint8_t addr = cpu.readMemory(cpu.PC + 1);
+    cpu.writeMemory(0xFF00 + addr, cpu.A);  // Write A to the address [0xFF00 + addr]
+    cpu.PC += 2;
+    cpu.updateCycles(12);
 }
 
 void POP_HL(CPU& cpu) {
-    uint16_t value = cpu.popFromStack();  // Use the new popFromStack function
-    cpu.H = (value >> 8) & 0xFF;         // High byte
-    cpu.L = value & 0xFF;                // Low byte
-    cpu.PC += 1;                         // Increment program counter
-    std::cout << "[DEBUG] POP_HL executed. HL: 0x" << std::hex << value << std::endl;
+    cpu.HL = cpu.pop16();
+    cpu.updateCycles(12);
+}
+
+void LDH_C_A(CPU& cpu) {
+    cpu.writeMemory(0xFF00 + cpu.C, cpu.A);  // Write A to the address [0xFF00 + C]
+    cpu.PC++;
+    cpu.updateCycles(8);
+}
+
+void PUSH_HL(CPU& cpu) {
+    cpu.push16(cpu.HL);
+    cpu.updateCycles(16);
+}
+
+void AND_A_n8(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.PC + 1);
+    cpu.A &= value;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(true);  // AND always produces half carry
+    cpu.setCarryFlag(false);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void RST_20(CPU& cpu) {
+    cpu.push16(cpu.PC);
+    cpu.PC = 0x20;
+    cpu.updateCycles(16);
+}
+
+void ADD_SP_e8(CPU& cpu) {
+    int8_t offset = cpu.readMemory(cpu.PC + 1);
+    uint16_t result = cpu.SP + offset;
+    cpu.SP = result;
+    cpu.setZeroFlag(false);  // ADD SP doesn't affect the Zero flag
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(((cpu.SP & 0xF) + (offset & 0xF)) > 0xF);
+    cpu.setCarryFlag((cpu.SP & 0xFF00) != (result & 0xFF00));  // Detect if there was a carry into the next byte
+    cpu.PC += 2;
+    cpu.updateCycles(16);
+}
+
+void JP_HL(CPU& cpu) {
+    cpu.PC = cpu.HL;
+    cpu.updateCycles(4);
+}
+
+void LD_a16_A(CPU& cpu) {
+    uint16_t addr = cpu.read16(cpu.PC + 1);
+    cpu.writeMemory(addr, cpu.A);
+    cpu.PC += 3;
+    cpu.updateCycles(16);
+}
+
+void XOR_A_n8(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.PC + 1);
+    cpu.A ^= value;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(false);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void RST_28(CPU& cpu) {
+    cpu.push16(cpu.PC);
+    cpu.PC = 0x28;
+    cpu.updateCycles(16);
+}
+
+void LDH_A_a8(CPU& cpu) {
+    uint8_t addr = cpu.readMemory(cpu.PC + 1);
+    cpu.A = cpu.readMemory(0xFF00 + addr);  // Load the value from [0xFF00 + addr] into A
+    cpu.PC += 2;
     cpu.updateCycles(12);
 }
 
 void POP_AF(CPU& cpu) {
-
-    uint16_t value = cpu.popFromStack();
-    cpu.A = (value >> 8) & 0xFF;
-    cpu.F = value & 0xF0;
-
-    cpu.PC++;
-    std::cout << "[DEBUG] POP_AF executed. AF: 0x" << std::hex << (uint16_t(cpu.A) << 8 | cpu.F) << std::endl;
+    cpu.AF = cpu.pop16();
     cpu.updateCycles(12);
 }
 
-
-void RETI(CPU& cpu) {
-    std::cout << "[DEBUG] Stack before RETI: SP: 0x" << std::hex << cpu.SP << std::endl;
-    
-    uint16_t returnAddr = cpu.popFromStack();
-    cpu.PC = returnAddr;
-
-    cpu.enableInterrupts();  // Enable interrupts
-
-    std::cout << "[DEBUG] RETI executed. Returning to: 0x" << std::hex << cpu.PC << std::endl;
-
-    cpu.updateCycles(16);  // Correct cycle count for RETI
+void LDH_A_C(CPU& cpu) {
+    cpu.A = cpu.readMemory(0xFF00 + cpu.C);  // Load the value from [0xFF00 + C] into A
+    cpu.PC++;
+    cpu.updateCycles(8);
 }
 
+void DI(CPU& cpu) {
+    cpu.interruptsEnabled = false;  // Disable interrupts
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
 
-void ADC_A_n8(CPU& cpu) {
-    uint8_t n8 = cpu.readMemory(cpu.PC + 1); // Read the immediate 8-bit value
-    uint16_t result = cpu.A + n8 + (cpu.F & 0x10 ? 1 : 0); // Add A + n8 + carry
+void PUSH_AF(CPU& cpu) {
+    cpu.push16(cpu.AF);
+    cpu.updateCycles(16);
+}
 
-    // Check for Zero flag
-    if (result == 0) {
-        cpu.F |= 0x80;  // Set Z flag (bit 7)
-    } else {
-        cpu.F &= ~0x80; // Clear Z flag
-    }
-
-    // Check for Half Carry (carry from bit 3)
-    if ((cpu.A & 0xF) + (n8 & 0xF) + (cpu.F & 0x10 ? 1 : 0) > 0xF) {
-        cpu.F |= 0x20;  // Set H flag (bit 5)
-    } else {
-        cpu.F &= ~0x20; // Clear H flag
-    }
-
-    // Check for Carry (carry from bit 7)
-    if (result > 0xFF) {
-        cpu.F |= 0x10;  // Set C flag (bit 4)
-    } else {
-        cpu.F &= ~0x10; // Clear C flag
-    }
-
-    // Store the result in A (only the lower 8 bits)
-    cpu.A = static_cast<uint8_t>(result);
-
-    // Update the Program Counter
+void OR_A_n8(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.PC + 1);
+    cpu.A |= value;
+    cpu.setZeroFlag(cpu.A == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(false);
     cpu.PC += 2;
-
-    // Update cycles
-    cpu.updateCycles(8);  // ADC A, n8 takes 8 cycles
+    cpu.updateCycles(8);
 }
+
+void RST_30(CPU& cpu) {
+    cpu.push16(cpu.PC);
+    cpu.PC = 0x30;
+    cpu.updateCycles(16);
+}
+
+void LD_HL_SP_e8(CPU& cpu) {
+    int8_t offset = cpu.readMemory(cpu.PC + 1);
+    uint16_t result = cpu.SP + offset;
+    cpu.HL = result;
+    cpu.setZeroFlag(false);  // LD HL, SP + e8 doesn't affect Zero flag
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(((cpu.SP & 0xF) + (offset & 0xF)) > 0xF);
+    cpu.setCarryFlag((cpu.SP & 0xFF00) != (result & 0xFF00));  // Carry check
+    cpu.PC += 2;
+    cpu.updateCycles(12);
+}
+
+void LD_SP_HL(CPU& cpu) {
+    cpu.SP = cpu.HL;
+    cpu.PC++;
+    cpu.updateCycles(8);
+}
+
+void LD_A_a16(CPU& cpu) {
+    uint16_t addr = cpu.read16(cpu.PC + 1);
+    cpu.A = cpu.readMemory(addr);
+    cpu.PC += 3;
+    cpu.updateCycles(16);
+}
+
+void EI(CPU& cpu) {
+    cpu.interruptsEnabled = true;  // Enable interrupts
+    cpu.PC++;
+    cpu.updateCycles(4);
+}
+
+void CP_A_n8(CPU& cpu) {
+    uint8_t value = cpu.readMemory(cpu.PC + 1);
+    cpu.setZeroFlag(cpu.A == value);  // Set Zero flag if A equals the immediate value
+    cpu.setSubtractFlag(true);  // Subtraction occurs in the comparison
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) - (value & 0x0F)) < 0);  // Check for half carry
+    cpu.setCarryFlag(cpu.A < value);  // Set Carry flag if there's a borrow
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+void RST_38(CPU& cpu) {
+    cpu.push16(cpu.PC);
+    cpu.PC = 0x38;
+    cpu.updateCycles(16);
+}
+
+
+
+
+
+
+
+
+
 
 
 

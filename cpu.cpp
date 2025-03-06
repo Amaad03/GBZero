@@ -34,9 +34,6 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x0F] = &RRCA;
     opcodeTable[0xC3] = &JP_a16;
     opcodeTable[0xD9] = &RETI;
-    opcodeTable[0xE1] = &POP_HL;
-    opcodeTable[0xF1] = &POP_AF;
-    opcodeTable[0xFF] = &RST_38;
     opcodeTable[0x10] = &STOP_n8; //0x10
     opcodeTable[0x11] = LD_DE_n16; //0x11
     opcodeTable[0x12] = LD_DE_A;//0x12
@@ -181,9 +178,125 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x8D] = ADC_A_L   ; 
     opcodeTable[0x8E] = ADC_A_HL  ; 
     opcodeTable[0x8F] = ADC_A_A   ;
+
+
+
+
+
+    //9x row
+    opcodeTable[0x90] = &SUB_A_B;
+    opcodeTable[0x91] = SUB_A_C;
+    opcodeTable[0x92] = SUB_A_D;
+    opcodeTable[0x93] =SUB_A_E;
+    opcodeTable[0x94] = SUB_A_H;
+    opcodeTable[0x95] = SUB_A_L;
+    opcodeTable[0x96] = SUB_A_memHL;
+    opcodeTable[0x97] = SUB_A_A;
+    opcodeTable[0x98] = SBC_A_B;
+    opcodeTable[0x99] = SBC_A_C;
+    opcodeTable[0x9A] =SBC_A_D;
+    opcodeTable[0x9B] =SBC_A_E;
+    opcodeTable[0x9C] = SBC_A_H;
+    opcodeTable[0x9D] = SBC_A_L;
+    opcodeTable[0x9E] = SBC_A_memHL;
+    opcodeTable[0x9F] =SBC_A_A;
+
+    //Ax row
+
+    opcodeTable[0xA0] = AND_A_B;
+    opcodeTable[0xA1] = AND_A_C;
+    opcodeTable[0xA2] = AND_A_D;
+    opcodeTable[0xA3] = AND_A_E;
+    opcodeTable[0xA4] = AND_A_H;
+    opcodeTable[0xA5] = AND_A_L;
+    opcodeTable[0xA6] = AND_A_memHL;
+    opcodeTable[0xA7] = AND_A_A;
+    opcodeTable[0xA8] =XOR_A_B;
+    opcodeTable[0xA9] =XOR_A_C;
+    opcodeTable[0xAA] = XOR_A_D;
+    opcodeTable[0xAB] = XOR_A_E;
+    opcodeTable[0xAC] = XOR_A_H;
+    opcodeTable[0xAD] = XOR_A_L;
+    opcodeTable[0xAE] = XOR_A_memHL;
+    opcodeTable[0xAF] = XOR_A_A;
     
-    opcodeTable[0xED] = no_opcode;
+
+    opcodeTable[0xB0] = OR_A_B;
+    opcodeTable[0xB1] = OR_A_C;
+    opcodeTable[0xB2] = OR_A_D;
+    opcodeTable[0xB3] = OR_A_E;
+    opcodeTable[0xB4] = OR_A_H;
+    opcodeTable[0xB5] =OR_A_L;
+    opcodeTable[0xB6] = OR_A_memHL;
+    opcodeTable[0xB7] =OR_A_A;
+    opcodeTable[0xB8] =CP_A_B;
+    opcodeTable[0xB9] = CP_A_C;
+    opcodeTable[0xBA] =CP_A_D;
+    opcodeTable[0xBB] =CP_A_E;
+    opcodeTable[0xBC] =CP_A_H;
+    opcodeTable[0xBD] = CP_A_L;
+    opcodeTable[0xBE] = CP_A_memHL;
+    opcodeTable[0xBF] =CP_A_A;
+
+
+    opcodeTable[0xC0] =RET_NZ;
+    opcodeTable[0xC1] =POP_BC;
+    opcodeTable[0xC2]=JP_NZ_a16;
+    opcodeTable[0xC3] =JP_a16;
+    opcodeTable[0xC4] = CALL_NZ_a16;
+    opcodeTable[0xC5] = PUSH_BC;
+    opcodeTable[0xC6] = ADD_A_n8;
+    opcodeTable[0xC7] = RST_00;
+    opcodeTable[0xC8] = RET_Z;
+    opcodeTable[0xC9] = RET;
+    opcodeTable[0xCA] = JP_Z_a16;
+    opcodeTable[0xCB] = PREFIX;
+    opcodeTable[0xCC] =CALL_Z_a16;
+  
+    opcodeTable[0xCD] = CALL_a16;
     opcodeTable[0xCE] = ADC_A_n8;
+    opcodeTable[0xCF] = RST_08;
+
+    opcodeTable[0xD0] = RET_NC;
+    opcodeTable[0xD1] = POP_DE;
+    opcodeTable[0xD2] = JP_NC_a16;
+    opcodeTable[0xD4] = CALL_NC_a16;
+    opcodeTable[0xD5] = PUSH_DE;
+    opcodeTable[0xD6] = SUB_A_n8;
+    opcodeTable[0xD7] = RST_10;
+    opcodeTable[0xD8] = RET_C;
+    opcodeTable[0xD9] = RETI;
+    opcodeTable[0xDC] = JP_C_a16;
+    opcodeTable[0xDD] = CALL_C_a16;
+    opcodeTable[0xDE] = SBC_A_n8;
+    opcodeTable[0xDF] = RST_18;
+
+    opcodeTable[0xE0] = LDH_a8_A;
+    opcodeTable[0xE1] = POP_HL;
+    opcodeTable[0xE2] = LDH_C_A;
+    opcodeTable[0xE5] = PUSH_HL;
+    opcodeTable[0xE6] = AND_A_n8;
+    opcodeTable[0xE7] = RST_20;
+    opcodeTable[0xE8] = ADD_SP_e8;
+    opcodeTable[0xE9] = JP_HL;
+    opcodeTable[0xEA] = LD_a16_A;
+    opcodeTable[0xEE] = XOR_A_n8;
+    opcodeTable[0xEF] = RST_28;
+    opcodeTable[0xED] = no_opcode;
+
+    opcodeTable[0xF0] = LDH_A_a8;
+    opcodeTable[0xF1] = POP_AF;
+    opcodeTable[0xE2] = LDH_A_C;
+    opcodeTable[0xF3] = DI;
+    opcodeTable[0xF5] = PUSH_AF;
+    opcodeTable[0xF6] = OR_A_n8;
+    opcodeTable[0xF7] = RST_30;
+    opcodeTable[0xF8] = LD_HL_SP_e8;
+    opcodeTable[0xF9] = LD_SP_HL;
+    opcodeTable[0xFA] = LD_A_a16;
+    opcodeTable[0xFB] = EI;
+    opcodeTable[0xFE] = CP_A_n8;
+    opcodeTable[0xFF] = RST_38;
     // Add more opcodes as needed...
 }
 
@@ -311,15 +424,15 @@ void CPU::setCarryFlag(bool value) {
 
 
 
-bool CPU::getZeroFlag(bool value) {
+bool CPU::getZeroFlag() {
     return (F & (1 << 7)) != 0;  // Check if Zero flag (bit 7) is set
 }
 
-bool CPU::getSubtractFlag(bool value) {
+bool CPU::getSubtractFlag() {
     return (F & (1 << 6)) != 0;  // Check if Subtract flag (bit 6) is set
 }
 
-bool CPU::getHalfCarryFlag(bool value) {
+bool CPU::getHalfCarryFlag() {
     return (F & (1 << 5)) != 0;  // Check if Half Carry flag (bit 5) is set
 }
 
@@ -355,4 +468,17 @@ void CPU::decrement16(uint16_t& reg, uint8_t& high, uint8_t& low) {
     high = (reg >> 8) & 0xFF;
     low = reg & 0xFF;
 
+}
+
+uint16_t CPU::pop16() {
+    uint16_t value = readMemory(SP) | (readMemory(SP + 1) << 8);
+    SP += 2;  // Stack pointer increases by 2 (16-bit value)
+    return value;
+}
+
+// PUSH16: Pushes a 16-bit value onto the stack.
+void CPU::push16(uint16_t value) {
+    writeMemory(SP - 1, value & 0xFF);
+    writeMemory(SP - 2, (value >> 8) & 0xFF);
+    SP -= 2;  // Stack pointer decreases by 2 (16-bit value)
 }
