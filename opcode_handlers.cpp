@@ -1685,7 +1685,7 @@ void ADD_A_n8(CPU& cpu) {
     cpu.updateCycles(8);
 }
 void RST_00(CPU& cpu) {
-    //cpu.PC += 1;
+    cpu.PC += 1;
     cpu.push16(cpu.PC);
     cpu.PC = 0x0000;
     cpu.updateCycles(16);
@@ -1754,7 +1754,7 @@ void ADC_A_n8(CPU& cpu) {
 
 
 void RST_08(CPU& cpu) {
-    //cpu.PC++;
+    cpu.PC++;
     cpu.push16(cpu.PC);
     cpu.PC = 0x0008;
     cpu.updateCycles(16);
@@ -1820,7 +1820,7 @@ void SUB_A_n8(CPU& cpu) {
 }
 
 void RST_10(CPU& cpu) {
-    //cpu.PC++;
+    cpu.PC++;
     cpu.push16(cpu.PC);
     cpu.PC = 0x0010;
     cpu.updateCycles(16);
@@ -1838,8 +1838,11 @@ void RET_C(CPU& cpu) {
 }
 
 void RETI(CPU& cpu) {
+
     cpu.enableInterrupts();
+    std::cout << "[DEBUG] Returning to PC: " << std::hex << cpu.PC << std::endl;
     cpu.PC = cpu.pop16();
+    cpu.handleInterrupts();
     cpu.updateCycles(16);
 }
 
@@ -1878,7 +1881,7 @@ void SBC_A_n8(CPU& cpu) {
 }
 
 void RST_18(CPU& cpu) {
-    //cpu.PC += 1;
+    cpu.PC += 1;
     cpu.push16(cpu.PC);
     cpu.PC = 0x0018;
     cpu.updateCycles(16);
@@ -1923,7 +1926,7 @@ void AND_A_n8(CPU& cpu) {
 }
 
 void RST_20(CPU& cpu) {
-    //cpu.PC += 1;
+    cpu.PC += 1;
     cpu.push16(cpu.PC);
     cpu.PC = 0x0020;
     cpu.updateCycles(16);
@@ -2075,9 +2078,11 @@ void CP_A_n8(CPU& cpu) {
 
 void RST_38(CPU& cpu) {
     //std::cout << "[DEBUG] RST 38H: Pushing PC = 0x" << std::hex << cpu.PC << " onto stack at SP = 0x" << cpu.SP << std::endl;
+    cpu.PC++;
     cpu.push16(cpu.PC);
     cpu.PC = 0x0038;
     cpu.updateCycles(16);
+        
 }
 
 /*
@@ -2092,12 +2097,11 @@ void SET_7_A(CPU& cpu) {
 
 
 */
-
-
-
-
-
-
 void no_opcode(CPU& cpu) {
- 
+    cpu.PC++;
+    std::cerr << "[ERROR] Unimplemented opcode: 0xDD at PC: 0x" 
+        << std::hex << cpu.PC << std::endl;
+    
 }
+
+
