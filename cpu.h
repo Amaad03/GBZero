@@ -76,6 +76,8 @@ public:
     void setDE(uint16_t value);
     void setHL(uint16_t value);
     void setAF(uint16_t value);
+
+    void dumpROMHeader();
 };
 
 void UNIMPLEMENTED(CPU& cpu);

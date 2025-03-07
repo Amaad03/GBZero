@@ -1,4 +1,4 @@
-#include "Memory.h"
+#include "memory.h"
 #include <iostream>
 
 Memory::Memory() {
@@ -16,6 +16,8 @@ void Memory::loadROM(const std::string& filename) {
     std::ifstream romFile(filename, std::ios::binary);
     if (!romFile) {
         throw std::runtime_error("Failed to open ROM file.");
+    } else {
+        std::cout<<"ROM opened successfully" <<std::endl;
     }
 
     romFile.seekg(0, std::ios::end);
@@ -62,15 +64,9 @@ uint8_t Memory::read(uint16_t addr) {
     if (addr <= 0x3FFF) {
         return rom[addr]; // ROM Bank 0
     } else if (addr >= 0x4000 && addr <= 0x7FFF) {
-        return rom[(currentROMBank * 0x4000) + (addr - 0x4000)];           // Switchable ROM Bank
-
-
+        return rom[(currentROMBank * 0x4000) + (addr - 0x4000)]; // Switchable ROM Bank
     } else if (addr >= 0xA000 && addr <= 0xBFFF && ramEnabled) {
         return ram[(currentRAMBank * 0x2000) + (addr - 0xA000)];
-
-
-
-
     } else if (addr >= 0x8000 && addr <= 0x9FFF) {
         return vram[addr - 0x8000]; // VRAM
     } else if (addr >= 0xC000 && addr <= 0xDFFF) {
@@ -82,6 +78,9 @@ uint8_t Memory::read(uint16_t addr) {
     } else if (addr == 0xFFFF) {
         return ie; // Interrupt Enable Register
     }
+
+    // Debugging: log any invalid address accesses
+    std::cout << "[DEBUG] Invalid memory access at address: " << std::hex << addr << std::endl;
     return 0xFF; // Default value for unmapped memory
 }
 

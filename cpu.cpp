@@ -267,8 +267,10 @@ void CPU::initOpcodeTable() {
     opcodeTable[0xD7] = RST_10;
     opcodeTable[0xD8] = RET_C;
     opcodeTable[0xD9] = RETI;
-    opcodeTable[0xDC] = JP_C_a16;
-    opcodeTable[0xDD] = CALL_C_a16;
+    opcodeTable[0xDA] = JP_C_a16;
+    opcodeTable[0xDB] = no_opcode;
+    opcodeTable[0xDC] = CALL_C_a16;
+    opcodeTable[0xDD] = no_opcode;
     opcodeTable[0xDE] = SBC_A_n8;
     opcodeTable[0xDF] = RST_18;
 
@@ -283,7 +285,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0xEA] = LD_a16_A;
     opcodeTable[0xEE] = XOR_A_n8;
     opcodeTable[0xEF] = RST_28;
-    opcodeTable[0xED] = no_opcode;
+    //opcodeTable[0xED] = no_opcode;
 
     opcodeTable[0xF0] = LDH_A_a8;
     opcodeTable[0xF1] = POP_AF;
@@ -317,9 +319,9 @@ void UNIMPLEMENTED(CPU& cpu) {
 }
 
 void CPU::executeOpcode(uint8_t opcode) {
-    //std::cout << "PC: 0x" << std::hex << PC 
-             //<< " | Opcode: 0x" << static_cast<int>(opcode) << std::endl;
-
+    std::cout << "PC: 0x" << std::hex << PC 
+             << " | Opcode: 0x" << static_cast<int>(opcode) << std::endl;
+    
     if (opcodeTable[opcode]) {
         opcodeTable[opcode](*this);  // Execute opcode
     } else {
@@ -340,6 +342,7 @@ void CPU::updateCycles(uint32_t cycles) {
     cycleCount += cycles;
     //std::cout << "[DEBUG] Total cycle count: " << std::hex << cycleCount << std::endl;
 }
+
 
 void CPU::enableInterrupts() {
     interruptsEnabled = true;
@@ -423,20 +426,30 @@ void CPU::decrement16(uint8_t& high, uint8_t& low) {
 }
 
 uint16_t CPU::pop16() {
-    uint16_t value = read16(SP);
-    SP += 2;  // Stack pointer increases by 2 (16-bit value)
-    return value;
+    // Read the low byte from the memory at the stack pointer (SP)
+    uint8_t low = memory.read(SP);
+    
+    // Read the high byte from the memory at the next address (SP + 1)
+    uint8_t high = memory.read(SP + 1);
+    
+    // Increment stack pointer by 2 after reading 16-bit value
+    SP += 2;  
+    
+    // Combine high and low byte into a 16-bit value and return
+    return (high << 8) | low;
 }
 
 // PUSH16: Pushes a 16-bit value onto the stack.
+
 void CPU::push16(uint16_t value) {
-    SP -=2;
-    writeMemory((SP ) & 0xFFFF, value >> 8); 
+    // Decrement the stack pointer by 2 (stack grows downward)
+    SP -= 2;
     
-    writeMemory((SP+1) & 0xFFFF, value & 0xFF);
+    // Write low byte to the current stack pointer address
+    memory.write(SP, value & 0xFF);  // Low byte
     
-    
-     // Stack pointer decreases by 2 (16-bit value)
+    // Write high byte to the next stack address (SP + 1)
+    memory.write(SP + 1, (value >> 8) & 0xFF);  // High byte
 }
 uint8_t CPU::read8(uint16_t addr) {
     return memory.read(addr);
@@ -498,6 +511,7 @@ void CPU::setAF(uint16_t value) {
     F = value & 0xFF; 
 }
 void CPU::run() {
+    reset();
     while (true) {
         if (isStopped) {
             // Wait for an interrupt
@@ -553,5 +567,14 @@ void CPU::handleInterrupts() {
 
         // Update cycle count (interrupt handling takes 20 cycles)
         updateCycles(20);
+    }
+}
+
+
+void CPU::dumpROMHeader() {
+    std::cout << "ROM Header:\n";
+    for (int i = 0x100; i < 0x150; ++i) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(memory.read(i)) << " ";
+        if ((i + 1) % 16 == 0) std::cout << "\n";
     }
 }
