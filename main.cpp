@@ -6,12 +6,12 @@
 // Function to load ROM into CPU memory
 int main() {
     CPU cpu;
-    cpu.memory.loadROM("Tetris.gb");
+    cpu.memory.loadROM("Pokemon_Red.gb");
 
 
     while (true) {
-    
-        cpu.executeNextInstruction();
+        
+        cpu.run();
     }
 
 

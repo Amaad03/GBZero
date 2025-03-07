@@ -11,23 +11,19 @@ void NOP(CPU& cpu) {
 }
 
 void LD_BC_d16(CPU& cpu) { 
-    uint16_t value = cpu.read16(cpu.PC+1);
-    cpu.setBC(value);
+    cpu.setBC(cpu.read16(cpu.PC+1));
     cpu.PC += 3;  
     cpu.updateCycles(12);
 }
 void LD_BC_A(CPU& cpu) {
-    uint16_t address = cpu.getBC();  // Combine B and C to form the BC address
-    cpu.writeMemory(address, cpu.A);// Store the value of register A at the address
-    cpu.PC += 1;  // Move the program counter forward by 1 byte (the opcode)
+    cpu.writeMemory(cpu.getBC(), cpu.A);// Store the value of register A at the address
+    cpu.PC ++;  // Move the program counter forward by 1 byte (the opcode)
     cpu.updateCycles(8);  // This opcode takes 8 cycles
 }
 
 
 void INC_BC(CPU& cpu) {
-    uint16_t bc = cpu.getBC(); 
-    bc++;
-    cpu.setBC(bc); 
+    cpu.setBC(cpu.getBC()+1); 
     cpu.PC++;
     cpu.updateCycles(8);
 }
@@ -54,20 +50,18 @@ void LD_B_d8(CPU& cpu) {
 
 void RLCA(CPU& cpu) {
     uint8_t carry = (cpu.A & 0x80) >> 7;
-    cpu.A <<= 1;
-    cpu.A |= carry;
-
-    cpu.F &= 0x10; // Clear the N (subtract) flag
-    cpu.F &= 0x20; // Clear the H (half carry) flag
-    cpu.F |= (carry << 4); // Set the C (carry) flag to the old MSB value
-
-    cpu.PC += 1;
+    cpu.A = (cpu.A << 1) | carry; 
+    cpu.setCarryFlag(carry);
+    cpu.setZeroFlag(false);
+    cpu.setSubtractFlag(false); 
+    cpu.setHalfCarryFlag(false);
+    cpu.PC++;
     cpu.updateCycles(4);
 }
 
 
 void LD_a16_SP(CPU& cpu) {  // 0x08
-    uint16_t addr =  cpu.read16(cpu.PC+2); 
+    uint16_t addr =  cpu.read16(cpu.PC+1); 
     cpu.write16(addr, cpu.SP);
     cpu.PC += 3;
     cpu.updateCycles(20);
@@ -78,39 +72,21 @@ void ADD_HL_BC(CPU& cpu) {  // 0x09
     uint16_t bc = cpu.getBC();
     uint16_t result = hl + bc;
     cpu.setHL(result);
-    // Update HL with the result
- 
-    cpu.F &= ~0x80; 
-    cpu.F &= ~0x40; 
-
-    // Half carry flag
-    if (((hl & 0xFFF) + (bc& 0xFFF)) > 0xFFF) {
-        cpu.F |= 0x20;  // Set the Half Carry flag
-    } else {
-        cpu.F &= ~0x20; // Clear the Half Carry flag
-    }
-
-    if (result < hl) {
-        cpu.F |= 0x10;  // Set the Carry flag
-    } else {
-        cpu.F &= ~0x10; // Clear the Carry flag
-    }
-
-    cpu.PC++;  // Increment program counter
-    cpu.updateCycles(8);  // Update the cycle count
+    cpu.setSubtractFlag(false);  
+    cpu.setHalfCarryFlag((hl & 0xFFF) + (bc & 0xFFF) > 0xFFF);  
+    cpu.setCarryFlag(result < hl);  
+    cpu.PC++; 
+    cpu.updateCycles(8);  
 }
 
 void LD_A_BC(CPU& cpu) { //0x0A
-    uint16_t address = cpu.getBC();
-    cpu.A = cpu.read8(address);
+    cpu.A = cpu.read8(cpu.getBC());
     cpu.PC += 1;
     cpu.updateCycles(8);
 }
 
 void DEC_BC(CPU& cpu) { //0x0B
-    uint16_t bc = cpu.getBC();
-    bc--;
-    cpu.setBC(bc);
+    cpu.setBC(cpu.getBC() - 1);
     cpu.PC++;
     cpu.updateCycles(8);
 
@@ -150,6 +126,7 @@ void RRCA(CPU& cpu) { //0x0F
 void STOP_n8(CPU& cpu) {
     cpu.PC += 2;
     cpu.updateCycles(4);
+    cpu.isStopped = true;
 }
 
 
@@ -281,9 +258,8 @@ void JR_NZ_e8(CPU& cpu) {
     }
 }
 
-void LD_HL_n16(CPU& cpu) {
-    uint16_t value = cpu.read16(cpu.PC+1);  
-    cpu.setHL(value);
+void LD_HL_n16(CPU& cpu) { 
+    cpu.setHL(cpu.read16(cpu.PC+1));
     cpu.PC += 3; 
     cpu.updateCycles(12); 
 }
@@ -415,7 +391,7 @@ void CPL(CPU& cpu) {
 }
 
 void LD_SP_n16(CPU& cpu) {
-    uint16_t value = cpu.read16(cpu.PC);  
+    uint16_t value = cpu.read16(cpu.PC+1);  
     cpu.SP = value; 
     cpu.PC += 3;  
     cpu.updateCycles(12);  
@@ -890,8 +866,6 @@ void LD_HL_L(CPU& cpu) {
 }
 
 void HALT(CPU& cpu) {
-    // HALT does nothing except stop the CPU from executing instructions
-    cpu.PC++;
     cpu.updateCycles(4);  // 4 cycles for HALT
 }
 
@@ -1651,7 +1625,7 @@ void CP_A_A(CPU& cpu) {
 }
 void RET_NZ(CPU& cpu) {
     if (!cpu.getZeroFlag()) {
-        cpu.PC = cpu.pop16();  // Call POP16 without cpu as argument
+        cpu.PC = cpu.pop16();  
         cpu.updateCycles(20);
     } else {
         cpu.PC++;
@@ -1680,14 +1654,15 @@ void JP_a16(CPU& cpu) {
     cpu.updateCycles(16);
 }
 void CALL_NZ_a16(CPU& cpu) {
-    cpu.PC += 3;
-    if (!cpu.getZeroFlag()) {
-        uint16_t address = cpu.read16(cpu.PC);  // Read the 16-bit address (a16)
-        cpu.push16(cpu.PC);                     // Push the return address (PC) onto the stack
-        cpu.PC = address;                       // Jump to the address (a16)
-        cpu.updateCycles(24);                   // 24 cycles if the call is taken
+    
+    if (!cpu.getZeroFlag()) { 
+        uint16_t address =cpu.PC+3; 
+        cpu.push16(address);                     
+        cpu.PC =  cpu.read16(cpu.PC + 1);                      
+        cpu.updateCycles(24);               
     } else {
-        cpu.updateCycles(12);                    // 12 cycles if the call is not taken
+        cpu.PC += 3;
+        cpu.updateCycles(12);                   
     }
 }
 
@@ -1710,9 +1685,9 @@ void ADD_A_n8(CPU& cpu) {
     cpu.updateCycles(8);
 }
 void RST_00(CPU& cpu) {
-    cpu.PC += 1;
+    //cpu.PC += 1;
     cpu.push16(cpu.PC);
-    cpu.PC = 0x00;
+    cpu.PC = 0x0000;
     cpu.updateCycles(16);
 }
 void RET_Z(CPU& cpu) {
@@ -1726,7 +1701,10 @@ void RET_Z(CPU& cpu) {
 
 }
 void RET(CPU& cpu) {
-    cpu.PC = cpu.pop16();
+
+
+    uint16_t returnAddress = cpu.pop16();
+    cpu.PC = returnAddress;
     cpu.updateCycles(16);
 }
 
@@ -1748,7 +1726,7 @@ void CALL_Z_a16(CPU& cpu) {
     if (cpu.getZeroFlag()) { 
         uint16_t returnAddress = cpu.PC + 3;  
         cpu.push16(returnAddress);  
-        cpu.PC = cpu.read16(cpu.PC);  
+        cpu.PC = cpu.read16(cpu.PC+1);  
         cpu.updateCycles(24);  
     } else {
         cpu.PC += 3; 
@@ -1759,7 +1737,7 @@ void CALL_Z_a16(CPU& cpu) {
 void CALL_a16(CPU& cpu) {
     uint16_t returnAddress = cpu.PC + 3; 
     cpu.push16(returnAddress);  
-    cpu.PC = cpu.read16(cpu.PC);
+    cpu.PC = cpu.read16(cpu.PC+1);
     cpu.updateCycles(24);
 }
 void ADC_A_n8(CPU& cpu) {
@@ -1770,16 +1748,15 @@ void ADC_A_n8(CPU& cpu) {
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (value & 0x0F) + (cpu.getCarryFlag() ? 1 : 0)) > 0x0F);
     cpu.setCarryFlag(result > 0xFF);
-    cpu.A =result;
     cpu.PC += 2;
     cpu.updateCycles(8);
 }
 
 
 void RST_08(CPU& cpu) {
-    cpu.PC++;
+    //cpu.PC++;
     cpu.push16(cpu.PC);
-    cpu.PC = 0x08;
+    cpu.PC = 0x0008;
     cpu.updateCycles(16);
 }
 
@@ -1813,8 +1790,9 @@ void JP_NC_a16(CPU& cpu) {
 
 void CALL_NC_a16(CPU& cpu) {
     if (!cpu.getCarryFlag()) {
-        cpu.push16(cpu.PC + 3);
-        cpu.PC = cpu.read16(cpu.PC);
+        uint16_t returnAddress = cpu.PC + 3; 
+        cpu.push16(returnAddress);
+        cpu.PC = cpu.read16(cpu.PC+1);
         cpu.updateCycles(24);
     } else {
         cpu.PC += 3;
@@ -1842,9 +1820,9 @@ void SUB_A_n8(CPU& cpu) {
 }
 
 void RST_10(CPU& cpu) {
-    cpu.PC++;
+    //cpu.PC++;
     cpu.push16(cpu.PC);
-    cpu.PC = 0x10;
+    cpu.PC = 0x0010;
     cpu.updateCycles(16);
 }
 
@@ -1860,7 +1838,7 @@ void RET_C(CPU& cpu) {
 }
 
 void RETI(CPU& cpu) {
-    cpu.interruptsEnabled= true;
+    cpu.enableInterrupts();
     cpu.PC = cpu.pop16();
     cpu.updateCycles(16);
 }
@@ -1876,13 +1854,13 @@ void JP_C_a16(CPU& cpu) {
 }
 
 void CALL_C_a16(CPU& cpu) {
-    cpu.PC += 3;
     if (cpu.getCarryFlag()) {
-        cpu.push16(cpu.PC + 3);
-        cpu.PC = cpu.read16(cpu.PC );
+        uint16_t returnAddress = cpu.PC + 3; 
+        cpu.push16(returnAddress);
+        cpu.PC = cpu.read16(cpu.PC+1 );
         cpu.updateCycles(24);
     } else {
-    
+        cpu.PC += 3;
         cpu.updateCycles(12);
     }
 }
@@ -1890,27 +1868,26 @@ void CALL_C_a16(CPU& cpu) {
 void SBC_A_n8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);
     uint16_t result = cpu.A - value - (cpu.getCarryFlag() ? 0 : 1);
+    cpu.A = result & 0xFF;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(true);
     cpu.setHalfCarryFlag((cpu.A & 0x0F) < (value & 0x0F) + (cpu.getCarryFlag() ? 0 : 1));
     cpu.setCarryFlag(result > 0xFF);
-    cpu.A = result & 0xFF;
     cpu.PC += 2;
     cpu.updateCycles(8);
 }
 
 void RST_18(CPU& cpu) {
-    cpu.PC += 1;
+    //cpu.PC += 1;
     cpu.push16(cpu.PC);
-    cpu.PC = 0x18;
+    cpu.PC = 0x0018;
     cpu.updateCycles(16);
 }
 void LDH_a8_A(CPU& cpu) {
-    cpu.updateCycles(4);
     uint8_t addr = cpu.read8(cpu.PC + 1);
     cpu.writeMemory(0xFF00 + addr, cpu.A);  // Write A to the address [0xFF00 + addr]
     cpu.PC += 2;
-    cpu.updateCycles(8);
+    cpu.updateCycles(12);
 }
 
 void POP_HL(CPU& cpu) {
@@ -1946,9 +1923,9 @@ void AND_A_n8(CPU& cpu) {
 }
 
 void RST_20(CPU& cpu) {
-    cpu.PC += 1;
+    //cpu.PC += 1;
     cpu.push16(cpu.PC);
-    cpu.PC = 0x20;
+    cpu.PC = 0x0020;
     cpu.updateCycles(16);
 }
 
@@ -1991,9 +1968,9 @@ void XOR_A_n8(CPU& cpu) {
 }
 
 void RST_28(CPU& cpu) {
-    cpu.PC += 1;
+    //cpu.PC += 1;
     cpu.push16(cpu.PC);
-    cpu.PC = 0x28;
+    cpu.PC = 0x0028;
     cpu.updateCycles(16);
 }
 
@@ -2045,9 +2022,9 @@ void OR_A_n8(CPU& cpu) {
 }
 
 void RST_30(CPU& cpu) {
-    cpu.PC += 1;
+    //cpu.PC += 1;
     cpu.push16(cpu.PC);
-    cpu.PC = 0x30;
+    cpu.PC = 0x0030;
     cpu.updateCycles(16);
 }
 
@@ -2095,14 +2072,15 @@ void CP_A_n8(CPU& cpu) {
     cpu.PC += 2;
     cpu.updateCycles(8);
 }
+
 void RST_38(CPU& cpu) {
-    cpu.PC += 1;
+    //std::cout << "[DEBUG] RST 38H: Pushing PC = 0x" << std::hex << cpu.PC << " onto stack at SP = 0x" << cpu.SP << std::endl;
     cpu.push16(cpu.PC);
-    cpu.PC = 0x38;
+    cpu.PC = 0x0038;
     cpu.updateCycles(16);
 }
 
-
+/*
 void SET_7_A(CPU& cpu) {
     uint8_t t =  cpu.A | (1<<7);
     cpu.A = t;
@@ -2113,7 +2091,7 @@ void SET_7_A(CPU& cpu) {
 
 
 
-
+*/
 
 
 

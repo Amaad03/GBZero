@@ -8,7 +8,8 @@ CPU::CPU() {
     PC = 0x0100;
     cycleCount = 0;
     interruptsEnabled = false;
-
+    isStopped = false;
+    
     reset();
     initOpcodeTable();
 }
@@ -297,9 +298,9 @@ void CPU::initOpcodeTable() {
     opcodeTable[0xFB] = EI;
     opcodeTable[0xFE] = CP_A_n8;
     opcodeTable[0xFF] = RST_38;
-    std::fill(std::begin(prefixedOpcodeTable), std::end(prefixedOpcodeTable), &UNIMPLEMENTED);
+    //std::fill(std::begin(prefixedOpcodeTable), std::end(prefixedOpcodeTable), &UNIMPLEMENTED);
 
-    prefixedOpcodeTable[0xFF] = SET_7_A;
+    //prefixedOpcodeTable[0x1FF] = SET_7_A;
     // Add more opcodes as needed...
 }
 
@@ -316,8 +317,8 @@ void UNIMPLEMENTED(CPU& cpu) {
 }
 
 void CPU::executeOpcode(uint8_t opcode) {
-    std::cout << "PC: 0x" << std::hex << PC 
-              << " | Opcode: 0x" << static_cast<int>(opcode) << std::endl;
+    //std::cout << "PC: 0x" << std::hex << PC 
+             //<< " | Opcode: 0x" << static_cast<int>(opcode) << std::endl;
 
     if (opcodeTable[opcode]) {
         opcodeTable[opcode](*this);  // Execute opcode
@@ -327,6 +328,7 @@ void CPU::executeOpcode(uint8_t opcode) {
     }
 }
 void CPU::executeNextInstruction() {
+    handleInterrupts();
     uint8_t opcode = read8(PC);  // Fetch the opcode from memory
     PC++;  // Increment the program counter to point to the next instruction
     executeOpcode(opcode);  // Execute the opcode
@@ -336,7 +338,7 @@ void CPU::executeNextInstruction() {
 
 void CPU::updateCycles(uint32_t cycles) {
     cycleCount += cycles;
-    std::cout << "[DEBUG] Total cycle count: " << std::hex << cycleCount << std::endl;
+    //std::cout << "[DEBUG] Total cycle count: " << std::hex << cycleCount << std::endl;
 }
 
 void CPU::enableInterrupts() {
@@ -393,7 +395,7 @@ bool CPU::getCarryFlag() {
 
 void CPU::increment8(uint8_t& reg) {
     uint8_t result = reg + 1;
-    setZeroFlag(reg == 0);  
+    setZeroFlag(result == 0);  
     setSubtractFlag(false);   
     setHalfCarryFlag((reg & 0x0F) == 0x0F);  // Half-carry occurs when lower nibble overflows
     reg = result;
@@ -401,7 +403,7 @@ void CPU::increment8(uint8_t& reg) {
 
 void CPU::decrement8(uint8_t& reg) {
     uint8_t result = reg - 1;  
-    setZeroFlag(reg == 0);  
+    setZeroFlag(result == 0);  
     setSubtractFlag(true);   
     setHalfCarryFlag((reg & 0x0F) == 0x00); // Half-carry occurs when lower nibble underflows
     reg = result;
@@ -421,16 +423,19 @@ void CPU::decrement16(uint8_t& high, uint8_t& low) {
 }
 
 uint16_t CPU::pop16() {
-    uint16_t value = read8(SP) | (read8(SP + 1) << 8);
+    uint16_t value = read16(SP);
     SP += 2;  // Stack pointer increases by 2 (16-bit value)
     return value;
 }
 
 // PUSH16: Pushes a 16-bit value onto the stack.
 void CPU::push16(uint16_t value) {
-    writeMemory(SP - 1, value >> 8);
-    writeMemory(SP - 2, value & 0xFF);
-    SP -= 2; 
+    SP -=2;
+    writeMemory((SP ) & 0xFFFF, value >> 8); 
+    
+    writeMemory((SP+1) & 0xFFFF, value & 0xFF);
+    
+    
      // Stack pointer decreases by 2 (16-bit value)
 }
 uint8_t CPU::read8(uint16_t addr) {
@@ -442,11 +447,17 @@ void CPU::writeMemory(uint16_t addr, uint8_t value) {
 }
 
 uint16_t CPU::read16(uint16_t addr) {
-    return memory.read(addr) | (memory.read(addr + 1) << 8);
+    uint8_t low = memory.read(addr);
+    uint8_t high = memory.read((addr + 1) << 8);
+    return (high << 8) | low;
 }
+
 void CPU::write16(uint16_t addr, uint16_t value) {
-    memory.write(addr, value & 0xFF);
-    memory.write(addr + 1, (value >> 8) & 0xFF);
+    writeMemory(addr, value & 0xFF);
+
+    // Write the higher byte (bits 8-15) to memory at addr + 1
+    writeMemory(addr + 1, (value >> 8) & 0xFF);
+
 }
 
 
@@ -485,4 +496,62 @@ void CPU::setHL(uint16_t value) {
 void CPU::setAF(uint16_t value) { 
     A = value >> 8; 
     F = value & 0xFF; 
+}
+void CPU::run() {
+    while (true) {
+        if (isStopped) {
+            // Wait for an interrupt
+            if (interruptOccurred()) {
+                isStopped = false;  // Exit stopped state
+            }
+        } else {
+            // Fetch and execute the next instruction
+
+            executeNextInstruction();
+        }
+    }
+}
+
+bool CPU::interruptOccurred() {
+    // Read the Interrupt Flag (IF) and Interrupt Enable (IE) registers
+    uint8_t IF = read8(0xFF0F);  // Interrupt Flag
+    uint8_t IE = read8(0xFFFF);  // Interrupt Enable
+
+    // Check if any enabled interrupts are pending
+    return (IF & IE & 0x1F) != 0;  // Only bits 0-4 are used for interrupts
+}
+
+void CPU::handleInterrupts() {
+    if (interruptsEnabled && interruptOccurred()) {
+        interruptsEnabled = false;  // Disable interrupts to prevent further interrupt handling
+
+        // Push the current PC onto the stack
+        push16(PC);
+
+        // Determine which interrupt to handle
+        uint8_t IF = read8(0xFF0F);  // Interrupt Flag
+        uint8_t IE = read8(0xFFFF);  // Interrupt Enable
+        uint8_t pending = IF & IE;
+
+        // Handle each interrupt type
+        if (pending & 0x01) {  // V-Blank
+            PC = 0x0040;
+            writeMemory(0xFF0F, IF & ~0x01);  // Clear V-Blank interrupt flag
+        } else if (pending & 0x02) {  // LCD STAT
+            PC = 0x0048;
+            writeMemory(0xFF0F, IF & ~0x02);  // Clear LCD STAT interrupt flag
+        } else if (pending & 0x04) {  // Timer
+            PC = 0x0050;
+            writeMemory(0xFF0F, IF & ~0x04);  // Clear Timer interrupt flag
+        } else if (pending & 0x08) {  // Serial
+            PC = 0x0058;
+            writeMemory(0xFF0F, IF & ~0x08);  // Clear Serial interrupt flag
+        } else if (pending & 0x10) {  // Joypad
+            PC = 0x0060;
+            writeMemory(0xFF0F, IF & ~0x10);  // Clear Joypad interrupt flag
+        }
+
+        // Update cycle count (interrupt handling takes 20 cycles)
+        updateCycles(20);
+    }
 }

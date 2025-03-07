@@ -21,6 +21,7 @@ public:
 
     uint32_t cycleCount; // Cycle count for instruction execution
     bool interruptsEnabled;
+    bool isStopped;
 
     OpcodeHandler opcodeTable[256]; // Opcode handler table (array of function pointers)
     OpcodeHandler prefixedOpcodeTable[256];
@@ -47,6 +48,9 @@ public:
     void disableInterrupts();
 
     void reset();
+    void run();
+    bool interruptOccurred();
+    void handleInterrupts();
     
     // Flag utilities
     void setZeroFlag(bool value);

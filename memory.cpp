@@ -1,191 +1,163 @@
-#include "memory.h"
+#include "Memory.h"
+#include <iostream>
 
 Memory::Memory() {
-    memory.resize(0x10000, 0);
+    // Initialize memory regions
+    rom.resize(0x200000); // 2MB ROM (max size)
+    ram.resize(0x8000);   // 32KB RAM (max size)
+    std::fill(vram, vram + 0x2000, 0);
+    std::fill(wram, wram + 0x2000, 0);
+    std::fill(oam, oam + 0xA0, 0);
+    std::fill(hram, hram + 0x7F, 0);
+    ie = 0;
 }
-
 
 void Memory::loadROM(const std::string& filename) {
     std::ifstream romFile(filename, std::ios::binary);
     if (!romFile) {
-        std::cerr << "Failed to open ROM File!" << std::endl;
-        exit(1);
+        throw std::runtime_error("Failed to open ROM file.");
+    }
+
+    romFile.seekg(0, std::ios::end);
+    std::streamsize size = romFile.tellg();
+    romFile.seekg(0, std::ios::beg);
+
+    if (size == 0) {
+        throw std::runtime_error("ROM file is empty.");
+    }
+
+    rom.resize(size);
+
+    // Read file byte-by-byte
+    for (size_t i = 0; i < static_cast<size_t>(size); ++i) {
+        char byte;
+        romFile.read(&byte, 1);
+        rom[i] = static_cast<uint8_t>(byte);
+    }
+
+    std::cout << "[DEBUG] ROM file size: " << size << " bytes." << std::endl;
+
+    // Debugging: Print first 16 bytes
+    std::cout << "[DEBUG] First 16 bytes of ROM: ";
+    for (int i = 0; i < 16; ++i) {
+        printf("%02X ", rom[i]);
+    }
+    std::cout << std::endl;
+
+    // Check entry point
+    if (rom.size() > 0x100) {
+        std::cout << "[DEBUG] Entry point instruction: ";
+        printf("%02X %02X %02X\n", rom[0x100], rom[0x101], rom[0x102]);
     } else {
-        std::cerr << "Rom opened properly!" << std::endl;
+        std::cerr << "[ERROR] ROM is too small!\n";
     }
-    romData.assign(std::istreambuf_iterator<char>(romFile), std::istreambuf_iterator<char>());
-    romFile.close();
 
-    mbcType = romData[0x147];  // Read MBC type from the ROM header
-    std::cout << "Loaded ROM, MBC Type: " << int(mbcType) << std::endl;
-
-    // Resize RAM based on MBC type
-    switch (mbcType) {
-        case 0x00: // ROM Only
-            break;
-        case 0x01: // MBC1
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x02: // MBC1 + RAM
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x03: // MBC1 + RAM + BATTERY
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x05: // MBC2
-            ramBanks.resize(1 * 0x2000, 0);
-            break;
-        case 0x06: // MBC2 + BATTERY
-            ramBanks.resize(1 * 0x2000, 0);
-            break;
-        case 0x08: // ROM + RAM
-            break;
-        case 0x09: // ROM + RAM + BATTERY
-            break;
-        case 0x0B: // MMM01
-            break;
-        case 0x0C: // MMM01 + RAM
-            break;
-        case 0x0D: // MMM01 + RAM + BATTERY
-            break;
-        case 0x0F: // MBC3 + TIMER + BATTERY
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x10: // MBC3 + TIMER + RAM + BATTERY
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x11: // MBC3
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x12: // MBC3 + RAM
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x13: // MBC3 + RAM + BATTERY
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x19: // MBC5
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x1A: // MBC5 + RAM
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x1B: // MBC5 + RAM + BATTERY
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x1C: // MBC5 + RUMBLE
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x1D: // MBC5 + RUMBLE + RAM
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x1E: // MBC5 + RUMBLE + RAM + BATTERY
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x20: // MBC6
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0x22: // MBC7 + SENSOR + RUMBLE + RAM + BATTERY
-            ramBanks.resize(4 * 0x2000, 0);
-            break;
-        case 0xFC: // POCKET CAMERA
-            break;
-        case 0xFD: // BANDAI TAMA5
-            break;
-        case 0xFE: // HuC3
-            break;
-        case 0xFF: // HuC1 + RAM + BATTERY
-            break;
-        default:
-            std::cerr << "Unsupported MBC Type: " << int(mbcType) << std::endl;
-            exit(1);  // Exit since the emulator can't continue with an unsupported MBC
-    }
+    mbcType = rom[0x147]; // Get MBC type
 }
+
+
 
 
 uint8_t Memory::read(uint16_t addr) {
-    // Read from ROM bank 0 (0x0000 - 0x3FFF)
     if (addr <= 0x3FFF) {
-        return romData[addr]; // Always Bank 0 for addresses 0x0000 - 0x3FFF
-    }
-    
-    // Read from ROM bank (0x4000 - 0x7FFF)
-    else if (addr >= 0x4000 && addr <= 0x7FFF) {
-        // Calculate offset for the current ROM bank
-        size_t offset = (currentROMBank * 0x4000) + (addr - 0x4000);
-        if (offset < romData.size()) {
-            return romData[offset]; // Ensure we're within bounds of ROM data
-        } else {
-            // Handle ROM read out-of-bounds (if necessary)
-            return 0xFF; // Return a default value (or handle error)
-        }
-    }
+        return rom[addr]; // ROM Bank 0
+    } else if (addr >= 0x4000 && addr <= 0x7FFF) {
+        return rom[(currentROMBank * 0x4000) + (addr - 0x4000)];           // Switchable ROM Bank
 
-    // Read from RAM bank (0xA000 - 0xBFFF)
-    else if (addr >= 0xA000 && addr <= 0xBFFF) {
-        if (ramEnabled) {
-            // Calculate the offset within the RAM bank
-            size_t offset = (currentRAMBank * 0x2000) + (addr - 0xA000);
-            if (offset < ramBanks.size()) {
-                return ramBanks[offset]; // Ensure we're within the bounds of RAM
-            } else {
-                // Handle RAM read out-of-bounds (if necessary)
-                return 0xFF; // Return a default value (or handle error)
-            }
-        }
-        else {
-            // Return 0xFF if RAM is not enabled
-            return 0xFF;
-        }
+
+    } else if (addr >= 0xA000 && addr <= 0xBFFF && ramEnabled) {
+        return ram[(currentRAMBank * 0x2000) + (addr - 0xA000)];
+
+
+
+
+    } else if (addr >= 0x8000 && addr <= 0x9FFF) {
+        return vram[addr - 0x8000]; // VRAM
+    } else if (addr >= 0xC000 && addr <= 0xDFFF) {
+        return wram[addr - 0xC000]; // WRAM
+    } else if (addr >= 0xFE00 && addr <= 0xFE9F) {
+        return oam[addr - 0xFE00]; // OAM
+    } else if (addr >= 0xFF80 && addr <= 0xFFFE) {
+        return hram[addr - 0xFF80]; // HRAM
+    } else if (addr == 0xFFFF) {
+        return ie; // Interrupt Enable Register
     }
-    
-    // Default case - Invalid address or unimplemented regions
-    return 0xFF; // Return a default value for invalid addresses
+    return 0xFF; // Default value for unmapped memory
 }
 
-
 void Memory::write(uint16_t addr, uint8_t value) {
-    // Handle ROM bank selection (0x2000 - 0x3FFF)
-    if (addr >= 0x2000 && addr <= 0x3FFF) { 
-        if (mbcType == 1 || mbcType == 0x19) { // MBC1 or MBC5
-            currentROMBank = value & 0x1F;
-            if (currentROMBank == 0) currentROMBank = 1; // ROM bank 0 cannot be selected
-            std::cout << "Switched to ROM Bank: " << int(currentROMBank) << std::endl;
+    if (addr <= 0x7FFF) {
+        // Handle MBC writes
+        switch (mbcType) {
+            case 1: handleMBC1Write(addr, value); break;
+            case 2: handleMBC2Write(addr, value); break;
+            case 3: handleMBC3Write(addr, value); break;
+            // Add more MBC types as needed
+            default: break;
         }
+    } else if (addr >= 0xA000 && addr <= 0xBFFF && ramEnabled) {
+        // External RAM
+        ram[(currentRAMBank * 0x2000) + (addr - 0xA000)] = value;
+    } else if (addr >= 0x8000 && addr <= 0x9FFF) {
+        vram[addr - 0x8000] = value; // VRAM
+    } else if (addr >= 0xC000 && addr <= 0xDFFF) {
+        wram[addr - 0xC000] = value; // WRAM
+    } else if (addr >= 0xFE00 && addr <= 0xFE9F) {
+        oam[addr - 0xFE00] = value; // OAM
+    } else if (addr >= 0xFF80 && addr <= 0xFFFE) {
+        hram[addr - 0xFF80] = value; // HRAM
+    } else if (addr == 0xFFFF) {
+        ie = value; // Interrupt Enable Register
     }
-    // Handle RAM bank selection (0x4000 - 0x5FFF)
-    else if (addr >= 0x4000 && addr <= 0x5FFF) {
-        if (mbcType == 1 || mbcType == 0x19) { // MBC1 or MBC5
-            currentRAMBank = value & 0x03;
-            std::cout << "Switched to RAM Bank: " << int(currentRAMBank) << std::endl;
+}
+
+void Memory::handleMBC1Write(uint16_t addr, uint8_t value) {
+    if (addr <= 0x1FFF) {
+        // Enable/disable RAM
+        ramEnabled = (value & 0x0F) == 0x0A;
+    } else if (addr >= 0x2000 && addr <= 0x3FFF) {
+        // Set lower 5 bits of ROM bank number
+        currentROMBank = (currentROMBank & 0xE0) | (value & 0x1F);
+        if (currentROMBank == 0) currentROMBank++; // Bank 0 is not allowed
+    } else if (addr >= 0x4000 && addr <= 0x5FFF) {
+        // Set upper 2 bits of ROM bank number or RAM bank number
+        currentROMBank = (currentROMBank & 0x1F) | ((value & 0x03) << 5);
+    } else if (addr >= 0x6000 && addr <= 0x7FFF) {
+        // MBC1 mode switching (not implemented here)
+    }
+}
+
+void Memory::handleMBC2Write(uint16_t addr, uint8_t value) {
+    if (addr <= 0x1FFF) {
+        // RAM enable/disable (only lower bit of address matters)
+        if ((addr & 0x0100) == 0) {
+            ramEnabled = (value & 0x0F) == 0x0A;
         }
+    } else if (addr >= 0x2100 && addr <= 0x3FFF) {
+        // ROM bank selection (only lower 4 bits matter)
+        currentROMBank = value & 0x0F;
+        if (currentROMBank == 0) currentROMBank++; // Bank 0 is not allowed
     }
-    // Enable RAM (0x0000 - 0x1FFF)
-    else if (addr >= 0x0000 && addr <= 0x1FFF) {
-        if (value == 0xA0) { // A0 enables RAM for MBC1, MBC5
-            ramEnabled = true;
-            std::cout << "RAM Enabled" << std::endl;
-        } else {
-            ramEnabled = false;
-            std::cout << "RAM Disabled" << std::endl;
+}
+
+void Memory::handleMBC3Write(uint16_t addr, uint8_t value) {
+    if (addr <= 0x1FFF) {
+        // RAM and RTC enable/disable
+        ramEnabled = (value & 0x0F) == 0x0A;
+    } else if (addr >= 0x2000 && addr <= 0x3FFF) {
+        // ROM bank selection
+        currentROMBank = value & 0x7F; // 7 bits for ROM bank
+        if (currentROMBank == 0) currentROMBank++; // Bank 0 is not allowed
+    } else if (addr >= 0x4000 && addr <= 0x5FFF) {
+        // RAM bank or RTC register selection
+        if (value <= 0x03) {
+            currentRAMBank = value; // RAM bank 0-3
+        } else if (value >= 0x08 && value <= 0x0C) {
+            // Select RTC register (e.g., seconds, minutes, hours, etc.)
+            // Implement RTC handling here
         }
-    }
-    // Write to RAM (0xA000 - 0xBFFF)
-    else if (addr >= 0xA000 && addr <= 0xBFFF && ramEnabled) {
-        if (addr >= 0xA000 && addr <= 0xBFFF) {
-            ramBanks[(currentRAMBank * 0x2000) + (addr - 0xA000)] = value;
-            std::cout << "Writing " << int(value) << " to address: " << std::hex << addr << std::endl;
-        } else {
-            std::cerr << "Invalid memory write at address: " << std::hex << addr << std::endl;
-        }
-    }
-    // Write to VRAM (0x8000 - 0x9FFF)
-    else if (addr >= 0x8000 && addr <= 0x9FFF) {
-        memory[addr] = value;  // Allow writes to VRAM
-        std::cout << "Writing " << int(value) << " to VRAM address: " << std::hex << addr << std::endl;
-    }
-    // Default memory write
-    else {
-        memory[addr] = value;
-        std::cout << "Writing " << int(value) << " to address: " << std::hex << addr << std::endl;
+    } else if (addr >= 0x6000 && addr <= 0x7FFF) {
+        // Latch RTC data (optional)
+        // Implement RTC latching here
     }
 }
