@@ -1,6 +1,11 @@
 #include "cpu.h"
 #include "opcode_handlers.h"
 #include <iostream>
+#include <iomanip>
+
+#define PREFIXED_OPCODE(byte) (0x100 | (byte))
+
+
 
 CPU::CPU() {
     A = B = C = F = D = E = H = L = 0;  // Initialize 8-bit registers and Flag
@@ -12,6 +17,7 @@ CPU::CPU() {
     
     reset();
     initOpcodeTable();
+    initPreOpcodeTable();
 }
 
 void CPU::initOpcodeTable() {
@@ -268,9 +274,8 @@ void CPU::initOpcodeTable() {
     opcodeTable[0xD8] = RET_C;
     opcodeTable[0xD9] = RETI;
     opcodeTable[0xDA] = JP_C_a16;
-    opcodeTable[0xDB] = no_opcode;
+
     opcodeTable[0xDC] = CALL_C_a16;
-    opcodeTable[0xDD] = no_opcode;
     opcodeTable[0xDE] = SBC_A_n8;
     opcodeTable[0xDF] = RST_18;
 
@@ -285,7 +290,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0xEA] = LD_a16_A;
     opcodeTable[0xEE] = XOR_A_n8;
     opcodeTable[0xEF] = RST_28;
-    //opcodeTable[0xED] = no_opcode;
+    //opcodeTable[0xED] = no_opcode
 
     opcodeTable[0xF0] = LDH_A_a8;
     opcodeTable[0xF1] = POP_AF;
@@ -300,12 +305,21 @@ void CPU::initOpcodeTable() {
     opcodeTable[0xFB] = EI;
     opcodeTable[0xFE] = CP_A_n8;
     opcodeTable[0xFF] = RST_38;
-    //std::fill(std::begin(prefixedOpcodeTable), std::end(prefixedOpcodeTable), &UNIMPLEMENTED);
 
-    //prefixedOpcodeTable[0x1FF] = SET_7_A;
+
     // Add more opcodes as needed...
 }
 
+
+void CPU::initPreOpcodeTable() {
+    std::fill(std::begin(prefixedOpcodeTable), std::end(prefixedOpcodeTable), &UNIMPLEMENTED);
+    prefixedOpcodeTable[0xDD] = SET_3_L;
+    prefixedOpcodeTable[0xD9] = SET_3_C;
+    prefixedOpcodeTable[0xC9] = SET_1_C;
+    prefixedOpcodeTable[0xFF] = SET_7_A;
+    prefixedOpcodeTable[0xCC] = SET_1_H;
+    prefixedOpcodeTable[0x10] = RL_B;
+}
 void CPU::reset() {
     SP = 0xFFFE;  // Stack Pointer
     PC = 0x0100;  // Program Counter starts at 0x0100
@@ -319,22 +333,59 @@ void UNIMPLEMENTED(CPU& cpu) {
 }
 
 void CPU::executeOpcode(uint8_t opcode) {
-    std::cout << "PC: 0x" << std::hex << PC 
-             << " | Opcode: 0x" << static_cast<int>(opcode) << std::endl;
+    std::cout << "PC: 0x" << std::hex << static_cast<int>(PC - 1) 
+              << " | Opcode: 0x" << static_cast<int>(opcode) << std::endl;
     
-    if (opcodeTable[opcode]) {
-        opcodeTable[opcode](*this);  // Execute opcode
+    if (opcode == 0xCB) {
+        // Handle prefixed opcodes
+        uint8_t prefixedByte = fetch()+1;  // Fetch the next byte (e.g., 0xDD)
+        std::cout << "Prefixed Opcode: 0xCB 0x" << std::hex << static_cast<int>(prefixedByte) << std::endl;
+        
+        if (prefixedOpcodeTable[prefixedByte] == nullptr) {
+            std::cerr << "[ERROR] Unimplemented prefixed opcode: 0xCB 0x" 
+                      << std::hex << static_cast<int>(prefixedByte) 
+                      << " at PC: 0x" << static_cast<int>(PC - 2) << std::endl;
+        } else {
+            prefixedOpcodeTable[prefixedByte](*this);  // Execute prefixed opcode
+        }
     } else {
-        std::cerr << "Unknown opcode: 0x" << std::hex << static_cast<int>(opcode) << std::endl;
-        exit(1);
+        // Handle unprefixed opcodes
+        if (opcodeTable[opcode] == nullptr) {
+            std::cerr << "[ERROR] Unimplemented unprefixed opcode: 0x" 
+                      << std::hex << static_cast<int>(opcode) 
+                      << " at PC: 0x" << static_cast<int>(PC - 1) << std::endl;
+        } else {
+            opcodeTable[opcode](*this);  // Execute unprefixed opcode
+        }
     }
 }
+
+
+uint8_t CPU::fetch() {
+    uint8_t opcode = memory.read(PC);  // Read the opcode from memory at the current PC
+    
+    std::cout << "Fetched opcode 0x" << std::hex << static_cast<int>(opcode) 
+                << " from PC: 0x" << std::hex << PC << std::endl;
+    
+    return opcode;
+}
+
+void CPU::executePrefixedOpcode() {
+    uint8_t opcode = memory.read(PC++);  // Fetch prefixed opcode
+
+    
+    if (prefixedOpcodeTable[opcode]) {
+        prefixedOpcodeTable[opcode](*this);  // Execute opcode
+    } else {
+        std::cerr << "[ERROR] Unimplemented CB opcode: 0xCB 0x" << std::hex << (int)opcode << std::endl;
+    }
+}
+
 void CPU::executeNextInstruction() {
-    handleInterrupts();
-    uint8_t opcode = read8(PC);  // Fetch the opcode from memory
-    PC++;  // Increment the program counter to point to the next instruction
+    handleInterrupts();;
+    uint8_t opcode = fetch();  // Fetch the opcode from memory
+   
     executeOpcode(opcode);  // Execute the opcode
-    updateCycles(4);  // Update the cycle count (adjust the cycle count as needed based on the opcode)
 }
 
 
@@ -461,7 +512,7 @@ void CPU::writeMemory(uint16_t addr, uint8_t value) {
 
 uint16_t CPU::read16(uint16_t addr) {
     uint8_t low = memory.read(addr);
-    uint8_t high = memory.read((addr + 1) << 8);
+    uint8_t high = memory.read(addr + 1);
     return (high << 8) | low;
 }
 
@@ -548,27 +599,21 @@ void CPU::handleInterrupts() {
         uint8_t pending = IF & IE;
 
         // Handle each interrupt type
-        if (pending & 0x01) {  // V-Blank
-            PC = 0x0040;
-            writeMemory(0xFF0F, IF & ~0x01);  // Clear V-Blank interrupt flag
-        } else if (pending & 0x02) {  // LCD STAT
-            PC = 0x0048;
-            writeMemory(0xFF0F, IF & ~0x02);  // Clear LCD STAT interrupt flag
-        } else if (pending & 0x04) {  // Timer
-            PC = 0x0050;
-            writeMemory(0xFF0F, IF & ~0x04);  // Clear Timer interrupt flag
-        } else if (pending & 0x08) {  // Serial
-            PC = 0x0058;
-            writeMemory(0xFF0F, IF & ~0x08);  // Clear Serial interrupt flag
-        } else if (pending & 0x10) {  // Joypad
-            PC = 0x0060;
-            writeMemory(0xFF0F, IF & ~0x10);  // Clear Joypad interrupt flag
+        const uint16_t interruptVectors[5] = {0x0040, 0x0048, 0x0050, 0x0058, 0x0060};
+
+        for (int i = 0; i < 5; i++) {
+            if (pending & (1 << i)) {
+                PC = interruptVectors[i];               // Set PC to interrupt vector
+                writeMemory(0xFF0F, IF & ~(1 << i));    // Clear the handled interrupt flag
+                break;  // Only handle one interrupt per cycle
+            }
         }
 
-        // Update cycle count (interrupt handling takes 20 cycles)
+        // Interrupt handling takes 20 cycles
         updateCycles(20);
     }
 }
+
 
 
 void CPU::dumpROMHeader() {

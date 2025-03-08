@@ -23,12 +23,13 @@ public:
     bool interruptsEnabled;
     bool isStopped;
 
-    OpcodeHandler opcodeTable[256]; // Opcode handler table (array of function pointers)
+    OpcodeHandler opcodeTable[256]  = {0}; // Opcode handler table (array of function pointers)
     OpcodeHandler prefixedOpcodeTable[256];
 
     CPU();  // Constructor
 
     void executeOpcode(uint8_t opcode);
+    void executePrefixedOpcode();
     void executeNextInstruction();
 
     uint8_t read8(uint16_t addr);
@@ -44,6 +45,7 @@ public:
     bool getCarryFlag();
 
     void initOpcodeTable();
+    void initPreOpcodeTable();
     void enableInterrupts();
     void disableInterrupts();
 
@@ -76,6 +78,7 @@ public:
     void setDE(uint16_t value);
     void setHL(uint16_t value);
     void setAF(uint16_t value);
+    uint8_t fetch();
 
     void dumpROMHeader();
 };

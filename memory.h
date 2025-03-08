@@ -16,6 +16,7 @@ public:
     uint8_t wram[0x2000];     // Work RAM (8KB)
     uint8_t oam[0xA0];        // Sprite Attribute Table (OAM, 160 bytes)
     uint8_t hram[0x7F];       // High RAM (127 bytes)
+    uint8_t io_registers[0x80];
     uint8_t ie;               // Interrupt Enable Register
 
     // MBC-related variables
@@ -41,6 +42,7 @@ private:
     void handleMBC1Write(uint16_t addr, uint8_t value);
     void handleMBC2Write(uint16_t addr, uint8_t value);
     void handleMBC3Write(uint16_t addr, uint8_t value);
+    void handleIOWrite(uint16_t addr, uint8_t value);
 };
 
 #endif

@@ -811,8 +811,7 @@ void LD_L_L(CPU& cpu) {
 }
 
 void LD_L_HL(CPU& cpu) {
-    uint16_t hl = cpu.getHL();  // Combine H and L to form HL
-    cpu.L = cpu.read8(hl);  // Copy value from memory at HL into L
+    cpu.L = cpu.read8( cpu.getHL());  // Copy value from memory at HL into L
     cpu.PC++;
     cpu.updateCycles(8);  // 8 cycles for memory access
 }
@@ -1641,16 +1640,20 @@ void POP_BC(CPU& cpu) {
 
 void JP_NZ_a16(CPU& cpu) {
     if (!cpu.getZeroFlag()) {
-        cpu.PC = cpu.read16(cpu.PC+1);
-        cpu.updateCycles(16);  // or 12 cycles if not taken
+        // Jump is taken: set PC to the 16-bit address
+        uint16_t address = cpu.read16(cpu.PC);
+        cpu.PC = address;
+        cpu.updateCycles(16);  // 16 cycles if jump is taken
     } else {
+        // Jump is not taken: skip the 2-byte address
         cpu.PC += 3;
-        cpu.updateCycles(12);
+        cpu.updateCycles(12);  // 12 cycles if jump is not taken
     }
 }
 
 void JP_a16(CPU& cpu) {
-    cpu.PC = cpu.read16(cpu.PC+1);
+    uint16_t addr= cpu.read16(cpu.PC+1);
+    cpu.PC = addr;
     cpu.updateCycles(16);
 }
 void CALL_NZ_a16(CPU& cpu) {
@@ -1737,17 +1740,24 @@ void CALL_Z_a16(CPU& cpu) {
 void CALL_a16(CPU& cpu) {
     uint16_t returnAddress = cpu.PC + 3; 
     cpu.push16(returnAddress);  
-    cpu.PC = cpu.read16(cpu.PC+1);
+    uint16_t address = cpu.read16(cpu.PC+1);
+    cpu.PC = address;
     cpu.updateCycles(24);
 }
 void ADC_A_n8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);
-    uint16_t result = cpu.A + value + (cpu.getCarryFlag() ? 1 : 0);
-    cpu.A = result & 0xFF;
-    cpu.setZeroFlag(cpu.A == 0);
+    uint8_t carry = cpu.getCarryFlag() ? 1 : 0;
+    
+    uint16_t result = cpu.A + value + carry;  // Compute full result before modifying A
+    
+    // Compute flags BEFORE modifying A
+    cpu.setZeroFlag((result & 0xFF) == 0);
     cpu.setSubtractFlag(false);
-    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (value & 0x0F) + (cpu.getCarryFlag() ? 1 : 0)) > 0x0F);
+    cpu.setHalfCarryFlag(((cpu.A & 0x0F) + (value & 0x0F) + carry) > 0x0F);
     cpu.setCarryFlag(result > 0xFF);
+
+    cpu.A = result & 0xFF;  // Update register A with the lower byte
+
     cpu.PC += 2;
     cpu.updateCycles(8);
 }
@@ -2078,30 +2088,64 @@ void CP_A_n8(CPU& cpu) {
 
 void RST_38(CPU& cpu) {
     //std::cout << "[DEBUG] RST 38H: Pushing PC = 0x" << std::hex << cpu.PC << " onto stack at SP = 0x" << cpu.SP << std::endl;
-    cpu.PC++;
+    //cpu.PC++;
     cpu.push16(cpu.PC);
     cpu.PC = 0x0038;
     cpu.updateCycles(16);
         
 }
 
-/*
-void SET_7_A(CPU& cpu) {
-    uint8_t t =  cpu.A | (1<<7);
-    cpu.A = t;
+void SET_1_H(CPU& cpu) {
+    uint8_t t = cpu.H |= (1<<1);
+    cpu.H = t;
     cpu.PC += 2;
     cpu.updateCycles(8);
 }
 
 
 
-
-*/
-void no_opcode(CPU& cpu) {
-    cpu.PC++;
-    std::cerr << "[ERROR] Unimplemented opcode: 0xDD at PC: 0x" 
-        << std::hex << cpu.PC << std::endl;
-    
+void SET_1_C(CPU& cpu) {
+    uint8_t t =  cpu.C |=  (1<<1);
+    cpu.C = t;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+void SET_3_L(CPU& cpu) {
+    uint8_t t =  cpu.L |=  (1<<3);
+    cpu.L = t;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
 }
 
+void SET_7_A(CPU& cpu) {
+    uint8_t t =  cpu.A |=  (1<<7);
+    cpu.A = t;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
 
+void SET_3_C(CPU& cpu) {
+    uint8_t t = cpu.C |= (1<<3);
+    cpu.C = t;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void RL_B(CPU& cpu ) {
+    uint8_t bit7 = (cpu.B >> 7) & 1;
+    cpu.B = (cpu.B << 1) | cpu.getCarryFlag();
+    cpu.setCarryFlag(bit7);
+
+    if (cpu.getZeroFlag() == 0) {
+        cpu.setZeroFlag(true);
+    } else {
+        cpu.setZeroFlag(false);
+    }
+
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+
+
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+}

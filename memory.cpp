@@ -49,7 +49,7 @@ void Memory::loadROM(const std::string& filename) {
     // Check entry point
     if (rom.size() > 0x100) {
         std::cout << "[DEBUG] Entry point instruction: ";
-        printf("%02X %02X %02X\n", rom[0x100], rom[0x101], rom[0x102]);
+        printf("%02X %02X %02X %02X %02X \n", rom[0x100], rom[0x101], rom[0x102], rom[0x103], rom[0x104]);
     } else {
         std::cerr << "[ERROR] ROM is too small!\n";
     }
@@ -59,30 +59,34 @@ void Memory::loadROM(const std::string& filename) {
 
 
 
-
 uint8_t Memory::read(uint16_t addr) {
+    if (addr >= 0xFF00 && addr <= 0xFFFF) {
+        return io_registers[addr - 0xFF00]; // MMIO Registers
+    }
     if (addr <= 0x3FFF) {
         return rom[addr]; // ROM Bank 0
     } else if (addr >= 0x4000 && addr <= 0x7FFF) {
-        return rom[(currentROMBank * 0x4000) + (addr - 0x4000)]; // Switchable ROM Bank
+        return rom[(currentROMBank * 0x4000) + (addr - 0x4000)];
     } else if (addr >= 0xA000 && addr <= 0xBFFF && ramEnabled) {
         return ram[(currentRAMBank * 0x2000) + (addr - 0xA000)];
     } else if (addr >= 0x8000 && addr <= 0x9FFF) {
-        return vram[addr - 0x8000]; // VRAM
+        return vram[addr - 0x8000];
     } else if (addr >= 0xC000 && addr <= 0xDFFF) {
-        return wram[addr - 0xC000]; // WRAM
+        return wram[addr - 0xC000];
+    } else if (addr >= 0xE000 && addr <= 0xFDFF) {
+        return wram[addr - 0xE000]; // Echo RAM (Mirror of WRAM)
     } else if (addr >= 0xFE00 && addr <= 0xFE9F) {
-        return oam[addr - 0xFE00]; // OAM
+        return oam[addr - 0xFE00];
     } else if (addr >= 0xFF80 && addr <= 0xFFFE) {
-        return hram[addr - 0xFF80]; // HRAM
+        return hram[addr - 0xFF80];
     } else if (addr == 0xFFFF) {
         return ie; // Interrupt Enable Register
     }
 
-    // Debugging: log any invalid address accesses
     std::cout << "[DEBUG] Invalid memory access at address: " << std::hex << addr << std::endl;
-    return 0xFF; // Default value for unmapped memory
+    return 0xFF;
 }
+
 
 void Memory::write(uint16_t addr, uint8_t value) {
     if (addr <= 0x7FFF) {
@@ -107,6 +111,8 @@ void Memory::write(uint16_t addr, uint8_t value) {
         hram[addr - 0xFF80] = value; // HRAM
     } else if (addr == 0xFFFF) {
         ie = value; // Interrupt Enable Register
+    } else if (addr >= 0xFF00 && addr <= 0xFF7F) {
+        handleIOWrite(addr, value);
     }
 }
 
@@ -158,5 +164,19 @@ void Memory::handleMBC3Write(uint16_t addr, uint8_t value) {
     } else if (addr >= 0x6000 && addr <= 0x7FFF) {
         // Latch RTC data (optional)
         // Implement RTC latching here
+    }
+}
+
+void Memory::handleIOWrite(uint16_t addr, uint8_t value) {
+    switch (addr) {
+        case 0xFF04: // Divider Register (DIV) - Writing resets it to 0
+            io_registers[0x04] = 0;
+            break;
+        case 0xFF44: // LCDC Y-Coordinate (LY) - Writing resets it to 0
+            io_registers[0x44] = 0;
+            break;
+        default:
+            io_registers[addr - 0xFF00] = value;
+            break;
     }
 }

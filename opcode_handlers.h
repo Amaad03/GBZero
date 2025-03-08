@@ -289,7 +289,7 @@ void LD_a16_SP(CPU& cpu);
 void LD_D_B(CPU& cpu);
 
 void ADC_A_n8(CPU& cpu);
-void no_opcode(CPU& cpu); 
+
 
 
 
@@ -369,6 +369,23 @@ void CP_A_n8(CPU& cpu);
 
 // RST $38
 void RST_38(CPU& cpu);
-//void SET_7_A(CPU& cpu);
+void SET_7_A(CPU& cpu);
+void SET_3_L(CPU&  cpu);
+void SET_1_C(CPU& cpu);
+void SET_1_H(CPU& cpu);
+void SET_3_C(CPU& cpu);
+
+
+
+
+
+void RL_B(CPU& cpu);
+
+
+
+
+
+
+
 #endif // OPCODE_HANDLERS_H
 
