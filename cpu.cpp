@@ -47,7 +47,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x13] = INC_DE; //0x13
     opcodeTable[0x14] = INC_D; //0x14
     opcodeTable[0x15] = DEC_D; //0x15
-    opcodeTable[0x16] = LD_D_n8; //0x16
+    opcodeTable[0x16] = LD_D_d8; //0x16
     opcodeTable[0x17] = RLA; //0x17
     opcodeTable[0x18] = JR_e8; //0x18
     opcodeTable[0x19] = ADD_HL_DE; //0x19
@@ -65,7 +65,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x23] = INC_HL;
     opcodeTable[0x24] = INC_H;
     opcodeTable[0x25] = DEC_H;
-    opcodeTable[0x26] = LD_H_n8;
+    opcodeTable[0x26] = LD_H_d8;
     opcodeTable[0x27] = DAA;
     opcodeTable[0x28] = JRZ_e8;
     opcodeTable[0x29] = ADD_HL_HL;
@@ -82,7 +82,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x33] = INC_SP;     // 0x33 - INC SP
     opcodeTable[0x34] = INC_HL_mem;     // 0x34 - INC HL
     opcodeTable[0x35] = DEC_HL_mem;     // 0x35 - DEC HL
-    opcodeTable[0x36] = LD_HL_n8;   // 0x36 - LD HL, n8
+    opcodeTable[0x36] = LD_HL_d8;   // 0x36 - LD HL, n8
     opcodeTable[0x37] = SCF;        // 0x37 - SCF
     opcodeTable[0x38] = JR_C_e8;    // 0x38 - JR C, e8
     opcodeTable[0x39] = ADD_HL_SP;  // 0x39 - ADD HL, SP
@@ -274,7 +274,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0xD8] = RET_C;
     opcodeTable[0xD9] = RETI;
     opcodeTable[0xDA] = JP_C_a16;
-
+    opcodeTable[0xDD] = no_opcode;
     opcodeTable[0xDC] = CALL_C_a16;
     opcodeTable[0xDE] = SBC_A_n8;
     opcodeTable[0xDF] = RST_18;
@@ -319,6 +319,7 @@ void CPU::initPreOpcodeTable() {
     prefixedOpcodeTable[0xFF] = SET_7_A;
     prefixedOpcodeTable[0xCC] = SET_1_H;
     prefixedOpcodeTable[0x10] = RL_B;
+    prefixedOpcodeTable[0x20] = SLA_B;
 }
 void CPU::reset() {
     SP = 0xFFFE;  // Stack Pointer
@@ -333,7 +334,7 @@ void UNIMPLEMENTED(CPU& cpu) {
 }
 
 void CPU::executeOpcode(uint8_t opcode) {
-    std::cout << "PC: 0x" << std::hex << static_cast<int>(PC - 1) 
+    std::cout << "PC: 0x" << std::hex << static_cast<int>(PC) 
               << " | Opcode: 0x" << static_cast<int>(opcode) << std::endl;
     
     if (opcode == 0xCB) {
@@ -344,7 +345,7 @@ void CPU::executeOpcode(uint8_t opcode) {
         if (prefixedOpcodeTable[prefixedByte] == nullptr) {
             std::cerr << "[ERROR] Unimplemented prefixed opcode: 0xCB 0x" 
                       << std::hex << static_cast<int>(prefixedByte) 
-                      << " at PC: 0x" << static_cast<int>(PC - 2) << std::endl;
+                      << " at PC: 0x" << static_cast<int>(PC ) << std::endl;
         } else {
             prefixedOpcodeTable[prefixedByte](*this);  // Execute prefixed opcode
         }
@@ -353,7 +354,7 @@ void CPU::executeOpcode(uint8_t opcode) {
         if (opcodeTable[opcode] == nullptr) {
             std::cerr << "[ERROR] Unimplemented unprefixed opcode: 0x" 
                       << std::hex << static_cast<int>(opcode) 
-                      << " at PC: 0x" << static_cast<int>(PC - 1) << std::endl;
+                      << " at PC: 0x" << static_cast<int>(PC) << std::endl;
         } else {
             opcodeTable[opcode](*this);  // Execute unprefixed opcode
         }
@@ -368,17 +369,6 @@ uint8_t CPU::fetch() {
                 << " from PC: 0x" << std::hex << PC << std::endl;
     
     return opcode;
-}
-
-void CPU::executePrefixedOpcode() {
-    uint8_t opcode = memory.read(PC++);  // Fetch prefixed opcode
-
-    
-    if (prefixedOpcodeTable[opcode]) {
-        prefixedOpcodeTable[opcode](*this);  // Execute opcode
-    } else {
-        std::cerr << "[ERROR] Unimplemented CB opcode: 0xCB 0x" << std::hex << (int)opcode << std::endl;
-    }
 }
 
 void CPU::executeNextInstruction() {
@@ -487,7 +477,10 @@ uint16_t CPU::pop16() {
     SP += 2;  
     
     // Combine high and low byte into a 16-bit value and return
+    printf("Popped value: 0x%04X, SP: 0x%04X\n", (high << 8) | low, SP);
+
     return (high << 8) | low;
+
 }
 
 // PUSH16: Pushes a 16-bit value onto the stack.

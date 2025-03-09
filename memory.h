@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <stdexcept>
 
+
 class Memory {
 public:
     // Memory regions
@@ -23,7 +24,9 @@ public:
     uint8_t currentROMBank = 1; // Current ROM bank (default to 1)
     uint8_t currentRAMBank = 0; // Current RAM bank (default to 0)
     bool ramEnabled = false;    // RAM enable flag (for MBC)
+    bool bootROMEnabled = true;
     uint8_t mbcType = 0;        // MBC type (0 = no MBC, 1 = MBC1, etc.)
+    bool mbc1Mode = false;      // Mode flag for MBC1 (0 = ROM banking, 1 = RAM banking)
 
     // Constructor
     Memory();
@@ -40,6 +43,7 @@ public:
 private:
     // Helper functions for MBC handling
     void handleMBC1Write(uint16_t addr, uint8_t value);
+    void performDMATransfer(uint8_t value);
     void handleMBC2Write(uint16_t addr, uint8_t value);
     void handleMBC3Write(uint16_t addr, uint8_t value);
     void handleIOWrite(uint16_t addr, uint8_t value);

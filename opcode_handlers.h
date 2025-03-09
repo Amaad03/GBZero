@@ -3,6 +3,7 @@
 class CPU;
 
 // Declare opcode handler functions
+void no_opcode(CPU& cpu);
 void NOP(CPU& cpu);
 void LD_BC_d16(CPU& cpu);
 void LD_BC_A(CPU& cpu);
@@ -27,7 +28,7 @@ void LD_DE_A(CPU& cpu); //0x12
 void INC_DE(CPU& cpu); //0x13
 void INC_D(CPU& cpu); //0x14
 void DEC_D(CPU& cpu); //0x15
-void LD_D_n8(CPU& cpu); //0x16
+void LD_D_d8(CPU& cpu); //0x16
 void RLA(CPU& cpu); //0x17
 void JR_e8(CPU& cpu); //0x18
 void ADD_HL_DE(CPU& cpu); //0x19
@@ -44,7 +45,7 @@ void LD_HLplus_A(CPU& cpu);
 void INC_HL(CPU& cpu);
 void INC_H(CPU& cpu);
 void DEC_H(CPU& cpu);
-void LD_H_n8(CPU& cpu);
+void LD_H_d8(CPU& cpu);
 void DAA(CPU& cpu);
 void JRZ_e8(CPU& cpu);
 void ADD_HL_HL(CPU& cpu);
@@ -63,7 +64,7 @@ void INC_HL(CPU& cpu);
 void INC_HL_mem(CPU& cpu);
 void DEC_HL_mem(CPU& cpu);
 void DEC_HL(CPU& cpu);
-void LD_HL_n8(CPU& cpu);
+void LD_HL_d8(CPU& cpu);
 void SCF(CPU& cpu);
 void JR_C_e8(CPU& cpu);
 void ADD_HL_SP(CPU& cpu);
@@ -379,6 +380,7 @@ void SET_3_C(CPU& cpu);
 
 
 
+void SLA_B(CPU& cpu);
 void RL_B(CPU& cpu);
 
 

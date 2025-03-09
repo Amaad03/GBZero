@@ -10,6 +10,7 @@ Memory::Memory() {
     std::fill(oam, oam + 0xA0, 0);
     std::fill(hram, hram + 0x7F, 0);
     ie = 0;
+    ramEnabled = true;
 }
 
 void Memory::loadROM(const std::string& filename) {
@@ -17,7 +18,7 @@ void Memory::loadROM(const std::string& filename) {
     if (!romFile) {
         throw std::runtime_error("Failed to open ROM file.");
     } else {
-        std::cout<<"ROM opened successfully" <<std::endl;
+        std::cout << "ROM opened successfully" << std::endl;
     }
 
     romFile.seekg(0, std::ios::end);
@@ -51,7 +52,7 @@ void Memory::loadROM(const std::string& filename) {
         std::cout << "[DEBUG] Entry point instruction: ";
         printf("%02X %02X %02X %02X %02X \n", rom[0x100], rom[0x101], rom[0x102], rom[0x103], rom[0x104]);
     } else {
-        std::cerr << "[ERROR] ROM is too small!\n";
+        std::cerr << "[ERROR] ROM is too small!" << std::endl;
     }
 
     mbcType = rom[0x147]; // Get MBC type
@@ -87,7 +88,6 @@ uint8_t Memory::read(uint16_t addr) {
     return 0xFF;
 }
 
-
 void Memory::write(uint16_t addr, uint8_t value) {
     if (addr <= 0x7FFF) {
         // Handle MBC writes
@@ -98,9 +98,14 @@ void Memory::write(uint16_t addr, uint8_t value) {
             // Add more MBC types as needed
             default: break;
         }
-    } else if (addr >= 0xA000 && addr <= 0xBFFF && ramEnabled) {
-        // External RAM
-        ram[(currentRAMBank * 0x2000) + (addr - 0xA000)] = value;
+    }
+
+    if (addr >= 0xA000 && addr <= 0xBFFF && ramEnabled) {
+        if (!ram.empty() && ramEnabled) {
+            ram[(currentRAMBank * 0x2000) + (addr - 0xA000)] = value;
+        } else {
+            printf("[ERROR] Attempted to write to unallocated RAM at 0x%04X\n", addr);
+        }
     } else if (addr >= 0x8000 && addr <= 0x9FFF) {
         vram[addr - 0x8000] = value; // VRAM
     } else if (addr >= 0xC000 && addr <= 0xDFFF) {
@@ -120,28 +125,38 @@ void Memory::handleMBC1Write(uint16_t addr, uint8_t value) {
     if (addr <= 0x1FFF) {
         // Enable/disable RAM
         ramEnabled = (value & 0x0F) == 0x0A;
+        printf("[DEBUG] RAM Enable Write: Value = 0x%02X, RAM Enabled = %d\n", value, ramEnabled);
     } else if (addr >= 0x2000 && addr <= 0x3FFF) {
         // Set lower 5 bits of ROM bank number
-        currentROMBank = (currentROMBank & 0xE0) | (value & 0x1F);
-        if (currentROMBank == 0) currentROMBank++; // Bank 0 is not allowed
+        uint8_t romBank = value & 0x1F;
+        if (romBank == 0) romBank = 1; // Bank 0 is not allowed
+
+        currentROMBank = (currentROMBank & 0xE0) | romBank;
     } else if (addr >= 0x4000 && addr <= 0x5FFF) {
         // Set upper 2 bits of ROM bank number or RAM bank number
-        currentROMBank = (currentROMBank & 0x1F) | ((value & 0x03) << 5);
+        if (mbc1Mode == 0) {
+            // Mode 0: Affects ROM banking
+            currentROMBank = (currentROMBank & 0x1F) | ((value & 0x03) << 5);
+        } else {
+            // Mode 1: Affects RAM banking
+            currentRAMBank = value & 0x03; // Only 2 bits for RAM banks 0-3
+        }
     } else if (addr >= 0x6000 && addr <= 0x7FFF) {
-        // MBC1 mode switching (not implemented here)
+        // Mode select: 0 = Large ROM (default), 1 = Small ROM + RAM banking
+        mbc1Mode = value & 0x01;
     }
 }
 
 void Memory::handleMBC2Write(uint16_t addr, uint8_t value) {
     if (addr <= 0x1FFF) {
-        // RAM enable/disable (only lower bit of address matters)
+        // Enable RAM (only if bit 8 of addr is 0)
         if ((addr & 0x0100) == 0) {
             ramEnabled = (value & 0x0F) == 0x0A;
         }
     } else if (addr >= 0x2100 && addr <= 0x3FFF) {
-        // ROM bank selection (only lower 4 bits matter)
+        // Set ROM bank (only lower 4 bits matter)
         currentROMBank = value & 0x0F;
-        if (currentROMBank == 0) currentROMBank++; // Bank 0 is not allowed
+        if (currentROMBank == 0) currentROMBank = 1; // Bank 0 is not allowed
     }
 }
 
@@ -169,14 +184,27 @@ void Memory::handleMBC3Write(uint16_t addr, uint8_t value) {
 
 void Memory::handleIOWrite(uint16_t addr, uint8_t value) {
     switch (addr) {
-        case 0xFF04: // Divider Register (DIV) - Writing resets it to 0
+        case 0xFF04: // DIV register reset
             io_registers[0x04] = 0;
             break;
-        case 0xFF44: // LCDC Y-Coordinate (LY) - Writing resets it to 0
+        case 0xFF44: // LY register reset
             io_registers[0x44] = 0;
+            break;
+        case 0xFF46: // DMA Transfer
+            performDMATransfer(value);
+            break;
+        case 0xFF50: // Disable boot ROM
+            bootROMEnabled = false;
             break;
         default:
             io_registers[addr - 0xFF00] = value;
             break;
+    }
+}
+
+void Memory::performDMATransfer(uint8_t value) {
+    uint16_t startAddress = value * 0x100; // 0x100 is 256 bytes per transfer
+    for (int i = 0; i < 0xA0; i++) { // 0xA0 = 160 bytes for OAM
+        oam[i] = read(startAddress + i); // Transfer data from RAM to OAM
     }
 }

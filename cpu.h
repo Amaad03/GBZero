@@ -24,12 +24,11 @@ public:
     bool isStopped;
 
     OpcodeHandler opcodeTable[256]  = {0}; // Opcode handler table (array of function pointers)
-    OpcodeHandler prefixedOpcodeTable[256];
+    OpcodeHandler prefixedOpcodeTable[256] = {0};
 
     CPU();  // Constructor
 
     void executeOpcode(uint8_t opcode);
-    void executePrefixedOpcode();
     void executeNextInstruction();
 
     uint8_t read8(uint16_t addr);

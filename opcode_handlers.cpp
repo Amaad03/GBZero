@@ -3,6 +3,11 @@
 #include "cpu.h"  // Include the CPU class to access registers
 #include <iostream>
 // Define the opcode handler functions
+
+
+void no_opcode(CPU& cpu) {
+    cpu.PC++;
+}
 void NOP(CPU& cpu) {
     std::cout << "[DEBUG] NOP executed" << std::endl;
     cpu.PC++; 
@@ -165,7 +170,7 @@ void DEC_D(CPU& cpu) { // both good
 
 
 
-void LD_D_n8(CPU& cpu) { // this is good
+void LD_D_d8(CPU& cpu) { // this is good
     uint8_t value = cpu.read8(cpu.PC + 1);
     cpu.D = value;
     cpu.PC += 2;
@@ -247,17 +252,40 @@ void RRA(CPU& cpu) {
     cpu.PC++;
     cpu.updateCycles(4);
 }
+
+/*
 void JR_NZ_e8(CPU& cpu) {
-    cpu.PC += 2;
-    if ((cpu.F & (1 << cpu.getZeroFlag())) == 0) {
-        int8_t offset = cpu.read8(cpu.PC + 1);  
-        cpu.PC += offset;  
-        cpu.updateCycles(12);  
+    if (!cpu.getZeroFlag()) {  // Jump if Zero flag is not set (NZ)
+        int8_t offset = cpu.read8(cpu.PC + 1);  // Read the signed 8-bit offset from the next byte
+        cpu.PC += offset;  // Update the program counter with the offset
+        cpu.updateCycles(12);  // Jump takes 12 cycles
+        printf("offset was added to PC");
     } else {
-        cpu.updateCycles(8);  
+        cpu.PC += 2;  // If no jump, just skip over the opcode and the offset
+        cpu.updateCycles(8);  // No jump, only increment by 2 bytes, takes 8 cycles
     }
 }
+*/
 
+
+
+void JR_NZ_e8(CPU& cpu) {
+    // Fetch the immediate 8-bit value for the jump
+    uint8_t r8 = cpu.read8(cpu.PC + 1);  // Get the signed 8-bit offset
+    int8_t offset = static_cast<int8_t>(r8);  // Convert to signed offset
+
+    // Check if Zero Flag (Z) is not set (Z == 0)
+    if ((cpu.F & (1 << cpu.getZeroFlag())) == 0) {
+        // If NZ, jump: Update the PC by the signed offset
+        cpu.PC += 2;  // Skip the opcode and r8 byte
+        cpu.PC += offset;  // Add the offset to the PC
+        cpu.updateCycles(12);  // Jump takes 12 cycles
+    } else {
+        // If Zero Flag is set (Z == 1), just increment PC by 2
+        cpu.PC += 2;  // Skip the opcode and r8 byte
+        cpu.updateCycles(8);  // No jump, takes 8 cycles
+    }
+}
 void LD_HL_n16(CPU& cpu) { 
     cpu.setHL(cpu.read16(cpu.PC+1));
     cpu.PC += 3; 
@@ -291,7 +319,7 @@ void DEC_H(CPU& cpu) {
     cpu.updateCycles(4); 
 }
 
-void LD_H_n8(CPU& cpu) {
+void LD_H_d8(CPU& cpu) {
     cpu.H = cpu.read8(cpu.PC + 1);  // Load immediate 8-bit value into H
     cpu.PC += 2;  // Move program counter to the next instruction
     cpu.updateCycles(8);  // 8 cycles for this instruction
@@ -441,7 +469,7 @@ void DEC_HL_mem(CPU& cpu) {
 
 
 
-void LD_HL_n8(CPU& cpu) {
+void LD_HL_d8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);  
     cpu.writeMemory(cpu.getHL(), value);               
     cpu.PC += 2;  
@@ -628,7 +656,8 @@ void LD_C_A(CPU& cpu) {
 }
 
 void LD_D_B(CPU& cpu) {
-    cpu.D = cpu.B;  // Copy value of B into D
+    uint8_t addr = cpu.read8(cpu.B);
+    cpu.D = addr;  // Copy value of B into D
     cpu.PC++;
     cpu.updateCycles(4);  // 4 cycles for register-to-register transfer
 }
@@ -1653,6 +1682,7 @@ void JP_NZ_a16(CPU& cpu) {
 
 void JP_a16(CPU& cpu) {
     uint16_t addr= cpu.read16(cpu.PC+1);
+    std::cout << "[DEBUG] JP executed: Jumping to " << std::hex << addr << std::endl;
     cpu.PC = addr;
     cpu.updateCycles(16);
 }
@@ -1708,7 +1738,10 @@ void RET(CPU& cpu) {
 
     uint16_t returnAddress = cpu.pop16();
     cpu.PC = returnAddress;
+    
     cpu.updateCycles(16);
+    printf("RET executed. Return address: 0x%04X, Setting PC to: 0x%04X\n", returnAddress, cpu.PC);
+
 }
 
 void JP_Z_a16(CPU& cpu) {
@@ -2062,11 +2095,11 @@ void LD_SP_HL(CPU& cpu) {
 }
 
 void LD_A_a16(CPU& cpu) {
-    cpu.updateCycles(8);
+
     uint16_t addr = cpu.read16(cpu.PC+1);
     cpu.A = cpu.read8(addr);
     cpu.PC += 3;
-    cpu.updateCycles(8);
+    cpu.updateCycles(16);
 }
 
 void EI(CPU& cpu) {
@@ -2077,14 +2110,17 @@ void EI(CPU& cpu) {
 
 void CP_A_n8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);
-    
-    cpu.setZeroFlag(cpu.A == value);  // Set Zero flag if A equals the immediate value
-    cpu.setSubtractFlag(true);  // Subtraction occurs in the comparison
-    cpu.setHalfCarryFlag(((cpu.A & 0x0F) - (value & 0x0F)) < 0);  // Check for half carry
-    cpu.setCarryFlag(cpu.A < value);  // Set Carry flag if there's a borrow
-    cpu.PC += 2;
+    uint8_t result = cpu.A - value;  // Subtract but don't store
+
+    cpu.setZeroFlag(result == 0);  // Set if A == value
+    cpu.setSubtractFlag(true);  // This is a subtraction operation
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (value & 0x0F));  // Borrow from lower nibble
+    cpu.setCarryFlag(cpu.A < value);  // Borrow from full 8-bit subtraction
+
+    cpu.PC += 2;  // Advance past opcode and operand
     cpu.updateCycles(8);
 }
+
 
 void RST_38(CPU& cpu) {
     //std::cout << "[DEBUG] RST 38H: Pushing PC = 0x" << std::hex << cpu.PC << " onto stack at SP = 0x" << cpu.SP << std::endl;
@@ -2148,4 +2184,8 @@ void RL_B(CPU& cpu ) {
 
     cpu.PC+=2;
     cpu.updateCycles(8);
+}
+
+void SLA_B(CPU& cpu) {
+
 }

@@ -6,7 +6,7 @@
 // Function to load ROM into CPU memory
 int main() {
     CPU cpu;
-    cpu.memory.loadROM("cpu_instrs.gb");
+    cpu.memory.loadROM("Red.gb");
     cpu.dumpROMHeader();
 
 
