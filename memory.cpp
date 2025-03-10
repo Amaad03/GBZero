@@ -1,5 +1,7 @@
 #include "memory.h"
 #include <iostream>
+#include <cstring>
+
 
 Memory::Memory() {
     // Initialize memory regions
@@ -10,8 +12,43 @@ Memory::Memory() {
     std::fill(oam, oam + 0xA0, 0);
     std::fill(hram, hram + 0x7F, 0);
     ie = 0;
-    ramEnabled = true;
+    ramEnabled = false;
+    std::fill(bootROM, bootROM + 256, 0);
+    bootROMUnmapped = false;
+    currentROMBank = 1;
+    currentRAMBank = 0;
+    mbc1Mode = false;
+    std::fill(io_registers, io_registers + 0x80, 0);
 }
+
+
+void Memory::loadBootROM(const std::string& bootROMPath) {
+    std::ifstream bootROMFile(bootROMPath, std::ios::binary);
+    if (!bootROMFile) {
+        throw std::runtime_error("Failed to load boot ROM: " + bootROMPath);
+    } else {
+        std::cout<<"boot rom loaded properly" << std::endl;
+    }
+
+    // Read the boot ROM into memory
+    bootROMFile.read(reinterpret_cast<char*>(bootROM), 256);
+    bootROMFile.close();
+
+    std::cout << "[DEBUG] Boot ROM loaded successfully." << std::endl;
+
+    // Debug: Print the first few bytes of the boot ROM
+    std::cout << "[DEBUG] First 16 bytes of boot ROM: ";
+    for (int i = 0; i < 16; ++i) {
+        printf("%02X ", bootROM[i]);
+    }
+    std::cout << std::endl;
+}
+void Memory::disableBootROM() {
+    bootROMUnmapped = true;
+    std::cout << "[DEBUG] Boot ROM unmapped. Switching to game ROM." << std::endl;
+}
+
+
 
 void Memory::loadROM(const std::string& filename) {
     std::ifstream romFile(filename, std::ios::binary);
@@ -61,36 +98,73 @@ void Memory::loadROM(const std::string& filename) {
 
 
 uint8_t Memory::read(uint16_t addr) {
-    if (addr >= 0xFF00 && addr <= 0xFFFF) {
-        return io_registers[addr - 0xFF00]; // MMIO Registers
-    }
-    if (addr <= 0x3FFF) {
-        return rom[addr]; // ROM Bank 0
-    } else if (addr >= 0x4000 && addr <= 0x7FFF) {
-        return rom[(currentROMBank * 0x4000) + (addr - 0x4000)];
-    } else if (addr >= 0xA000 && addr <= 0xBFFF && ramEnabled) {
-        return ram[(currentRAMBank * 0x2000) + (addr - 0xA000)];
-    } else if (addr >= 0x8000 && addr <= 0x9FFF) {
-        return vram[addr - 0x8000];
-    } else if (addr >= 0xC000 && addr <= 0xDFFF) {
-        return wram[addr - 0xC000];
-    } else if (addr >= 0xE000 && addr <= 0xFDFF) {
-        return wram[addr - 0xE000]; // Echo RAM (Mirror of WRAM)
-    } else if (addr >= 0xFE00 && addr <= 0xFE9F) {
-        return oam[addr - 0xFE00];
-    } else if (addr >= 0xFF80 && addr <= 0xFFFE) {
-        return hram[addr - 0xFF80];
-    } else if (addr == 0xFFFF) {
-        return ie; // Interrupt Enable Register
+    // Boot ROM (0x0000–0x00FF)
+    if (addr < 0x0100 && !bootROMUnmapped) {
+        std::cout << "[DEBUG] Reading from boot ROM at address 0x" << std::hex << static_cast<int>(addr)
+                  << ": 0x" << static_cast<int>(bootROM[addr]) << std::endl;
+        return bootROM[addr]; // Access boot ROM if it's still mapped
     }
 
-    std::cout << "[DEBUG] Invalid memory access at address: " << std::hex << addr << std::endl;
+    // Cartridge ROM (0x0000–0x7FFF)
+    if (addr <= 0x7FFF) {
+        if (addr <= 0x3FFF) {
+            return rom[addr]; // ROM Bank 0
+        } else {
+            return rom[(currentROMBank * 0x4000) + (addr - 0x4000)]; // Switchable ROM Bank
+        }
+    }
+
+    // Video RAM (0x8000–0x9FFF)
+    if (addr >= 0x8000 && addr <= 0x9FFF) {
+        return vram[addr - 0x8000];
+    }
+
+    // External RAM (0xA000–0xBFFF)
+    if (addr >= 0xA000 && addr <= 0xBFFF) {
+        if (ramEnabled) {
+            return ram[(currentRAMBank * 0x2000) + (addr - 0xA000)];
+        } else {
+            return 0xFF; // RAM disabled
+        }
+    }
+
+    // Work RAM (0xC000–0xDFFF) and Echo RAM (0xE000–0xFDFF)
+    if (addr >= 0xC000 && addr <= 0xFDFF) {
+        return wram[addr - 0xC000]; // Echo RAM mirrors WRAM
+    }
+
+    // Sprite Attribute Table (OAM, 0xFE00–0xFE9F)
+    if (addr >= 0xFE00 && addr <= 0xFE9F) {
+        return oam[addr - 0xFE00];
+    }
+
+    // Unusable Memory (0xFEA0–0xFEFF)
+    if (addr >= 0xFEA0 && addr <= 0xFEFF) {
+        return 0xFF; // Unusable memory region
+    }
+
+    // IO Registers (0xFF00–0xFF7F)
+    if (addr >= 0xFF00 && addr <= 0xFF7F) {
+        return io_registers[addr - 0xFF00];
+    }
+
+    // High RAM (HRAM, 0xFF80–0xFFFE)
+    if (addr >= 0xFF80 && addr <= 0xFFFE) {
+        return hram[addr - 0xFF80];
+    }
+
+    // Interrupt Enable Register (0xFFFF)
+    if (addr == 0xFFFF) {
+        return ie;
+    }
+
+    // Invalid memory access
+    std::cout << "[DEBUG] Invalid memory access at address: 0x" << std::hex << addr << std::endl;
     return 0xFF;
 }
-
 void Memory::write(uint16_t addr, uint8_t value) {
+    // Handle MBC writes (ROM banking, RAM banking, etc.)
     if (addr <= 0x7FFF) {
-        // Handle MBC writes
         switch (mbcType) {
             case 1: handleMBC1Write(addr, value); break;
             case 2: handleMBC2Write(addr, value); break;
@@ -98,29 +172,71 @@ void Memory::write(uint16_t addr, uint8_t value) {
             // Add more MBC types as needed
             default: break;
         }
+        return; // MBC writes don't affect other memory regions
     }
 
-    if (addr >= 0xA000 && addr <= 0xBFFF && ramEnabled) {
-        if (!ram.empty() && ramEnabled) {
+    if (addr == 0xFF50 ) {
+        bootROMUnmapped = true;
+        std::cout << "[DEBUG] Boot ROM unmapped. Switching to cartridge ROM." << std::endl;
+        return;
+    }
+
+    // Handle RAM writes
+    if (addr >= 0xA000 && addr <= 0xBFFF) {
+        if (ramEnabled && !ram.empty()) {
             ram[(currentRAMBank * 0x2000) + (addr - 0xA000)] = value;
         } else {
-            printf("[ERROR] Attempted to write to unallocated RAM at 0x%04X\n", addr);
+            printf("[ERROR] Attempted to write to unallocated or disabled RAM at 0x%04X\n", addr);
         }
-    } else if (addr >= 0x8000 && addr <= 0x9FFF) {
-        vram[addr - 0x8000] = value; // VRAM
-    } else if (addr >= 0xC000 && addr <= 0xDFFF) {
-        wram[addr - 0xC000] = value; // WRAM
-    } else if (addr >= 0xFE00 && addr <= 0xFE9F) {
-        oam[addr - 0xFE00] = value; // OAM
-    } else if (addr >= 0xFF80 && addr <= 0xFFFE) {
-        hram[addr - 0xFF80] = value; // HRAM
-    } else if (addr == 0xFFFF) {
-        ie = value; // Interrupt Enable Register
-    } else if (addr >= 0xFF00 && addr <= 0xFF7F) {
-        handleIOWrite(addr, value);
+        return;
     }
-}
 
+    // Handle VRAM writes
+    if (addr >= 0x8000 && addr <= 0x9FFF) {
+        vram[addr - 0x8000] = value;
+        return;
+    }
+
+    // Handle WRAM writes
+    if (addr >= 0xC000 && addr <= 0xDFFF) {
+        wram[addr - 0xC000] = value;
+        return;
+    }
+
+    // Handle OAM writes
+    if (addr >= 0xFE00 && addr <= 0xFE9F) {
+        oam[addr - 0xFE00] = value;
+        return;
+    }
+
+    // Handle HRAM writes
+    if (addr >= 0xFF80 && addr <= 0xFFFE) {
+        hram[addr - 0xFF80] = value;
+        return;
+    }
+
+    // Handle Interrupt Enable Register write
+    if (addr == 0xFFFF) {
+        ie = value;
+        return;
+    }
+
+    // Handle I/O register writes (0xFF00-0xFF7F)
+    if (addr >= 0xFF00 && addr <= 0xFF7F) {
+        // Special case: Writing to 0xFF50 disables the boot ROM
+        if (addr == 0xFF50 && value == 0x01) {
+            bootROMUnmapped = true; // Disable boot ROM
+            std::cout << "[DEBUG] Boot ROM unmapped." << std::endl;
+        }
+
+        // Handle other I/O register writes
+        handleIOWrite(addr, value);
+        return;
+    }
+
+    // Invalid memory write
+    printf("[ERROR] Invalid memory write at address: 0x%04X\n", addr);
+}
 void Memory::handleMBC1Write(uint16_t addr, uint8_t value) {
     if (addr <= 0x1FFF) {
         // Enable/disable RAM
@@ -192,9 +308,6 @@ void Memory::handleIOWrite(uint16_t addr, uint8_t value) {
             break;
         case 0xFF46: // DMA Transfer
             performDMATransfer(value);
-            break;
-        case 0xFF50: // Disable boot ROM
-            bootROMEnabled = false;
             break;
         default:
             io_registers[addr - 0xFF00] = value;

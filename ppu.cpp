@@ -1,8 +1,10 @@
 #include "ppu.h"
 #include <iostream>
+#include <SDL2/SDL.h>
 
 PPU::PPU(Memory& memory)
     : memory(memory),
+      
       LCDC(memory.io_registers[0x40]), // 0xFF40 - 0xFF00 = 0x40
       STAT(memory.io_registers[0x41]), // 0xFF41 - 0xFF00 = 0x41
       SCY(memory.io_registers[0x42]),  // 0xFF42 - 0xFF00 = 0x42
@@ -13,7 +15,51 @@ PPU::PPU(Memory& memory)
       OBP0(memory.io_registers[0x48]), // 0xFF48 - 0xFF00 = 0x48
       OBP1(memory.io_registers[0x49]), // 0xFF49 - 0xFF00 = 0x49
       WY(memory.io_registers[0x4A]),   // 0xFF4A - 0xFF00 = 0x4A
-      WX(memory.io_registers[0x4B]) {} // 0xFF4B - 0xFF00 = 0x4B
+      WX(memory.io_registers[0x4B]) {  // 0xFF4B - 0xFF00 = 0x4B
+    initializeSDL(); // Initialize SDL
+}
+
+void PPU::initializeSDL() {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    // Create an SDL window
+    window = SDL_CreateWindow("Game Boy Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_SHOWN);
+    if (!window) {
+        std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    // Create a renderer for the window
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer) {
+        std::cerr << "Renderer could not be created! SDL_Error: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    // Create a texture to render the framebuffer
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STATIC, 160, 144);
+    if (!texture) {
+        std::cerr << "Texture could not be created! SDL_Error: " << SDL_GetError() << std::endl;
+        return;
+    }
+}
+
+void PPU::renderFrame() {
+    // Update the texture with the current framebuffer
+    SDL_UpdateTexture(texture, NULL, framebuffer.data(), 160 * 3);
+
+    // Clear the renderer
+    SDL_RenderClear(renderer);
+
+    // Copy the texture to the renderer
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+
+    // Present the renderer
+    SDL_RenderPresent(renderer);
+}
 
 void PPU::step(unsigned int cycles) {
     if (!isLCDEnabled()) {
@@ -33,6 +79,7 @@ void PPU::step(unsigned int cycles) {
             // Enter V-Blank
             STAT |= 0x01; // Set V-Blank flag
             memory.io_registers[0x0F] |= 0x01; // Request V-Blank interrupt
+            renderFrame();
         } else if (LY > 153) {
             // Reset to top of screen
             LY = 0;
@@ -51,6 +98,17 @@ void PPU::step(unsigned int cycles) {
             STAT &= ~0x04; // Clear coincidence flag
         }
     }
+}
+
+// The rest of your render and helper methods remain unchanged
+bool PPU::handleEvents() {
+    SDL_Event e;
+    while (SDL_PollEvent(&e) != 0) {
+        if (e.type == SDL_QUIT) {
+            return false; // Exit the loop if the window is closed
+        }
+    }
+    return true;
 }
 
 void PPU::renderScanline() {

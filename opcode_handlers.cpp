@@ -349,15 +349,25 @@ void DAA(CPU& cpu) {
 }
 
 void JRZ_e8(CPU& cpu) {
+
+    int8_t offset = cpu.read8(cpu.PC + 1); 
+    std::cout << "Offset: " << (int)offset << std::endl;
+
     cpu.PC += 2;
-    if((cpu.F & (1 << cpu.getZeroFlag())) != 0) {  
-        int8_t offset = cpu.read8(cpu.PC + 1); 
+    std::cout << "PC after skipping opcode and offset: " << std::hex << cpu.PC << std::endl;
+
+    if(cpu.getZeroFlag() != 0) {
         cpu.PC += offset; 
+
+        std::cout << "Jump taken. New PC: " << std::hex << cpu.PC << std::endl;
         cpu.updateCycles(12);  
     } else {
+        std::cout << "Jump not taken. PC: " << std::hex << cpu.PC << std::endl;
         cpu.updateCycles(8);  
     }
 }
+
+
 void ADD_HL_HL(CPU& cpu) {
     uint16_t hl = cpu.getHL();
 
@@ -1771,11 +1781,28 @@ void CALL_Z_a16(CPU& cpu) {
 }
 
 void CALL_a16(CPU& cpu) {
-    uint16_t returnAddress = cpu.PC + 3; 
-    cpu.push16(returnAddress);  
-    uint16_t address = cpu.read16(cpu.PC+1);
-    cpu.PC = address;
-    cpu.updateCycles(24);
+    uint16_t returnAddress = cpu.PC + 3; // Calculate return address (PC + 3 bytes for CALL instruction)
+    uint16_t address = cpu.read16(cpu.PC + 1); // Read the 16-bit address from the operand
+
+    // Check if the address is 0x0061
+    if (address == 0x0061) {
+        // Handle the call to 0x0061
+        std::cout << "[DEBUG] CALL to 0x0061 detected. Handling special case..." << std::endl;
+
+        // Push the return address onto the stack
+        cpu.push16(returnAddress);
+
+        // Set PC to 0x0061
+        cpu.PC = address;
+
+        // Update cycles (assuming 24 cycles for CALL)
+        cpu.updateCycles(24);
+    } else {
+        // Handle normal CALL instruction
+        cpu.push16(returnAddress);
+        cpu.PC = address;
+        cpu.updateCycles(24);
+    }
 }
 void ADC_A_n8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);
@@ -2104,27 +2131,30 @@ void LD_A_a16(CPU& cpu) {
 
 void EI(CPU& cpu) {
     cpu.interruptsEnabled = true;  // Enable interrupts
+    cpu.handleInterrupts();
     cpu.PC++;
     cpu.updateCycles(4);
 }
 
 void CP_A_n8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);
-    uint8_t result = cpu.A - value;  // Subtract but don't store
+    std::cout << "A before CP: " << std::hex << (int)cpu.A << std::endl;
+    std::cout << "Value to compare: " << std::hex << (int)value << std::endl;
 
-    cpu.setZeroFlag(result == 0);  // Set if A == value
-    cpu.setSubtractFlag(true);  // This is a subtraction operation
-    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (value & 0x0F));  // Borrow from lower nibble
-    cpu.setCarryFlag(cpu.A < value);  // Borrow from full 8-bit subtraction
+    uint8_t result = cpu.A - value;
+    cpu.setZeroFlag(result == 0);
+    cpu.setSubtractFlag(true);
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (value & 0x0F));
+    cpu.setCarryFlag(cpu.A < value);
 
-    cpu.PC += 2;  // Advance past opcode and operand
+    std::cout << "Z flag after CP: " << cpu.getZeroFlag() << std::endl;
+
+    cpu.PC += 2;
     cpu.updateCycles(8);
 }
-
-
 void RST_38(CPU& cpu) {
     //std::cout << "[DEBUG] RST 38H: Pushing PC = 0x" << std::hex << cpu.PC << " onto stack at SP = 0x" << cpu.SP << std::endl;
-    //cpu.PC++;
+    cpu.PC++;
     cpu.push16(cpu.PC);
     cpu.PC = 0x0038;
     cpu.updateCycles(16);
@@ -2188,4 +2218,11 @@ void RL_B(CPU& cpu ) {
 
 void SLA_B(CPU& cpu) {
 
+}
+
+
+void BIT_7_H (CPU& cpu) {
+    cpu.BIT(7, cpu.H);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
 }

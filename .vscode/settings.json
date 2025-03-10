@@ -61,6 +61,9 @@
         "stop_token": "cpp",
         "thread": "cpp",
         "variant": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "cstring": "cpp",
+        "cstdarg": "cpp",
+        "cinttypes": "cpp"
     }
 }

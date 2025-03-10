@@ -9,25 +9,25 @@ typedef void (*OpcodeHandler)(CPU& cpu);
 
 class CPU {
 public:
-    // 8-bit registers
+// 8-bit registers
     uint8_t A, F;  // Accumulator and Flags
     uint8_t B, C;  // BC register pair
     uint8_t D, E;  // DE register pair
     uint8_t H, L;  // HL register pair
 
-
     uint16_t PC, SP;   // Program counter and stack pointer
-    Memory memory;     // 64KB of memory
-
+    Memory& memory;    // Reference to memory
     uint32_t cycleCount; // Cycle count for instruction execution
     bool interruptsEnabled;
     bool isStopped;
 
+    // Constructor
+    CPU(Memory& mem);
+
+    // Reset the CPU
+    void reset();
     OpcodeHandler opcodeTable[256]  = {0}; // Opcode handler table (array of function pointers)
     OpcodeHandler prefixedOpcodeTable[256] = {0};
-
-    CPU();  // Constructor
-
     void executeOpcode(uint8_t opcode);
     void executeNextInstruction();
 
@@ -47,8 +47,8 @@ public:
     void initPreOpcodeTable();
     void enableInterrupts();
     void disableInterrupts();
-
-    void reset();
+    void disableBootROM();
+    
     void run();
     bool interruptOccurred();
     void handleInterrupts();
@@ -58,6 +58,7 @@ public:
     void setSubtractFlag(bool value);
     void setHalfCarryFlag(bool value);
     void setCarryFlag(bool value);
+    void BIT(uint8_t bit, uint8_t reg);
 
 
     uint16_t pop16();

@@ -7,19 +7,14 @@
 
 
 
-CPU::CPU() {
-    A = B = C = F = D = E = H = L = 0;  // Initialize 8-bit registers and Flag
-    SP = 0xFFFE;  // Stack Pointer
-    PC = 0x0100;
-    cycleCount = 0;
-    interruptsEnabled = false;
-    isStopped = false;
-    
+CPU::CPU(Memory& mem) 
+    : A(0), F(0), B(0), C(0), D(0), E(0), H(0), L(0),
+      PC(0x0000), SP(0xFFFE), memory(mem),
+      cycleCount(0), interruptsEnabled(false), isStopped(false) {
     reset();
     initOpcodeTable();
     initPreOpcodeTable();
 }
-
 void CPU::initOpcodeTable() {
     std::fill(std::begin(opcodeTable), std::end(opcodeTable), &UNIMPLEMENTED);  
 
@@ -218,6 +213,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0xA5] = AND_A_L;
     opcodeTable[0xA6] = AND_A_memHL;
     opcodeTable[0xA7] = AND_A_A;
+    opcodeTable[0x061] = XOR_A_A;
     opcodeTable[0xA8] =XOR_A_B;
     opcodeTable[0xA9] =XOR_A_C;
     opcodeTable[0xAA] = XOR_A_D;
@@ -320,13 +316,28 @@ void CPU::initPreOpcodeTable() {
     prefixedOpcodeTable[0xCC] = SET_1_H;
     prefixedOpcodeTable[0x10] = RL_B;
     prefixedOpcodeTable[0x20] = SLA_B;
-}
-void CPU::reset() {
-    SP = 0xFFFE;  // Stack Pointer
-    PC = 0x0100;  // Program Counter starts at 0x0100
-    cycleCount = 0;
+    prefixedOpcodeTable[0x7C] = BIT_7_H;
 }
 
+
+void CPU::reset() {
+    // Initialize registers to their default values
+    A = 0x01; // Default value for A after boot ROM
+    F = 0xB0; // Default flags after boot ROM
+    B = 0x00;
+    C = 0x13;
+    D = 0x00;
+    E = 0xD8;
+    H = 0x01;
+    L = 0x4D;
+    SP = 0xFFFE;
+    PC = 0x0000; // Start execution at 0x0000 (boot ROM)
+    cycleCount = 0;
+    interruptsEnabled = false;
+    isStopped = false;
+
+    std::cout << "[DEBUG] CPU reset. Registers initialized." << std::endl;
+}
 void UNIMPLEMENTED(CPU& cpu) {
     std::cerr << "Unimplemented opcode: 0x" 
               << std::hex << static_cast<int>(cpu.read8(cpu.PC)) << std::endl;
@@ -334,32 +345,42 @@ void UNIMPLEMENTED(CPU& cpu) {
 }
 
 void CPU::executeOpcode(uint8_t opcode) {
-    std::cout << "PC: 0x" << std::hex << static_cast<int>(PC) 
-              << " | Opcode: 0x" << static_cast<int>(opcode) << std::endl;
+    std::cout << "Executing opcode: 0x" << std::hex << static_cast<int>(opcode) 
+              << " at PC: 0x" << std::hex << static_cast<int>(PC) << std::endl;
     
     if (opcode == 0xCB) {
         // Handle prefixed opcodes
-        uint8_t prefixedByte = fetch()+1;  // Fetch the next byte (e.g., 0xDD)
+        uint8_t prefixedByte = memory.read(PC + 1);  // Fetch the next byte (e.g., 0xDD)
         std::cout << "Prefixed Opcode: 0xCB 0x" << std::hex << static_cast<int>(prefixedByte) << std::endl;
         
         if (prefixedOpcodeTable[prefixedByte] == nullptr) {
             std::cerr << "[ERROR] Unimplemented prefixed opcode: 0xCB 0x" 
                       << std::hex << static_cast<int>(prefixedByte) 
-                      << " at PC: 0x" << static_cast<int>(PC ) << std::endl;
+                      << " at PC: 0x" << std::hex << static_cast<int>(PC) << std::endl;
         } else {
             prefixedOpcodeTable[prefixedByte](*this);  // Execute prefixed opcode
         }
+
+        // Increment PC by 2 (1 for 0xCB prefix, 1 for the prefixed byte)
+        //PC += 2;
     } else {
         // Handle unprefixed opcodes
         if (opcodeTable[opcode] == nullptr) {
             std::cerr << "[ERROR] Unimplemented unprefixed opcode: 0x" 
                       << std::hex << static_cast<int>(opcode) 
-                      << " at PC: 0x" << static_cast<int>(PC) << std::endl;
+                      << " at PC: 0x" << std::hex << static_cast<int>(PC) << std::endl;
         } else {
             opcodeTable[opcode](*this);  // Execute unprefixed opcode
         }
+
+        // Increment PC based on the opcode length
+        // For simplicity, assume all unprefixed opcodes are 1 byte (adjust as needed)
+        //PC += 1;
     }
 }
+
+
+
 
 
 uint8_t CPU::fetch() {
@@ -372,10 +393,21 @@ uint8_t CPU::fetch() {
 }
 
 void CPU::executeNextInstruction() {
-    handleInterrupts();;
-    uint8_t opcode = fetch();  // Fetch the opcode from memory
-   
-    executeOpcode(opcode);  // Execute the opcode
+    if (!memory.bootROMUnmapped) {
+        // Execute boot ROM instructions
+        uint8_t opcode = fetch();
+        executeOpcode(opcode);
+
+        // Check if we've reached the end of the boot ROM
+        if (PC >= 0x0100) {
+            memory.disableBootROM(); // Unmap the boot ROM
+            std::cout << "[DEBUG] Boot ROM unmapped. Switching to game ROM." << std::endl;
+        }
+    } else {
+        // Execute game ROM instructions
+        uint8_t opcode = fetch();
+        executeOpcode(opcode);
+    }
 }
 
 
@@ -397,25 +429,36 @@ void CPU::disableInterrupts() {
 
 
 void CPU::setZeroFlag(bool value) {
-    if (value) F |= (1 << 7);  // Set bit 7 (Zero Flag)
-    else F &= ~(1 << 7);       // Clear bit 7
+    if (value) {
+        F |= (1 << 7);  // Set bit 7 (Zero Flag)
+    } else  {
+    F &= ~(1 << 7);       // Clear bit 7    
+    }
 }
 
 void CPU::setSubtractFlag(bool value) {
-    if (value) F |= (1 << 6);  // Set bit 6 (Subtract Flag)
-    else F &= ~(1 << 6);       // Clear bit 6
+    if (value) {
+        F |= (1 << 6);  
+    } else {
+        F &= ~(1 << 6);// Set bit 6 (Subtract Flag)
+    }      // Clear bit 6
 }
 
 void CPU::setHalfCarryFlag(bool value) {
-    if (value) F |= (1 << 5);  // Set bit 5 (Half Carry Flag)
-    else F &= ~(1 << 5);       // Clear bit 5
+    if (value) {
+        F |= (1 << 5);
+    } else {
+        F &= ~(1 << 5);       // Clear bit 5
+    }
 }
 
 void CPU::setCarryFlag(bool value) {
-    if (value) F |= (1 << 4);  // Set bit 4 (Carry Flag)
-    else F &= ~(1 << 4);       // Clear bit 4
+    if (value){
+        F |= (1 << 4);  // Set bit 4 (Carry Flag)
+    } else {
+        F &= ~(1 << 4);       // Clear bit 4
+    }
 }
-
 
 
 bool CPU::getZeroFlag() {
@@ -536,22 +579,22 @@ uint16_t CPU::getAF() const {
 
 // Setter functions for 16-bit registers
 void CPU::setBC(uint16_t value) { 
-    B = value >> 8; 
+    B = (value & 0xFF00>> 8) ; 
     C = value & 0xFF; 
 }
 
 void CPU::setDE(uint16_t value) { 
-    D = value >> 8; 
+    D =(value & 0xFF00>> 8); 
     E = value & 0xFF; 
 }
 
 void CPU::setHL(uint16_t value) { 
-    H = value >> 8; 
+    H = (value & 0xFF00>> 8); 
     L = value & 0xFF; 
 }
 
 void CPU::setAF(uint16_t value) { 
-    A = value >> 8; 
+    A = (value & 0xFF00>> 8); 
     F = value & 0xFF; 
 }
 void CPU::run() {
@@ -615,4 +658,16 @@ void CPU::dumpROMHeader() {
         std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(memory.read(i)) << " ";
         if ((i + 1) % 16 == 0) std::cout << "\n";
     }
+}
+
+void CPU::BIT(uint8_t bit, uint8_t reg) {
+    bool isBitSet = (reg & (1 << bit)) != 0;
+
+
+    setZeroFlag(!isBitSet); 
+
+    setSubtractFlag(false);
+    setHalfCarryFlag(true);
+
+
 }

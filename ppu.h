@@ -4,24 +4,33 @@
 #include "memory.h"
 #include <array>
 #include <cstdint>
+#include <SDL2/SDL.h>
+
 
 class PPU {
 public:
     PPU(Memory& memory);
-
+    ~PPU(); 
+    //~PPU();
     void step(unsigned int cycles);
     void renderScanline();
     void renderBackground();
+    bool handleEvents();
     void renderWindow();
     void renderSprites();
     void drawPixel(uint8_t x, uint8_t y, uint8_t color);
 
     // Framebuffer to store the final rendered image
     std::array<uint8_t, 160 * 144 * 3> framebuffer; // 160x144 pixels, 3 bytes per pixel (RGB)
-
+    void initializeSDL(); // Initialize SDL
+    void renderFrame();    // Display the frame on the SDL window
+   
 private:
     Memory& memory;
-
+    SDL_Window* window;         // Declare the SDL Window
+    SDL_Renderer* renderer;     // Declare the SDL Renderer
+    SDL_Texture* texture;       // Declare the SDL Texture
+    
     // PPU registers
     uint8_t& LCDC; // LCD Control (0xFF40)
     uint8_t& STAT; // LCD Status (0xFF41)

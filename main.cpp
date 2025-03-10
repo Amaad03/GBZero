@@ -1,18 +1,29 @@
-#include "cpu.h"
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <thread>
-// Function to load ROM into CPU memory
-int main() {
-    CPU cpu;
-    cpu.memory.loadROM("Red.gb");
-    cpu.dumpROMHeader();
 
+#include <iostream>
+#include "cpu.h"
+
+#include "memory.h"
+// Assume the PPU class and other code are already included.
+
+int main() {
+    Memory memory;
+    CPU cpu(memory); // Your CPU object, assuming you have a CPU class
+    
+    memory.loadBootROM("dmg_boot.bin");
+    cpu.memory.loadROM("Red.gb");
+    
+    // Initialize SDL and create window, renderer, etc.
+
+    cpu.reset();
 
     while (true) {
+        // Handle window events (like close button press)
         
-        cpu.executeNextInstruction();
+    
+        // Execute one CPU instruction cycle (or step, if you have such a function)
+        cpu.executeNextInstruction();  // Or cpu.step() or whatever function you use for the CPU
+
     }
-        return 0;
+
+    return 0;
 }

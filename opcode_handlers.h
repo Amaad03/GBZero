@@ -296,8 +296,8 @@ void ADC_A_n8(CPU& cpu);
 
 
 
-
-
+void LD_SP(CPU& cpu);
+void BIT_7_H (CPU& cpu);
 
 // LDH [a8], A
 void LDH_a8_A(CPU& cpu);
