@@ -8,9 +8,10 @@
 
 
 CPU::CPU(Memory& mem) 
-    : A(0), F(0), B(0), C(0), D(0), E(0), H(0), L(0),
+    : A(0), F(0), B(0), C(0), D(0), E(0), H(0), L(0), 
       PC(0x0000), SP(0xFFFE), memory(mem),
-      cycleCount(0), interruptsEnabled(false), isStopped(false) {
+      
+      cycleCount(0), interruptsEnabled(false), isStopped(false), interruptsEnableNextInstructions(false) ,  interruptFlags(0), interruptEnable(0){
     reset();
     initOpcodeTable();
     initPreOpcodeTable();
@@ -393,6 +394,7 @@ uint8_t CPU::fetch() {
 }
 
 void CPU::executeNextInstruction() {
+    handleInterrupts();
     if (!memory.bootROMUnmapped) {
         // Execute boot ROM instructions
         uint8_t opcode = fetch();
@@ -407,6 +409,11 @@ void CPU::executeNextInstruction() {
         // Execute game ROM instructions
         uint8_t opcode = fetch();
         executeOpcode(opcode);
+        if (interruptsEnableNextInstructions) {
+            interruptsEnabled = true;
+            interruptsEnableNextInstructions = false;
+        }
+    
     }
 }
 
@@ -623,32 +630,42 @@ bool CPU::interruptOccurred() {
 }
 
 void CPU::handleInterrupts() {
-    if (interruptsEnabled && interruptOccurred()) {
-        interruptsEnabled = false;  // Disable interrupts to prevent further interrupt handling
+    if (!interruptsEnabled) return; // If interrupts are disabled, do nothing
 
-        // Push the current PC onto the stack
-        push16(PC);
+    uint8_t interruptFlags = memory.read(0xFF0F);  // IF Register (Interrupt Flags)
+    uint8_t interruptEnable = memory.read(0xFFFF); // IE Register (Interrupt Enable)
+    uint8_t activeInterrupts = interruptFlags & interruptEnable; // Mask enabled & requested interrupts
 
-        // Determine which interrupt to handle
-        uint8_t IF = read8(0xFF0F);  // Interrupt Flag
-        uint8_t IE = read8(0xFFFF);  // Interrupt Enable
-        uint8_t pending = IF & IE;
+    if (activeInterrupts) {
+        interruptsEnabled = false; // Disable further interrupts until EI is called again
 
-        // Handle each interrupt type
-        const uint16_t interruptVectors[5] = {0x0040, 0x0048, 0x0050, 0x0058, 0x0060};
-
-        for (int i = 0; i < 5; i++) {
-            if (pending & (1 << i)) {
-                PC = interruptVectors[i];               // Set PC to interrupt vector
-                writeMemory(0xFF0F, IF & ~(1 << i));    // Clear the handled interrupt flag
-                break;  // Only handle one interrupt per cycle
-            }
-        }
-
-        // Interrupt handling takes 20 cycles
-        updateCycles(20);
+        // Prioritize interrupts (VBlank > LCD Stat > Timer > Serial > Joypad)
+        if (activeInterrupts & 0x01) serviceInterrupt(0x40, 0); // VBlank Interrupt
+        else if (activeInterrupts & 0x02) serviceInterrupt(0x48, 1); // LCD Stat Interrupt
+        else if (activeInterrupts & 0x04) serviceInterrupt(0x50, 2); // Timer Interrupt
+        else if (activeInterrupts & 0x08) serviceInterrupt(0x58, 3); // Serial Interrupt
+        else if (activeInterrupts & 0x10) serviceInterrupt(0x60, 4); // Joypad Interrupt
     }
 }
+
+void CPU::serviceInterrupt(uint16_t address, int bit) {
+    // Clear the corresponding bit in IF Register (acknowledge interrupt)
+    uint8_t interruptFlags = memory.read(0xFF0F);
+    interruptFlags &= ~(1 << bit);
+    memory.write(0xFF0F, interruptFlags);
+
+    // Push current PC to stack
+    SP -= 2;
+    write16(SP, PC);
+
+    // Jump to interrupt vector
+    PC = address;
+
+    // Delay for interrupt service time (5 cycles)
+    updateCycles(20);
+}
+
+
 
 
 

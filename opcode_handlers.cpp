@@ -2071,6 +2071,7 @@ void LDH_A_C(CPU& cpu) {
 
 void DI(CPU& cpu) {
     cpu.interruptsEnabled = false;  // Disable interrupts
+    cpu.interruptsEnableNextInstructions = false;
     cpu.PC++;
     cpu.updateCycles(4);
 }
@@ -2130,8 +2131,7 @@ void LD_A_a16(CPU& cpu) {
 }
 
 void EI(CPU& cpu) {
-    cpu.interruptsEnabled = true;  // Enable interrupts
-    cpu.handleInterrupts();
+    cpu.interruptsEnableNextInstructions = true;  // Enable interrupts
     cpu.PC++;
     cpu.updateCycles(4);
 }

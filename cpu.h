@@ -20,6 +20,9 @@ public:
     uint32_t cycleCount; // Cycle count for instruction execution
     bool interruptsEnabled;
     bool isStopped;
+    bool interruptsEnableNextInstructions;
+    uint8_t interruptFlags;
+    uint interruptEnable;
 
     // Constructor
     CPU(Memory& mem);
@@ -48,7 +51,8 @@ public:
     void enableInterrupts();
     void disableInterrupts();
     void disableBootROM();
-    
+
+    void serviceInterrupt(uint16_t address, int bit);
     void run();
     bool interruptOccurred();
     void handleInterrupts();
