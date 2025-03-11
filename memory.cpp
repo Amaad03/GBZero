@@ -38,7 +38,8 @@ void Memory::loadBootROM(const std::string& bootROMPath) {
 
     // Debug: Print the first few bytes of the boot ROM
     std::cout << "[DEBUG] First 16 bytes of boot ROM: ";
-    for (int i = 0; i < 16; ++i) {
+    for (int i = 0; i < 100; ++i) {
+        write(i, bootROM[i]);
         printf("%02X ", bootROM[i]);
     }
     std::cout << std::endl;
@@ -80,6 +81,7 @@ void Memory::loadROM(const std::string& filename) {
     // Debugging: Print first 16 bytes
     std::cout << "[DEBUG] First 16 bytes of ROM: ";
     for (int i = 0; i < 16; ++i) {
+        write(i, rom[i]);
         printf("%02X ", rom[i]);
     }
     std::cout << std::endl;

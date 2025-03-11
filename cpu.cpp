@@ -11,7 +11,7 @@ CPU::CPU(Memory& mem)
     : A(0), F(0), B(0), C(0), D(0), E(0), H(0), L(0), 
       PC(0x0000), SP(0xFFFE), memory(mem),
       
-      cycleCount(0), interruptsEnabled(false), isStopped(false), interruptsEnableNextInstructions(false) ,  interruptFlags(0), interruptEnable(0){
+      cycleCount(0), interruptsEnabled(false), isStopped(false), interruptsEnableNextInstructions(false) ,  interruptFlags(0x00), interruptEnable(0x00){
     reset();
     initOpcodeTable();
     initPreOpcodeTable();
@@ -299,7 +299,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0xF8] = LD_HL_SP_e8;
     opcodeTable[0xF9] = LD_SP_HL;
     opcodeTable[0xFA] = LD_A_a16;
-    opcodeTable[0xFB] = EI;
+    opcodeTable[0xFB] = Elephant_I;
     opcodeTable[0xFE] = CP_A_n8;
     opcodeTable[0xFF] = RST_38;
 
@@ -318,6 +318,7 @@ void CPU::initPreOpcodeTable() {
     prefixedOpcodeTable[0x10] = RL_B;
     prefixedOpcodeTable[0x20] = SLA_B;
     prefixedOpcodeTable[0x7C] = BIT_7_H;
+    prefixedOpcodeTable[0x95] = RES_2_L;
 }
 
 
@@ -351,7 +352,7 @@ void CPU::executeOpcode(uint8_t opcode) {
     
     if (opcode == 0xCB) {
         // Handle prefixed opcodes
-        uint8_t prefixedByte = memory.read(PC + 1);  // Fetch the next byte (e.g., 0xDD)
+        uint8_t prefixedByte = memory.read(PC+1);  // Fetch the next byte (e.g., 0xDD)
         std::cout << "Prefixed Opcode: 0xCB 0x" << std::hex << static_cast<int>(prefixedByte) << std::endl;
         
         if (prefixedOpcodeTable[prefixedByte] == nullptr) {
@@ -389,31 +390,33 @@ uint8_t CPU::fetch() {
     
     std::cout << "Fetched opcode 0x" << std::hex << static_cast<int>(opcode) 
                 << " from PC: 0x" << std::hex << PC << std::endl;
-    
+
     return opcode;
 }
 
 void CPU::executeNextInstruction() {
-    handleInterrupts();
-    if (!memory.bootROMUnmapped) {
-        // Execute boot ROM instructions
-        uint8_t opcode = fetch();
-        executeOpcode(opcode);
+    std::cout << "[DEBUG] Executing instruction at PC: " << std::hex << (int)PC << std::dec << std::endl;
+    
+    // Handle interrupts first (interrupts are temporarily disabled inside this function if needed)
+    if (interruptsEnabled) {
+        handleInterrupts();
+    }
 
-        // Check if we've reached the end of the boot ROM
+    uint8_t opcode = fetch();  // Fetch the opcode
+    std::cout << "[DEBUG] Fetched opcode: " << std::hex << (int)opcode << std::dec << std::endl;
+
+    executeOpcode(opcode);     // Execute the opcode
+
+ 
+    // Check if we are still in the boot ROM
+    if (!memory.bootROMUnmapped) {
+        std::cout << "[DEBUG] In boot ROM, PC: " << std::hex << (int)PC << std::dec << std::endl;
         if (PC >= 0x0100) {
             memory.disableBootROM(); // Unmap the boot ROM
             std::cout << "[DEBUG] Boot ROM unmapped. Switching to game ROM." << std::endl;
         }
     } else {
-        // Execute game ROM instructions
-        uint8_t opcode = fetch();
-        executeOpcode(opcode);
-        if (interruptsEnableNextInstructions) {
-            interruptsEnabled = true;
-            interruptsEnableNextInstructions = false;
-        }
-    
+        std::cout << "[DEBUG] In game ROM, PC: " << std::hex << (int)PC << std::dec << std::endl;
     }
 }
 
@@ -604,21 +607,6 @@ void CPU::setAF(uint16_t value) {
     A = (value & 0xFF00>> 8); 
     F = value & 0xFF; 
 }
-void CPU::run() {
-    reset();
-    while (true) {
-        if (isStopped) {
-            // Wait for an interrupt
-            if (interruptOccurred()) {
-                isStopped = false;  // Exit stopped state
-            }
-        } else {
-            // Fetch and execute the next instruction
-
-            executeNextInstruction();
-        }
-    }
-}
 
 bool CPU::interruptOccurred() {
     // Read the Interrupt Flag (IF) and Interrupt Enable (IE) registers
@@ -632,39 +620,51 @@ bool CPU::interruptOccurred() {
 void CPU::handleInterrupts() {
     if (!interruptsEnabled) return; // If interrupts are disabled, do nothing
 
-    uint8_t interruptFlags = memory.read(0xFF0F);  // IF Register (Interrupt Flags)
-    uint8_t interruptEnable = memory.read(0xFFFF); // IE Register (Interrupt Enable)
-    uint8_t activeInterrupts = interruptFlags & interruptEnable; // Mask enabled & requested interrupts
+    uint8_t IF = memory.read(0xFF0F); // Interrupt Flags
+    uint8_t IE = memory.read(0xFFFF); // Interrupt Enable
+
+    // Mask the interrupt flags with enabled interrupts to check for pending interrupts
+    uint8_t activeInterrupts = IF & IE & 0x1F;
 
     if (activeInterrupts) {
-        interruptsEnabled = false; // Disable further interrupts until EI is called again
+        // Disable interrupts temporarily to prevent nested interrupts
+        interruptsEnabled = false;
 
         // Prioritize interrupts (VBlank > LCD Stat > Timer > Serial > Joypad)
-        if (activeInterrupts & 0x01) serviceInterrupt(0x40, 0); // VBlank Interrupt
-        else if (activeInterrupts & 0x02) serviceInterrupt(0x48, 1); // LCD Stat Interrupt
-        else if (activeInterrupts & 0x04) serviceInterrupt(0x50, 2); // Timer Interrupt
-        else if (activeInterrupts & 0x08) serviceInterrupt(0x58, 3); // Serial Interrupt
-        else if (activeInterrupts & 0x10) serviceInterrupt(0x60, 4); // Joypad Interrupt
+        if (activeInterrupts & 0x01) {
+            serviceInterrupt(0x40, 0);  // VBlank Interrupt
+        }
+        else if (activeInterrupts & 0x02) {
+            serviceInterrupt(0x48, 1);  // LCD Stat Interrupt
+        }
+        else if (activeInterrupts & 0x04) {
+            serviceInterrupt(0x50, 2);  // Timer Interrupt
+        }
+        else if (activeInterrupts & 0x08) {
+            serviceInterrupt(0x58, 3);  // Serial Interrupt
+        }
+        else if (activeInterrupts & 0x10) {
+            serviceInterrupt(0x60, 4);  // Joypad Interrupt
+        }
     }
 }
 
 void CPU::serviceInterrupt(uint16_t address, int bit) {
     // Clear the corresponding bit in IF Register (acknowledge interrupt)
-    uint8_t interruptFlags = memory.read(0xFF0F);
-    interruptFlags &= ~(1 << bit);
-    memory.write(0xFF0F, interruptFlags);
+    uint8_t IF = memory.read(0xFF0F);
+    IF &= ~(1 << bit);  // Clear the interrupt flag for this interrupt
+    memory.write(0xFF0F, IF);
 
-    // Push current PC to stack
+    // Push the current Program Counter (PC) onto the stack
     SP -= 2;
     write16(SP, PC);
 
-    // Jump to interrupt vector
+    // Jump to the interrupt vector
     PC = address;
 
-    // Delay for interrupt service time (5 cycles)
-    updateCycles(20);
+    // Handle the interrupt for 5 cycles
+    updateCycles(20);  // 5 cycles of processing time for the interrupt
 }
-
 
 
 

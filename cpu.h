@@ -22,7 +22,7 @@ public:
     bool isStopped;
     bool interruptsEnableNextInstructions;
     uint8_t interruptFlags;
-    uint interruptEnable;
+    uint8_t interruptEnable;
 
     // Constructor
     CPU(Memory& mem);
@@ -53,7 +53,6 @@ public:
     void disableBootROM();
 
     void serviceInterrupt(uint16_t address, int bit);
-    void run();
     bool interruptOccurred();
     void handleInterrupts();
     

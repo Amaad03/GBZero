@@ -363,7 +363,7 @@ void LD_SP_HL(CPU& cpu);
 void LD_A_a16(CPU& cpu);
 
 // EI
-void EI(CPU& cpu);
+void Elephant_I(CPU& cpu);
 
 // CP A, n8
 void CP_A_n8(CPU& cpu);
@@ -378,7 +378,7 @@ void SET_3_C(CPU& cpu);
 
 
 
-
+void RES_2_L(CPU& cpu);
 
 void SLA_B(CPU& cpu);
 void RL_B(CPU& cpu);

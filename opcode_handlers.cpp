@@ -10,7 +10,7 @@ void no_opcode(CPU& cpu) {
 }
 void NOP(CPU& cpu) {
     std::cout << "[DEBUG] NOP executed" << std::endl;
-    cpu.PC++; 
+    //cpu.PC++; 
     cpu.updateCycles(4);
     
 }
@@ -275,9 +275,9 @@ void JR_NZ_e8(CPU& cpu) {
     int8_t offset = static_cast<int8_t>(r8);  // Convert to signed offset
 
     // Check if Zero Flag (Z) is not set (Z == 0)
-    if ((cpu.F & (1 << cpu.getZeroFlag())) == 0) {
+    if (cpu.getZeroFlag()) {
         // If NZ, jump: Update the PC by the signed offset
-        cpu.PC += 2;  // Skip the opcode and r8 byte
+        //cpu.PC += 2;  // Skip the opcode and r8 byte
         cpu.PC += offset;  // Add the offset to the PC
         cpu.updateCycles(12);  // Jump takes 12 cycles
     } else {
@@ -2071,7 +2071,6 @@ void LDH_A_C(CPU& cpu) {
 
 void DI(CPU& cpu) {
     cpu.interruptsEnabled = false;  // Disable interrupts
-    cpu.interruptsEnableNextInstructions = false;
     cpu.PC++;
     cpu.updateCycles(4);
 }
@@ -2130,9 +2129,13 @@ void LD_A_a16(CPU& cpu) {
     cpu.updateCycles(16);
 }
 
-void EI(CPU& cpu) {
-    cpu.interruptsEnableNextInstructions = true;  // Enable interrupts
+void Elephant_I(CPU& cpu) {
+    std::cout << "[DEBUG] Entering EI, PC: " << std::hex << (int)cpu.PC << std::endl;
+
+    //cpu.interruptsEnabled =  true;  // Enable interrupts
     cpu.PC++;
+    std::cout << "[DEBUG] EI executed. Interrupts will be enabled after the next instruction." << std::endl;
+
     cpu.updateCycles(4);
 }
 
@@ -2217,9 +2220,39 @@ void RL_B(CPU& cpu ) {
 }
 
 void SLA_B(CPU& cpu) {
+    uint8_t value = cpu.B;  // Get the current value of register B
+
+
+    // Shift the value left by 1 bit
+    uint8_t result = value << 1;
+
+
+    // Set the Carry flag to the bit that was shifted out
+    cpu.setCarryFlag(value & 0x80);  // Set carry if MSB is 1
+
+
+    // Set the Zero flag if the result is 0
+    cpu.setZeroFlag(result == 0);
+   
+    // Clear the Sign and Half Carry flags (SLA doesn't affect these flags)
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+
+
+    // Store the result back in register B
+    cpu.B = result;
+    cpu.PC+= 2;
+
+
+    // Update cycles (SLA takes 8 cycles)
+    cpu.updateCycles(8);
 
 }
-
+void RES_2_L(CPU& cpu) {
+    cpu.L &= ~(1 << 2);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
 
 void BIT_7_H (CPU& cpu) {
     cpu.BIT(7, cpu.H);
