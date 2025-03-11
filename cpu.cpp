@@ -310,6 +310,37 @@ void CPU::initOpcodeTable() {
 
 void CPU::initPreOpcodeTable() {
     std::fill(std::begin(prefixedOpcodeTable), std::end(prefixedOpcodeTable), &UNIMPLEMENTED);
+    prefixedOpcodeTable[0x00] = RLC_B;
+    prefixedOpcodeTable[0x01] = RLC_C;
+    prefixedOpcodeTable[0x02] = RLC_D;
+    prefixedOpcodeTable[0x03] = RLC_E;
+    prefixedOpcodeTable[0x04] = RLC_H;
+    prefixedOpcodeTable[0x05] = RLC_L;
+    prefixedOpcodeTable[0x06] = RLC_bracket_HL;
+    prefixedOpcodeTable[0x07] = RLC_A;
+    prefixedOpcodeTable[0x08] = RRC_B;
+    prefixedOpcodeTable[0x09] = RRC_C;
+    prefixedOpcodeTable[0x0A] = RRC_D;
+    prefixedOpcodeTable[0x0B] = RRC_E;
+    prefixedOpcodeTable[0x0C] = RRC_H;
+    prefixedOpcodeTable[0x0D] = RRC_L;
+    prefixedOpcodeTable[0x0E] = RRC_bracket_HL;
+    prefixedOpcodeTable[0x0F] = RRC_A;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     prefixedOpcodeTable[0xDD] = SET_3_L;
     prefixedOpcodeTable[0xD9] = SET_3_C;
     prefixedOpcodeTable[0xC9] = SET_1_C;
@@ -324,6 +355,8 @@ void CPU::initPreOpcodeTable() {
 
 void CPU::reset() {
     // Initialize registers to their default values
+    memory.write(0xFF50, 0x01);
+    PC = 0x0100; // Start execution at 0x0000 (boot ROM)
     A = 0x01; // Default value for A after boot ROM
     F = 0xB0; // Default flags after boot ROM
     B = 0x00;
@@ -333,7 +366,7 @@ void CPU::reset() {
     H = 0x01;
     L = 0x4D;
     SP = 0xFFFE;
-    PC = 0x0000; // Start execution at 0x0000 (boot ROM)
+    memory.ie = 0x00;
     cycleCount = 0;
     interruptsEnabled = false;
     isStopped = false;
@@ -362,9 +395,6 @@ void CPU::executeOpcode(uint8_t opcode) {
         } else {
             prefixedOpcodeTable[prefixedByte](*this);  // Execute prefixed opcode
         }
-
-        // Increment PC by 2 (1 for 0xCB prefix, 1 for the prefixed byte)
-        //PC += 2;
     } else {
         // Handle unprefixed opcodes
         if (opcodeTable[opcode] == nullptr) {
@@ -375,9 +405,6 @@ void CPU::executeOpcode(uint8_t opcode) {
             opcodeTable[opcode](*this);  // Execute unprefixed opcode
         }
 
-        // Increment PC based on the opcode length
-        // For simplicity, assume all unprefixed opcodes are 1 byte (adjust as needed)
-        //PC += 1;
     }
 }
 
@@ -387,26 +414,22 @@ void CPU::executeOpcode(uint8_t opcode) {
 
 uint8_t CPU::fetch() {
     uint8_t opcode = memory.read(PC);  // Read the opcode from memory at the current PC
-    
-    std::cout << "Fetched opcode 0x" << std::hex << static_cast<int>(opcode) 
-                << " from PC: 0x" << std::hex << PC << std::endl;
-
     return opcode;
 }
 
 void CPU::executeNextInstruction() {
-    std::cout << "[DEBUG] Executing instruction at PC: " << std::hex << (int)PC << std::dec << std::endl;
     
     // Handle interrupts first (interrupts are temporarily disabled inside this function if needed)
     if (interruptsEnabled) {
         handleInterrupts();
     }
 
-    uint8_t opcode = fetch();  // Fetch the opcode
-    std::cout << "[DEBUG] Fetched opcode: " << std::hex << (int)opcode << std::dec << std::endl;
-
-    executeOpcode(opcode);     // Execute the opcode
-
+   
+    uint8_t opcode = memory.read(PC);
+  
+    
+    executeOpcode(opcode);  // Execute the instruction
+    
  
     // Check if we are still in the boot ROM
     if (!memory.bootROMUnmapped) {

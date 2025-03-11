@@ -383,6 +383,22 @@ void RES_2_L(CPU& cpu);
 void SLA_B(CPU& cpu);
 void RL_B(CPU& cpu);
 
+void RLC_B(CPU& cpu);
+void RLC_C(CPU& cpu);
+void RLC_D(CPU& cpu);
+void RLC_E(CPU& cpu);
+void RLC_H(CPU& cpu);
+void RLC_L(CPU& cpu);
+void RLC_bracket_HL(CPU& cpu);
+void RLC_A(CPU& cpu);
+void RRC_B(CPU& cpu);
+void RRC_C(CPU& cpu);
+void RRC_D(CPU& cpu);
+void RRC_E(CPU& cpu);
+void RRC_H(CPU& cpu);
+void RRC_L(CPU& cpu);
+void RRC_bracket_HL(CPU& cpu);
+void RRC_A(CPU& cpu);
 
 
 

@@ -8,13 +8,13 @@
 int main() {
     Memory memory;
     CPU cpu(memory); // Your CPU object, assuming you have a CPU class
-    
-    memory.loadBootROM("dmg_boot.bin");
+    cpu.reset();
+    //memory.loadBootROM("dmg_boot.bin");
     cpu.memory.loadROM("Red.gb");
     
     // Initialize SDL and create window, renderer, etc.
 
-    cpu.reset();
+    
 
     while (true) {
         // Handle window events (like close button press)

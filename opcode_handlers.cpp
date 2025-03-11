@@ -10,7 +10,7 @@ void no_opcode(CPU& cpu) {
 }
 void NOP(CPU& cpu) {
     std::cout << "[DEBUG] NOP executed" << std::endl;
-    //cpu.PC++; 
+    cpu.PC++; 
     cpu.updateCycles(4);
     
 }
@@ -356,7 +356,7 @@ void JRZ_e8(CPU& cpu) {
     cpu.PC += 2;
     std::cout << "PC after skipping opcode and offset: " << std::hex << cpu.PC << std::endl;
 
-    if(cpu.getZeroFlag() != 0) {
+    if(!cpu.getZeroFlag()) {
         cpu.PC += offset; 
 
         std::cout << "Jump taken. New PC: " << std::hex << cpu.PC << std::endl;
@@ -1196,6 +1196,7 @@ void SUB_A_H(CPU& cpu) {
 }
 
 void SUB_A_L(CPU& cpu) {
+    std::cout<<"executing 095" <<std::endl;
     uint16_t result = cpu.A - cpu.L;
     cpu.A = result & 0xFF;
     cpu.setZeroFlag(cpu.A == 0);
@@ -2132,7 +2133,7 @@ void LD_A_a16(CPU& cpu) {
 void Elephant_I(CPU& cpu) {
     std::cout << "[DEBUG] Entering EI, PC: " << std::hex << (int)cpu.PC << std::endl;
 
-    //cpu.interruptsEnabled =  true;  // Enable interrupts
+    cpu.interruptsEnabled =  true;  // Enable interrupts
     cpu.PC++;
     std::cout << "[DEBUG] EI executed. Interrupts will be enabled after the next instruction." << std::endl;
 
@@ -2258,4 +2259,61 @@ void BIT_7_H (CPU& cpu) {
     cpu.BIT(7, cpu.H);
     cpu.PC+=2;
     cpu.updateCycles(8);
+}
+
+
+void RLC_B(CPU& cpu) {
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+void RLC_C(CPU& cpu) {
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+void RLC_D(CPU& cpu) {
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+void RLC_E(CPU& cpu) {
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+void RLC_H(CPU& cpu) {
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}   
+void RLC_L(CPU& cpu) {
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+void RLC_bracket_HL(CPU& cpu) {
+    cpu.PC+= 2;
+    cpu.updateCycles(16);
+}
+void RLC_A(CPU& cpu) {
+
+}
+void RRC_B(CPU& cpu) {
+
+}
+void RRC_C(CPU& cpu) {
+
+}
+void RRC_D(CPU& cpu) {
+
+}
+void RRC_E(CPU& cpu) {
+
+}
+void RRC_H(CPU& cpu) {
+
+}
+void RRC_L(CPU& cpu) {
+
+}
+void RRC_bracket_HL(CPU& cpu) {
+
+}
+void RRC_A(CPU& cpu){
+
 }

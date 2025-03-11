@@ -38,8 +38,8 @@ void Memory::loadBootROM(const std::string& bootROMPath) {
 
     // Debug: Print the first few bytes of the boot ROM
     std::cout << "[DEBUG] First 16 bytes of boot ROM: ";
-    for (int i = 0; i < 100; ++i) {
-        write(i, bootROM[i]);
+    for (int i = 0; i < 256; ++i) {
+        //write(i, bootROM[i]);
         printf("%02X ", bootROM[i]);
     }
     std::cout << std::endl;
@@ -68,31 +68,23 @@ void Memory::loadROM(const std::string& filename) {
     }
 
     rom.resize(size);
-
+    romFile.read(reinterpret_cast<char*>(rom.data()), size);
+    romFile.close();
     // Read file byte-by-byte
-    for (size_t i = 0; i < static_cast<size_t>(size); ++i) {
-        char byte;
-        romFile.read(&byte, 1);
-        rom[i] = static_cast<uint8_t>(byte);
-    }
+    
 
     std::cout << "[DEBUG] ROM file size: " << size << " bytes." << std::endl;
+    
 
+    
     // Debugging: Print first 16 bytes
     std::cout << "[DEBUG] First 16 bytes of ROM: ";
-    for (int i = 0; i < 16; ++i) {
-        write(i, rom[i]);
-        printf("%02X ", rom[i]);
+    for (int i = 0; i < 256; ++i) {
+        //write(i, rom[i]);
+        printf("%02X ", rom[256+i]);
     }
     std::cout << std::endl;
 
-    // Check entry point
-    if (rom.size() > 0x100) {
-        std::cout << "[DEBUG] Entry point instruction: ";
-        printf("%02X %02X %02X %02X %02X \n", rom[0x100], rom[0x101], rom[0x102], rom[0x103], rom[0x104]);
-    } else {
-        std::cerr << "[ERROR] ROM is too small!" << std::endl;
-    }
 
     mbcType = rom[0x147]; // Get MBC type
 }
