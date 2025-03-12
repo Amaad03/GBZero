@@ -3,10 +3,6 @@
 #include <iostream>
 #include <iomanip>
 
-#define PREFIXED_OPCODE(byte) (0x100 | (byte))
-
-
-
 CPU::CPU(Memory& mem) 
     : A(0), F(0), B(0), C(0), D(0), E(0), H(0), L(0), 
       PC(0x0000), SP(0xFFFE), memory(mem),
@@ -614,11 +610,10 @@ void CPU::initPreOpcodeTable() {
 
 
 void CPU::reset() {
-    // Initialize registers to their default values
     memory.write(0xFF50, 0x01);
-    PC = 0x0100; // Start execution at 0x0000 (boot ROM)
-    A = 0x01; // Default value for A after boot ROM
-    F = 0xB0; // Default flags after boot ROM
+    PC = 0x0100; 
+    A = 0x01; 
+    F = 0xB0; 
     B = 0x00;
     C = 0x13;
     D = 0x00;
@@ -644,8 +639,7 @@ void CPU::executeOpcode(uint8_t opcode) {
               << " at PC: 0x" << std::hex << static_cast<int>(PC) << std::endl;
     
     if (opcode == 0xCB) {
-        // Handle prefixed opcodes
-        uint8_t prefixedByte = memory.read(PC+1);  // Fetch the next byte (e.g., 0xDD)
+        uint8_t prefixedByte = memory.read(PC+1); 
         std::cout << "Prefixed Opcode: 0xCB 0x" << std::hex << static_cast<int>(prefixedByte) << std::endl;
         
         if (prefixedOpcodeTable[prefixedByte] == nullptr) {
@@ -653,16 +647,16 @@ void CPU::executeOpcode(uint8_t opcode) {
                       << std::hex << static_cast<int>(prefixedByte) 
                       << " at PC: 0x" << std::hex << static_cast<int>(PC) << std::endl;
         } else {
-            prefixedOpcodeTable[prefixedByte](*this);  // Execute prefixed opcode
+            prefixedOpcodeTable[prefixedByte](*this);  
         }
     } else {
-        // Handle unprefixed opcodes
+
         if (opcodeTable[opcode] == nullptr) {
             std::cerr << "[ERROR] Unimplemented unprefixed opcode: 0x" 
                       << std::hex << static_cast<int>(opcode) 
                       << " at PC: 0x" << std::hex << static_cast<int>(PC) << std::endl;
         } else {
-            opcodeTable[opcode](*this);  // Execute unprefixed opcode
+            opcodeTable[opcode](*this);  
         }
 
     }
@@ -673,40 +667,26 @@ void CPU::executeOpcode(uint8_t opcode) {
 
 
 uint8_t CPU::fetch() {
-    uint8_t opcode = memory.read(PC);  // Read the opcode from memory at the current PC
+    uint8_t opcode = memory.read(PC);  
     return opcode;
 }
 
 void CPU::executeNextInstruction() {
-    
-    // Handle interrupts first (interrupts are temporarily disabled inside this function if needed)
+
     if (interruptsEnabled) {
         handleInterrupts();
     }
 
    
     uint8_t opcode = memory.read(PC);
-  
-    
-    executeOpcode(opcode);  // Execute the instruction
-    
- 
-    // Check if we are still in the boot ROM
-    if (!memory.bootROMUnmapped) {
- 
-        if (PC >= 0x0100) {
-            memory.disableBootROM(); // Unmap the boot ROM
-            std::cout << "[DEBUG] Boot ROM unmapped. Switching to game ROM." << std::endl;
-        }
-    } else {
-    
-    }
+    executeOpcode(opcode);  
+   
 }
 
 
 void CPU::updateCycles(uint32_t cycles) {
     cycleCount += cycles;
-    //std::cout << "[DEBUG] Total cycle count: " << std::hex << cycleCount << std::endl;
+   
 }
 
 
@@ -723,9 +703,9 @@ void CPU::disableInterrupts() {
 
 void CPU::setZeroFlag(bool value) {
     if (value) {
-        F |= (1 << 7);  // Set bit 7 (Zero Flag)
+        F |= (1 << 7);  
     } else  {
-    F &= ~(1 << 7);       // Clear bit 7    
+    F &= ~(1 << 7);     
     }
 }
 
@@ -733,41 +713,41 @@ void CPU::setSubtractFlag(bool value) {
     if (value) {
         F |= (1 << 6);  
     } else {
-        F &= ~(1 << 6);// Set bit 6 (Subtract Flag)
-    }      // Clear bit 6
+        F &= ~(1 << 6);
+    }      
 }
 
 void CPU::setHalfCarryFlag(bool value) {
     if (value) {
         F |= (1 << 5);
     } else {
-        F &= ~(1 << 5);       // Clear bit 5
+        F &= ~(1 << 5);      
     }
 }
 
 void CPU::setCarryFlag(bool value) {
     if (value){
-        F |= (1 << 4);  // Set bit 4 (Carry Flag)
+        F |= (1 << 4);  
     } else {
-        F &= ~(1 << 4);       // Clear bit 4
+        F &= ~(1 << 4);       
     }
 }
 
 
 bool CPU::getZeroFlag() {
-    return (F & (1 << 7)) != 0;  // Check if Zero flag (bit 7) is set
+    return (F & (1 << 7)) != 0;  
 }
 
 bool CPU::getSubtractFlag() {
-    return (F & (1 << 6)) != 0;  // Check if Subtract flag (bit 6) is set
+    return (F & (1 << 6)) != 0; 
 }
 
 bool CPU::getHalfCarryFlag() {
-    return (F & (1 << 5)) != 0;  // Check if Half Carry flag (bit 5) is set
+    return (F & (1 << 5)) != 0;  
 }
 
 bool CPU::getCarryFlag() {
-    return (F & (1 << 4)) != 0;  // Check if Carry flag (bit 4) is set
+    return (F & (1 << 4)) != 0;  
 }
 
 
@@ -777,7 +757,7 @@ void CPU::increment8(uint8_t& reg) {
     uint8_t result = reg + 1;
     setZeroFlag(result == 0);  
     setSubtractFlag(false);   
-    setHalfCarryFlag((reg & 0x0F) == 0x0F);  // Half-carry occurs when lower nibble overflows
+    setHalfCarryFlag((reg & 0x0F) == 0x0F); 
     reg = result;
 }
 
@@ -785,7 +765,7 @@ void CPU::decrement8(uint8_t& reg) {
     uint8_t result = reg - 1;  
     setZeroFlag(result == 0);  
     setSubtractFlag(true);   
-    setHalfCarryFlag((reg & 0x0F) == 0x00); // Half-carry occurs when lower nibble underflows
+    setHalfCarryFlag((reg & 0x0F) == 0x00); 
     reg = result;
 }
 
@@ -803,33 +783,20 @@ void CPU::decrement16(uint8_t& high, uint8_t& low) {
 }
 
 uint16_t CPU::pop16() {
-    // Read the low byte from the memory at the stack pointer (SP)
     uint8_t low = memory.read(SP);
-    
-    // Read the high byte from the memory at the next address (SP + 1)
     uint8_t high = memory.read(SP + 1);
-    
-    // Increment stack pointer by 2 after reading 16-bit value
     SP += 2;  
-    
-    // Combine high and low byte into a 16-bit value and return
-    printf("Popped value: 0x%04X, SP: 0x%04X\n", (high << 8) | low, SP);
-
     return (high << 8) | low;
 
 }
 
-// PUSH16: Pushes a 16-bit value onto the stack.
+
 
 void CPU::push16(uint16_t value) {
-    // Decrement the stack pointer by 2 (stack grows downward)
+ 
     SP -= 2;
-    
-    // Write low byte to the current stack pointer address
-    memory.write(SP, value & 0xFF);  // Low byte
-    
-    // Write high byte to the next stack address (SP + 1)
-    memory.write(SP + 1, (value >> 8) & 0xFF);  // High byte
+    memory.write(SP, value & 0xFF);  
+    memory.write(SP + 1, (value >> 8) & 0xFF); 
 }
 uint8_t CPU::read8(uint16_t addr) {
     return memory.read(addr);
@@ -847,8 +814,6 @@ uint16_t CPU::read16(uint16_t addr) {
 
 void CPU::write16(uint16_t addr, uint16_t value) {
     writeMemory(addr, value & 0xFF);
-
-    // Write the higher byte (bits 8-15) to memory at addr + 1
     writeMemory(addr + 1, (value >> 8) & 0xFF);
 
 }
@@ -870,7 +835,6 @@ uint16_t CPU::getAF() const {
     return (A << 8) | F; 
 }
 
-// Setter functions for 16-bit registers
 void CPU::setBC(uint16_t value) { 
     B = (value & 0xFF00>> 8) ; 
     C = value & 0xFF; 
@@ -892,28 +856,23 @@ void CPU::setAF(uint16_t value) {
 }
 
 bool CPU::interruptOccurred() {
-    // Read the Interrupt Flag (IF) and Interrupt Enable (IE) registers
-    uint8_t IF = read8(0xFF0F);  // Interrupt Flag
-    uint8_t IE = read8(0xFFFF);  // Interrupt Enable
 
-    // Check if any enabled interrupts are pending
-    return (IF & IE & 0x1F) != 0;  // Only bits 0-4 are used for interrupts
+    uint8_t IF = read8(0xFF0F);  
+    uint8_t IE = read8(0xFFFF); 
+    return (IF & IE & 0x1F) != 0;  
 }
 
 void CPU::handleInterrupts() {
-    if (!interruptsEnabled) return; // If interrupts are disabled, do nothing
+    if (!interruptsEnabled) return; 
 
-    uint8_t IF = memory.read(0xFF0F); // Interrupt Flags
-    uint8_t IE = memory.read(0xFFFF); // Interrupt Enable
+    uint8_t IF = memory.read(0xFF0F); 
+    uint8_t IE = memory.read(0xFFFF);
 
-    // Mask the interrupt flags with enabled interrupts to check for pending interrupts
     uint8_t activeInterrupts = IF & IE & 0x1F;
 
     if (activeInterrupts) {
-        // Disable interrupts temporarily to prevent nested interrupts
+    
         interruptsEnabled = false;
-
-        // Prioritize interrupts (VBlank > LCD Stat > Timer > Serial > Joypad)
         if (activeInterrupts & 0x01) {
             serviceInterrupt(0x40, 0);  // VBlank Interrupt
         }
@@ -933,20 +892,19 @@ void CPU::handleInterrupts() {
 }
 
 void CPU::serviceInterrupt(uint16_t address, int bit) {
-    // Clear the corresponding bit in IF Register (acknowledge interrupt)
+
     uint8_t IF = memory.read(0xFF0F);
-    IF &= ~(1 << bit);  // Clear the interrupt flag for this interrupt
+    IF &= ~(1 << bit);  
     memory.write(0xFF0F, IF);
 
-    // Push the current Program Counter (PC) onto the stack
     SP -= 2;
     write16(SP, PC);
 
-    // Jump to the interrupt vector
+
     PC = address;
 
-    // Handle the interrupt for 5 cycles
-    updateCycles(20);  // 5 cycles of processing time for the interrupt
+
+    updateCycles(20);
 }
 
 
@@ -979,12 +937,12 @@ void CPU::RES_n_X(CPU& cpu, uint8_t bit, uint8_t& reg) {
 }
 
 void CPU::RES_n_HL(CPU& cpu, uint8_t bit) {
-    uint16_t address = cpu.getHL();         // Get HL address
-    uint8_t value = cpu.memory.read(address); // Read value from memory
-    value &= ~(1 << bit);                   // Clear the specified bit
-    cpu.memory.write(address, value);       // Write back the modified value
+    uint16_t address = cpu.getHL();    
+    uint8_t value = cpu.memory.read(address); 
+    value &= ~(1 << bit);                 
+    cpu.write16(address, value);       
     cpu.PC += 2;
-    cpu.updateCycles(16); // Memory operations take longer
+    cpu.updateCycles(16); 
 }
 
 void CPU::SET_n_X(CPU& cpu, uint8_t bit, uint8_t& reg) {
@@ -995,10 +953,8 @@ void CPU::SET_n_X(CPU& cpu, uint8_t bit, uint8_t& reg) {
 }
 
 void CPU::SET_n_HL(CPU& cpu, uint8_t bit) {
-    uint16_t address = cpu.getHL();         // Get HL address
-    uint8_t value = cpu.memory.read(address); // Read value from memory
-    value |= (1 << bit);                   // Clear the specified bit
-    cpu.memory.write(address, value);       // Write back the modified value
+    uint16_t address = cpu.getHL();        
+    uint8_t value = cpu.memory.read(address); 
+    cpu.write16(address, value);       
     cpu.PC += 2;
-    cpu.updateCycles(16); // Memory operations take longer
-}
+    cpu.updateCycles(16); 

@@ -1,8 +1,8 @@
 
 #include "opcode_handlers.h"
-#include "cpu.h"  // Include the CPU class to access registers
+#include "cpu.h"  
 #include <iostream>
-// Define the opcode handler functions
+
 
 
 void no_opcode(CPU& cpu) {
@@ -21,9 +21,9 @@ void LD_BC_d16(CPU& cpu) {
     cpu.updateCycles(12);
 }
 void LD_BC_A(CPU& cpu) {
-    cpu.writeMemory(cpu.getBC(), cpu.A);// Store the value of register A at the address
-    cpu.PC ++;  // Move the program counter forward by 1 byte (the opcode)
-    cpu.updateCycles(8);  // This opcode takes 8 cycles
+    cpu.writeMemory(cpu.getBC(), cpu.A);
+    cpu.PC ++;  
+    cpu.updateCycles(8);  
 }
 
 
@@ -133,9 +133,7 @@ void STOP_n8(CPU& cpu) {
     cpu.updateCycles(4);
     cpu.isStopped = true;
 }
-
-
-void LD_DE_n16(CPU& cpu) {   // this is complete
+void LD_DE_n16(CPU& cpu) {   
     uint16_t value = cpu.read16(cpu.PC + 1);
     cpu.setDE(value);
     cpu.PC += 3;
@@ -143,12 +141,12 @@ void LD_DE_n16(CPU& cpu) {   // this is complete
 }
 
 void LD_DE_A(CPU& cpu) {
-    cpu.writeMemory(cpu.getDE(), cpu.A); // complete
+    cpu.writeMemory(cpu.getDE(), cpu.A); 
     cpu.PC++;
     cpu.updateCycles(8);
 }
 
-void INC_DE(CPU& cpu) { // complete
+void INC_DE(CPU& cpu) { 
     uint16_t value = ((cpu.D << 8) + cpu.E) + 1;
     cpu.D = value >> 8;
     cpu.E = value &0x00FF;
@@ -156,13 +154,13 @@ void INC_DE(CPU& cpu) { // complete
     cpu.updateCycles(8); 
 }
 
-void INC_D(CPU& cpu) {  // both good 
+void INC_D(CPU& cpu) {  
     cpu.increment8(cpu.D);
     cpu.PC++;                      
     cpu.updateCycles(4);           
 }
 
-void DEC_D(CPU& cpu) { // both good 
+void DEC_D(CPU& cpu) { 
     cpu.decrement8(cpu.D);         
     cpu.PC++;                      
     cpu.updateCycles(4);          
@@ -170,7 +168,7 @@ void DEC_D(CPU& cpu) { // both good
 
 
 
-void LD_D_d8(CPU& cpu) { // this is good
+void LD_D_d8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);
     cpu.D = value;
     cpu.PC += 2;
@@ -253,37 +251,20 @@ void RRA(CPU& cpu) {
     cpu.updateCycles(4);
 }
 
-/*
-void JR_NZ_e8(CPU& cpu) {
-    if (!cpu.getZeroFlag()) {  // Jump if Zero flag is not set (NZ)
-        int8_t offset = cpu.read8(cpu.PC + 1);  // Read the signed 8-bit offset from the next byte
-        cpu.PC += offset;  // Update the program counter with the offset
-        cpu.updateCycles(12);  // Jump takes 12 cycles
-        printf("offset was added to PC");
-    } else {
-        cpu.PC += 2;  // If no jump, just skip over the opcode and the offset
-        cpu.updateCycles(8);  // No jump, only increment by 2 bytes, takes 8 cycles
-    }
-}
-*/
+
 
 
 
 void JR_NZ_e8(CPU& cpu) {
-    // Fetch the immediate 8-bit value for the jump
-    uint8_t r8 = cpu.read8(cpu.PC + 1);  // Get the signed 8-bit offset
-    int8_t offset = static_cast<int8_t>(r8);  // Convert to signed offset
 
-    // Check if Zero Flag (Z) is not set (Z == 0)
+    uint8_t r8 = cpu.read8(cpu.PC + 1);  
+    int8_t offset = static_cast<int8_t>(r8);  
     if (cpu.getZeroFlag()) {
-        // If NZ, jump: Update the PC by the signed offset
-        //cpu.PC += 2;  // Skip the opcode and r8 byte
-        cpu.PC += offset;  // Add the offset to the PC
-        cpu.updateCycles(12);  // Jump takes 12 cycles
+        cpu.PC += offset;  
+        cpu.updateCycles(12);  
     } else {
-        // If Zero Flag is set (Z == 1), just increment PC by 2
-        cpu.PC += 2;  // Skip the opcode and r8 byte
-        cpu.updateCycles(8);  // No jump, takes 8 cycles
+        cpu.PC += 2;  
+        cpu.updateCycles(8);  
     }
 }
 void LD_HL_n16(CPU& cpu) { 
@@ -320,9 +301,9 @@ void DEC_H(CPU& cpu) {
 }
 
 void LD_H_d8(CPU& cpu) {
-    cpu.H = cpu.read8(cpu.PC + 1);  // Load immediate 8-bit value into H
-    cpu.PC += 2;  // Move program counter to the next instruction
-    cpu.updateCycles(8);  // 8 cycles for this instruction
+    cpu.H = cpu.read8(cpu.PC + 1);  
+    cpu.PC += 2;  
+    cpu.updateCycles(8);  
 }
 void DAA(CPU& cpu) {
     if ((cpu.F & 0x40)  == 0) {  

@@ -1,7 +1,7 @@
 #ifndef CPU_H
 #define CPU_H
 #include <stdint.h>
-#include "opcode_handlers.h"  // Include the opcode handler header
+#include "opcode_handlers.h" 
 #include <iostream>
 #include "memory.h"
 
@@ -9,7 +9,7 @@ typedef void (*OpcodeHandler)(CPU& cpu);
 
 class CPU {
 public:
-// 8-bit registers
+
     uint8_t A, F;  // Accumulator and Flags
     uint8_t B, C;  // BC register pair
     uint8_t D, E;  // DE register pair
@@ -24,12 +24,12 @@ public:
     uint8_t interruptFlags;
     uint8_t interruptEnable;
 
-    // Constructor
+
     CPU(Memory& mem);
 
-    // Reset the CPU
+
     void reset();
-    OpcodeHandler opcodeTable[256]  = {0}; // Opcode handler table (array of function pointers)
+    OpcodeHandler opcodeTable[256]  = {0}; 
     OpcodeHandler prefixedOpcodeTable[256] = {0};
     void executeOpcode(uint8_t opcode);
     void executeNextInstruction();
@@ -55,8 +55,7 @@ public:
     void serviceInterrupt(uint16_t address, int bit);
     bool interruptOccurred();
     void handleInterrupts();
-    
-    // Flag utilities
+
     void setZeroFlag(bool value);
     void setSubtractFlag(bool value);
     void setHalfCarryFlag(bool value);
@@ -69,7 +68,6 @@ public:
 
     uint16_t pop16();
     void push16(uint16_t value);
-    //arithmetic
     void increment8(uint8_t& reg);
     void increment16(uint8_t& high, uint8_t& low);
     void decrement8(uint8_t& reg);
@@ -79,7 +77,7 @@ public:
     uint16_t getHL() const;
     uint16_t getAF() const;
 
-    // Setter functions for 16-bit registers
+
     void setBC(uint16_t value);
     void setDE(uint16_t value);
     void setHL(uint16_t value);
