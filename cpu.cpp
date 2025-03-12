@@ -693,13 +693,13 @@ void CPU::executeNextInstruction() {
  
     // Check if we are still in the boot ROM
     if (!memory.bootROMUnmapped) {
-        std::cout << "[DEBUG] In boot ROM, PC: " << std::hex << (int)PC << std::dec << std::endl;
+ 
         if (PC >= 0x0100) {
             memory.disableBootROM(); // Unmap the boot ROM
             std::cout << "[DEBUG] Boot ROM unmapped. Switching to game ROM." << std::endl;
         }
     } else {
-        std::cout << "[DEBUG] In game ROM, PC: " << std::hex << (int)PC << std::dec << std::endl;
+    
     }
 }
 

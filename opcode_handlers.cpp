@@ -1874,6 +1874,7 @@ void CALL_NC_a16(CPU& cpu) {
 void PUSH_DE(CPU& cpu) {
     uint16_t de = cpu.getDE();
     cpu.push16(de);
+    cpu.PC++;
     cpu.updateCycles(16);
 }
 
