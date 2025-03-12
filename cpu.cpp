@@ -971,3 +971,34 @@ void CPU::BIT(uint8_t bit, uint8_t reg) {
 
 
 }
+
+void CPU::RES_n_X(CPU& cpu, uint8_t bit, uint8_t& reg) {
+    reg &= ~(1 << bit);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void CPU::RES_n_HL(CPU& cpu, uint8_t bit) {
+    uint16_t address = cpu.getHL();         // Get HL address
+    uint8_t value = cpu.memory.read(address); // Read value from memory
+    value &= ~(1 << bit);                   // Clear the specified bit
+    cpu.memory.write(address, value);       // Write back the modified value
+    cpu.PC += 2;
+    cpu.updateCycles(16); // Memory operations take longer
+}
+
+void CPU::SET_n_X(CPU& cpu, uint8_t bit, uint8_t& reg) {
+    reg |= (1<<bit);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+
+}
+
+void CPU::SET_n_HL(CPU& cpu, uint8_t bit) {
+    uint16_t address = cpu.getHL();         // Get HL address
+    uint8_t value = cpu.memory.read(address); // Read value from memory
+    value |= (1 << bit);                   // Clear the specified bit
+    cpu.memory.write(address, value);       // Write back the modified value
+    cpu.PC += 2;
+    cpu.updateCycles(16); // Memory operations take longer
+}

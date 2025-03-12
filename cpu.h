@@ -62,7 +62,10 @@ public:
     void setHalfCarryFlag(bool value);
     void setCarryFlag(bool value);
     void BIT(uint8_t bit, uint8_t reg);
-
+    void RES_n_X(CPU& cpu, uint8_t bit, uint8_t& reg);
+    void RES_n_HL(CPU& cpu, uint8_t bit);
+    void SET_n_X(CPU& cpu, uint8_t bit, uint8_t& reg);
+    void SET_n_HL(CPU& cpu, uint8_t bit);
 
     uint16_t pop16();
     void push16(uint16_t value);

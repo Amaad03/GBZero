@@ -3157,7 +3157,7 @@ void BIT_1_bracket_HL(CPU& cpu) {
     cpu.setZeroFlag(!bitSet);
     cpu.setHalfCarryFlag(true);
     cpu.setSubtractFlag(false);
-    cpu.setCarryFlag(false);
+
     cpu.PC += 2;
     cpu.updateCycles(12);  // Memory access takes longer
 }
@@ -3167,55 +3167,477 @@ void BIT_1_A(CPU& cpu) {
     cpu.PC += 2;
     cpu.updateCycles(8);
 }
+void BIT_2_B(CPU& cpu) {
+    cpu.BIT(2, cpu.B);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
 
 
+}
+void BIT_2_C(CPU& cpu) {
+    cpu.BIT(2, cpu.C);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
 
-void SET_1_H(CPU& cpu) {
-    uint8_t t = cpu.H |= (1<<1);
-    cpu.H = t;
+
+}
+void BIT_2_D(CPU& cpu) {
+    cpu.BIT(2, cpu.D);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_2_E(CPU& cpu) {
+    cpu.BIT(2, cpu.E);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_2_H(CPU& cpu) {
+    cpu.BIT(2, cpu.H);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_2_L(CPU& cpu) {
+    cpu.BIT(2, cpu.L);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_2_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();
+    uint8_t value = cpu.read8(address);
+    cpu.BIT(2, value);
     cpu.PC += 2;
-    cpu.updateCycles(8);
+    cpu.updateCycles(12);
+
+    
 }
+void BIT_2_A(CPU& cpu) {
+    cpu.BIT(2, cpu.A);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
 
+    
+}
+void BIT_3_B(CPU& cpu) {
+    cpu.BIT(3, cpu.B);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
 
+    
+}
+void BIT_3_C(CPU& cpu) {
+    cpu.BIT(3, cpu.C);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
 
-void SET_1_C(CPU& cpu) {
-    uint8_t t =  cpu.C |=  (1<<1);
-    cpu.C = t;
+    
+}
+void BIT_3_D(CPU& cpu) {
+    cpu.BIT(3, cpu.D);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_3_E(CPU& cpu) {
+    cpu.BIT(3, cpu.E);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_3_H(CPU& cpu) {
+    cpu.BIT(3, cpu.H);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_3_L(CPU& cpu) {
+    cpu.BIT(3, cpu.L);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_3_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();
+    uint8_t value = cpu.read8(address);
+    cpu.BIT(3, value);
     cpu.PC += 2;
+    cpu.updateCycles(12);
+
+    
+}
+void BIT_3_A(CPU& cpu) {
+    cpu.BIT(3, cpu.A);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_4_B(CPU& cpu) {
+    cpu.BIT(4, cpu.B);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_4_C(CPU& cpu) {
+    cpu.BIT(4, cpu.C);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_4_D(CPU& cpu) {
+    cpu.BIT(4, cpu.D);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+
+void BIT_4_E(CPU& cpu) {
+    cpu.BIT(4, cpu.E);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_4_H(CPU& cpu) {
+    cpu.BIT(4, cpu.H);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_4_L(CPU& cpu) {
+    cpu.BIT(4, cpu.L);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_4_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();
+    uint8_t value = cpu.read8(address);
+    cpu.BIT(4, value);
+    cpu.PC+=2;
+    cpu.updateCycles(12);
+
+    
+}
+void BIT_4_A(CPU& cpu) {
+    cpu.BIT(4, cpu.A);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_5_B(CPU& cpu) {
+    cpu.BIT(5, cpu.B);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_5_C(CPU& cpu) {
+    cpu.BIT(5, cpu.C);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+
+    
+}
+void BIT_5_D(CPU& cpu) {
+    cpu.BIT(5, cpu.D);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+    
+}
+
+void BIT_5_E(CPU& cpu) {
+    cpu.BIT(5, cpu.E);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+    
+}
+void BIT_5_H(CPU& cpu) {
+    cpu.BIT(5, cpu.L);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+    
+}
+void BIT_5_L(CPU& cpu) {
+    cpu.BIT(5, cpu.L);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+    
+}
+
+void BIT_5_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();
+    uint8_t value = cpu.read8(address);
+    cpu.BIT(5, value);
+    cpu.PC+=2;
+    cpu.updateCycles(12);
+    
+}
+void BIT_5_A(CPU& cpu) {
+    cpu.BIT(5, cpu.A);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+    
+}
+
+
+void BIT_6_B(CPU& cpu) {
+    cpu.BIT(6, cpu.B);
+    cpu.PC+=2;
     cpu.updateCycles(8);
 }
-void SET_3_L(CPU& cpu) {
-    uint8_t t =  cpu.L |=  (1<<3);
-    cpu.L = t;
-    cpu.PC += 2;
+void BIT_6_C(CPU& cpu) {
+    cpu.BIT(6, cpu.C);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+}
+void BIT_6_D(CPU& cpu) {
+    cpu.BIT(6, cpu.D);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+}
+void BIT_6_E(CPU& cpu) {
+    cpu.BIT(6, cpu.E);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+}
+void BIT_6_H(CPU& cpu) {
+    cpu.BIT(6, cpu.H);
+    cpu.PC+=2;
     cpu.updateCycles(8);
 }
 
-void SET_7_A(CPU& cpu) {
-    uint8_t t =  cpu.A |=  (1<<7);
-    cpu.A = t;
-    cpu.PC += 2;
+void BIT_6_L(CPU& cpu) {
+    cpu.BIT(6, cpu.L);
+    cpu.PC+=2;
     cpu.updateCycles(8);
 }
 
-void SET_3_C(CPU& cpu) {
-    uint8_t t = cpu.C |= (1<<3);
-    cpu.C = t;
-    cpu.PC += 2;
+void BIT_6_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();
+    uint8_t value = cpu.read8(address);
+    cpu.BIT(6, value);
+    cpu.PC+=2;
     cpu.updateCycles(8);
 }
-
-
-
-void RES_2_L(CPU& cpu) {
-    cpu.L &= ~(1 << 2);
-    cpu.PC+= 2;
+void BIT_6_A(CPU& cpu) {
+    cpu.BIT(6, cpu.A);
+    cpu.PC+=2;
     cpu.updateCycles(8);
 }
-
-void BIT_7_H (CPU& cpu) {
+void BIT_7_B(CPU& cpu) {
+    cpu.BIT(7, cpu.B);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+}
+void BIT_7_C(CPU& cpu) {
+    cpu.BIT(7, cpu.C);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+}
+void BIT_7_D(CPU& cpu) {
+    cpu.BIT(7, cpu.D);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+}
+void BIT_7_E(CPU& cpu) {
+    cpu.BIT(7, cpu.E);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+}
+void BIT_7_H(CPU& cpu) {
     cpu.BIT(7, cpu.H);
     cpu.PC+=2;
     cpu.updateCycles(8);
 }
+void BIT_7_L(CPU& cpu) {
+    cpu.BIT(7, cpu.L);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+}
+void BIT_7_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();
+    uint8_t value = cpu.read8(address);
+    cpu.BIT(7, value);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+}
+void BIT_7_A(CPU& cpu) {
+    cpu.BIT(7, cpu.A);
+    cpu.PC+=2;
+    cpu.updateCycles(8);
+}
+
+
+
+
+void RES_0_B(CPU& cpu) { cpu.RES_n_X(cpu, 0, cpu.B); }
+void RES_0_C(CPU& cpu) { cpu.RES_n_X(cpu, 0, cpu.C); }
+void RES_0_D(CPU& cpu) { cpu.RES_n_X(cpu, 0, cpu.D); }
+void RES_0_E(CPU& cpu) { cpu.RES_n_X(cpu, 0, cpu.E); }
+void RES_0_H(CPU& cpu) { cpu.RES_n_X(cpu, 0, cpu.L); }
+void RES_0_L(CPU& cpu) { cpu.RES_n_X(cpu, 0, cpu.L); }
+void RES_0_bracket_HL(CPU& cpu) { cpu.RES_n_HL(cpu, 0); }
+void RES_0_A(CPU& cpu) { cpu.RES_n_X(cpu, 0, cpu.A); }
+
+void RES_1_B(CPU& cpu) { cpu.RES_n_X(cpu, 1, cpu.B); }                                          
+void RES_1_C(CPU& cpu) { cpu.RES_n_X(cpu, 1, cpu.C); }
+void RES_1_D(CPU& cpu) { cpu.RES_n_X(cpu, 1, cpu.D); }
+void RES_1_E(CPU& cpu) { cpu.RES_n_X(cpu, 1, cpu.E); }
+void RES_1_H(CPU& cpu) { cpu.RES_n_X(cpu, 1, cpu.H); }
+void RES_1_L(CPU& cpu) { cpu.RES_n_X(cpu, 1, cpu.L); }
+void RES_1_bracket_HL(CPU& cpu) { cpu.RES_n_HL(cpu, 1); }
+void RES_1_A(CPU& cpu) { cpu.RES_n_X(cpu, 1, cpu.A); }
+
+void RES_2_B(CPU& cpu) { cpu.RES_n_X(cpu, 2, cpu.B); }
+void RES_2_C(CPU& cpu) { cpu.RES_n_X(cpu, 2, cpu.C); }
+void RES_2_D(CPU& cpu) { cpu.RES_n_X(cpu, 2, cpu.D); }
+void RES_2_E(CPU& cpu) { cpu.RES_n_X(cpu, 2, cpu.E); }
+void RES_2_H(CPU& cpu) { cpu.RES_n_X(cpu, 2, cpu.H); }
+void RES_2_L(CPU& cpu) { cpu.RES_n_X(cpu, 2, cpu.L); }
+void RES_2_bracket_HL(CPU& cpu) { cpu.RES_n_HL(cpu, 2); }
+void RES_2_A(CPU& cpu) {cpu.RES_n_X(cpu, 2, cpu.A); }
+
+
+void RES_3_B(CPU& cpu) { cpu.RES_n_X(cpu, 3, cpu.B); }
+void RES_3_C(CPU& cpu) { cpu.RES_n_X(cpu, 3, cpu.C); }
+void RES_3_D(CPU& cpu) { cpu.RES_n_X(cpu, 3, cpu.D); }
+void RES_3_E(CPU& cpu) { cpu.RES_n_X(cpu, 3, cpu.E); }
+void RES_3_H(CPU& cpu) { cpu.RES_n_X(cpu, 3, cpu.H); }
+void RES_3_L(CPU& cpu) { cpu.RES_n_X(cpu, 3, cpu.L); }
+void RES_3_bracket_HL(CPU& cpu) { cpu.RES_n_HL(cpu, 3); }
+void RES_3_A(CPU& cpu) { cpu.RES_n_X(cpu, 3, cpu.A); }
+
+void RES_4_B(CPU& cpu) { cpu.RES_n_X(cpu, 4, cpu.B); }
+void RES_4_C(CPU& cpu) { cpu.RES_n_X(cpu, 4, cpu.C); }
+void RES_4_D(CPU& cpu) { cpu.RES_n_X(cpu, 4, cpu.D); }
+void RES_4_E(CPU& cpu) { cpu.RES_n_X(cpu, 4, cpu.E); }
+void RES_4_H(CPU& cpu) { cpu.RES_n_X(cpu, 4, cpu.H); }
+void RES_4_L(CPU& cpu) { cpu.RES_n_X(cpu, 4, cpu.L); }
+void RES_4_bracket_HL(CPU& cpu) { cpu.RES_n_HL(cpu, 4); }
+void RES_4_A(CPU& cpu) { cpu.RES_n_X(cpu, 5, cpu.A); }
+
+void RES_5_B(CPU& cpu) { cpu.RES_n_X(cpu, 5, cpu.B); }
+void RES_5_C(CPU& cpu) { cpu.RES_n_X(cpu, 5, cpu.C); }
+void RES_5_D(CPU& cpu) { cpu.RES_n_X(cpu, 5, cpu.D); }
+void RES_5_E(CPU& cpu) { cpu.RES_n_X(cpu, 5, cpu.E); }
+void RES_5_H(CPU& cpu) { cpu.RES_n_X(cpu, 5, cpu.H); }
+void RES_5_L(CPU& cpu) { cpu.RES_n_X(cpu, 5, cpu.L); }
+void RES_5_bracket_HL(CPU& cpu) { cpu.RES_n_HL(cpu, 5); }
+void RES_5_A(CPU& cpu) { cpu.RES_n_X(cpu, 5, cpu.A); }
+
+void RES_6_B(CPU& cpu) { cpu.RES_n_X(cpu, 6, cpu.B); }
+void RES_6_C(CPU& cpu) { cpu.RES_n_X(cpu, 6, cpu.C); }
+void RES_6_D(CPU& cpu) { cpu.RES_n_X(cpu, 6, cpu.D); }
+void RES_6_E(CPU& cpu) { cpu.RES_n_X(cpu, 6, cpu.E); }
+void RES_6_H(CPU& cpu) { cpu.RES_n_X(cpu, 6, cpu.H); }
+void RES_6_L(CPU& cpu) { cpu.RES_n_X(cpu, 6, cpu.L); }
+void RES_6_bracket_HL(CPU& cpu) { cpu.RES_n_HL(cpu, 6); }
+void RES_6_A(CPU& cpu) { cpu.RES_n_X(cpu, 6, cpu.A); }
+
+void RES_7_B(CPU& cpu) { cpu.RES_n_X(cpu, 7, cpu.B); }
+void RES_7_C(CPU& cpu) { cpu.RES_n_X(cpu, 7, cpu.C); }
+void RES_7_D(CPU& cpu) { cpu.RES_n_X(cpu, 7, cpu.D); }
+void RES_7_E(CPU& cpu) { cpu.RES_n_X(cpu, 7, cpu.E); }
+void RES_7_H(CPU& cpu) { cpu.RES_n_X(cpu, 7, cpu.H); }
+void RES_7_L(CPU& cpu) { cpu.RES_n_X(cpu, 7, cpu.L); }
+void RES_7_bracket_HL(CPU& cpu) { cpu.RES_n_HL(cpu, 7); }
+void RES_7_A(CPU& cpu) { cpu.RES_n_X(cpu, 7, cpu.A); }
+
+
+void SET_0_B(CPU& cpu) { cpu.SET_n_X(cpu, 0, cpu.B); }
+void SET_0_C(CPU& cpu) { cpu.SET_n_X(cpu, 0, cpu.C); }
+void SET_0_D(CPU& cpu) { cpu.SET_n_X(cpu, 0, cpu.D); }
+void SET_0_E(CPU& cpu) { cpu.SET_n_X(cpu, 0, cpu.E); }
+void SET_0_H(CPU& cpu) { cpu.SET_n_X(cpu, 0, cpu.H); }
+void SET_0_L(CPU& cpu) { cpu.SET_n_X(cpu, 0, cpu.L); }
+void SET_0_bracket_HL(CPU& cpu) { cpu.SET_n_HL(cpu, 0); }
+void SET_0_A(CPU& cpu) { cpu.SET_n_X(cpu, 0, cpu.A); }
+
+void SET_1_B(CPU& cpu) { cpu.SET_n_X(cpu, 1, cpu.B); }
+void SET_1_C(CPU& cpu) { cpu.SET_n_X(cpu, 1, cpu.C); }
+void SET_1_D(CPU& cpu) { cpu.SET_n_X(cpu, 1, cpu.D); }
+void SET_1_E(CPU& cpu) { cpu.SET_n_X(cpu, 1, cpu.E); }
+void SET_1_H(CPU& cpu) { cpu.SET_n_X(cpu, 1, cpu.H); }
+void SET_1_L(CPU& cpu) { cpu.SET_n_X(cpu, 1, cpu.L); }
+void SET_1_bracket_HL(CPU& cpu) { cpu.SET_n_HL(cpu, 1); }
+void SET_1_A(CPU& cpu) { cpu.SET_n_X(cpu, 1, cpu.A); }
+
+
+void SET_2_B(CPU& cpu) { cpu.SET_n_X(cpu, 2, cpu.B); }
+void SET_2_C(CPU& cpu) { cpu.SET_n_X(cpu, 2, cpu.C); }
+void SET_2_D(CPU& cpu) { cpu.SET_n_X(cpu, 2, cpu.D); }
+void SET_2_E(CPU& cpu) { cpu.SET_n_X(cpu, 2, cpu.E); }
+void SET_2_H(CPU& cpu) { cpu.SET_n_X(cpu, 2, cpu.H); }
+void SET_2_L(CPU& cpu) { cpu.SET_n_X(cpu, 2, cpu.L); }
+void SET_2_bracket_HL(CPU& cpu) { cpu.SET_n_HL(cpu, 2); }
+void SET_2_A(CPU& cpu) { cpu.SET_n_X(cpu, 2, cpu.A); }
+
+void SET_3_B(CPU& cpu) { cpu.SET_n_X(cpu, 3, cpu.B); }
+void SET_3_C(CPU& cpu) { cpu.SET_n_X(cpu, 3, cpu.C); }
+void SET_3_D(CPU& cpu) { cpu.SET_n_X(cpu, 3, cpu.D); }
+void SET_3_E(CPU& cpu) { cpu.SET_n_X(cpu, 3, cpu.E); }
+void SET_3_H(CPU& cpu) { cpu.SET_n_X(cpu, 3, cpu.H); }
+void SET_3_L(CPU& cpu) { cpu.SET_n_X(cpu, 3, cpu.L); }
+void SET_3_bracket_HL(CPU& cpu) { cpu.SET_n_HL(cpu, 3); }
+void SET_3_A(CPU& cpu) { cpu.SET_n_X(cpu, 3, cpu.A); }
+
+
+void SET_4_B(CPU& cpu) { cpu.SET_n_X(cpu, 4, cpu.B); }
+void SET_4_C(CPU& cpu) { cpu.SET_n_X(cpu, 4, cpu.C); }
+void SET_4_D(CPU& cpu) { cpu.SET_n_X(cpu, 4, cpu.D); }
+void SET_4_E(CPU& cpu) { cpu.SET_n_X(cpu, 4, cpu.E); }
+void SET_4_H(CPU& cpu) { cpu.SET_n_X(cpu, 4, cpu.H); }
+void SET_4_L(CPU& cpu) { cpu.SET_n_X(cpu, 4, cpu.L); }
+void SET_4_bracket_HL(CPU& cpu) { cpu.SET_n_HL(cpu, 4); }
+void SET_4_A(CPU& cpu) { cpu.SET_n_X(cpu, 4, cpu.A); }
+
+void SET_5_B(CPU& cpu) { cpu.SET_n_X(cpu, 5, cpu.B); }
+void SET_5_C(CPU& cpu) { cpu.SET_n_X(cpu, 5, cpu.C); }
+void SET_5_D(CPU& cpu) { cpu.SET_n_X(cpu, 5, cpu.D); }
+void SET_5_E(CPU& cpu) { cpu.SET_n_X(cpu, 5, cpu.E); }
+void SET_5_H(CPU& cpu) { cpu.SET_n_X(cpu, 5, cpu.H); }
+void SET_5_L(CPU& cpu) { cpu.SET_n_X(cpu, 5, cpu.L); }
+void SET_5_bracket_HL(CPU& cpu) { cpu.SET_n_HL(cpu, 5); }
+void SET_5_A(CPU& cpu) { cpu.SET_n_X(cpu, 5, cpu.A); }
+
+
+void SET_6_B(CPU& cpu) { cpu.SET_n_X(cpu, 6, cpu.B); }
+void SET_6_C(CPU& cpu) { cpu.SET_n_X(cpu, 6, cpu.C); }
+void SET_6_D(CPU& cpu) { cpu.SET_n_X(cpu, 6, cpu.D); }
+void SET_6_E(CPU& cpu) { cpu.SET_n_X(cpu, 6, cpu.E); }
+void SET_6_H(CPU& cpu) { cpu.SET_n_X(cpu, 6, cpu.H); }
+void SET_6_L(CPU& cpu) { cpu.SET_n_X(cpu, 6, cpu.L); }
+void SET_6_bracket_HL(CPU& cpu) { cpu.SET_n_HL(cpu, 6); }
+void SET_6_A(CPU& cpu) { cpu.SET_n_X(cpu, 6, cpu.A); }
+
+void SET_7_B(CPU& cpu) { cpu.SET_n_X(cpu, 7, cpu.B); }
+void SET_7_C(CPU& cpu) { cpu.SET_n_X(cpu, 7, cpu.C); }
+void SET_7_D(CPU& cpu) { cpu.SET_n_X(cpu, 7, cpu.D); }
+void SET_7_E(CPU& cpu) { cpu.SET_n_X(cpu, 7, cpu.E); }
+void SET_7_H(CPU& cpu) { cpu.SET_n_X(cpu, 7, cpu.H); }
+void SET_7_L(CPU& cpu) { cpu.SET_n_X(cpu, 7, cpu.L); }
+void SET_7_bracket_HL(CPU& cpu) { cpu.SET_n_HL(cpu, 7); }
+void SET_7_A(CPU& cpu) { cpu.SET_n_X(cpu, 7, cpu.A); }
+
+
+
+
+
