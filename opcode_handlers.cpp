@@ -2165,6 +2165,1011 @@ void RST_38(CPU& cpu) {
         
 }
 
+
+
+
+void RLC_B(CPU& cpu) {
+    uint8_t value = cpu.B;
+    bool carryout = value & 0x80;
+    value = (value << 1) | (carryout ? 1 : 0);
+    cpu.B = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+
+void RLC_C(CPU& cpu) {
+    uint8_t value = cpu.C;
+    bool carryout = value & 0x80;
+    value = (value << 1) | (carryout ? 1 : 0);
+    cpu.C = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+
+
+
+void RLC_D(CPU& cpu) {
+    uint8_t value = cpu.D;
+    bool carryout = value & 0x80;
+    value = (value << 1) | (carryout ? 1 : 0);
+    cpu.D = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+
+void RLC_E(CPU& cpu) {
+    uint8_t value = cpu.E;
+    bool carryout = value & 0x80;
+    value = (value << 1) | (carryout ? 1 : 0);
+    cpu.E = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+
+void RLC_H(CPU& cpu) {
+    uint8_t value = cpu.H;
+    bool carryout = value & 0x80;
+    value = (value << 1) | (carryout ? 1 : 0);
+    cpu.H = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}   
+
+
+
+void RLC_L(CPU& cpu) {
+    uint8_t value = cpu.L;
+    bool carryout = value & 0x80;
+    value = (value << 1) | (carryout ? 1 : 0);
+    cpu.L = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+
+
+void RLC_bracket_HL(CPU& cpu) {
+
+    uint16_t address = cpu.getHL();
+    uint8_t value = cpu.read8(address);
+
+    bool carryout = value & 0x80;
+    value = (value << 1) | (carryout ? 1 : 0);
+    cpu.memory.write(address, value);
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+
+
+    cpu.PC+= 2;
+    cpu.updateCycles(16);
+}
+
+
+
+void RLC_A(CPU& cpu) {
+    uint8_t value = cpu.A;
+    bool carryout = value & 0x80;
+    value = (value << 1) | (carryout ? 1 : 0);
+    cpu.A = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+
+
+void RRC_B(CPU& cpu) {
+    uint8_t value = cpu.B;
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryout ? 0x80 : 0);
+    cpu.B = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+
+
+void RRC_C(CPU& cpu) {
+    uint8_t value = cpu.C;
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryout ? 0x80 : 0);
+    cpu.C = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+void RRC_D(CPU& cpu) {
+    uint8_t value = cpu.D;
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryout ? 0x80 : 0);
+    cpu.D = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+
+
+
+void RRC_E(CPU& cpu) {
+    uint8_t value = cpu.E;
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryout ? 0x80 : 0);
+    cpu.E = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+void RRC_H(CPU& cpu) {
+    uint8_t value = cpu.H;
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryout ? 0x80 : 0);
+    cpu.H = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+void RRC_L(CPU& cpu) {
+    uint8_t value = cpu.L;
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryout ? 0x80 : 0);
+    cpu.L = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+void RRC_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();
+    uint8_t value = cpu.read8(address);
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryout ? 0x80 : 0);
+    cpu.memory.write(address, value);
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(16);
+}
+void RRC_A(CPU& cpu){
+    uint8_t value = cpu.A;
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryout ? 0x80 : 0);
+    cpu.A = value;
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+}
+
+
+void RL_B(CPU& cpu) {
+    uint8_t value = cpu.B;
+    bool carryout = value & 0x80;  // Get the most significant bit (MSB) before shifting
+    value = (value << 1) | (cpu.getCarryFlag() ? 1 : 0);  // Shift left and add the carry flag to the LSB
+    cpu.B = value;
+
+    cpu.setZeroFlag(value == 0);  // Set ZeroFlag if the result is zero
+    cpu.setSubtractFlag(false);  // RL operation does not affect the subtract flag
+    cpu.setHalfCarryFlag(false);  // RL operation does not affect the half carry flag
+    cpu.setCarryFlag(carryout);  // Set CarryFlag to the value of the old MSB
+
+    cpu.PC += 2;  // Increment PC by 2 for 8-bit instructions (opcode + operand)
+    cpu.updateCycles(8);  // 8 cycles for this operation
+}
+
+void RL_C(CPU& cpu) {
+    uint8_t value = cpu.C;
+    bool carryout = value & 0x80; 
+    value = (value << 1) | (cpu.getCarryFlag() ? 1 : 0);  
+    cpu.C = value;
+
+    cpu.setZeroFlag(value == 0); 
+    cpu.setSubtractFlag(false);  
+    cpu.setHalfCarryFlag(false);  
+    cpu.setCarryFlag(carryout);  
+
+    cpu.PC += 2; 
+    cpu.updateCycles(8);  
+}
+
+void RL_D(CPU& cpu) {
+    uint8_t value = cpu.D;
+    bool carryout = value & 0x80; 
+    value = (value << 1) | (cpu.getCarryFlag() ? 1 : 0);  
+    cpu.D= value;
+
+    cpu.setZeroFlag(value == 0); 
+    cpu.setSubtractFlag(false);  
+    cpu.setHalfCarryFlag(false);  
+    cpu.setCarryFlag(carryout);  
+
+    cpu.PC += 2; 
+    cpu.updateCycles(8);  
+}
+
+void RL_E(CPU& cpu) {
+    uint8_t value = cpu.E;
+    bool carryout = value & 0x80; 
+    value = (value << 1) | (cpu.getCarryFlag() ? 1 : 0);  
+    cpu.E = value;
+
+    cpu.setZeroFlag(value == 0); 
+    cpu.setSubtractFlag(false);  
+    cpu.setHalfCarryFlag(false);  
+    cpu.setCarryFlag(carryout);  
+
+    cpu.PC += 2; 
+    cpu.updateCycles(8);  
+}
+
+void RL_H(CPU& cpu) {
+    uint8_t value = cpu.H;
+    bool carryout = value & 0x80; 
+    value = (value << 1) | (cpu.getCarryFlag() ? 1 : 0);  
+    cpu.H = value;
+
+    cpu.setZeroFlag(value == 0); 
+    cpu.setSubtractFlag(false);  
+    cpu.setHalfCarryFlag(false);  
+    cpu.setCarryFlag(carryout);  
+
+    cpu.PC += 2; 
+    cpu.updateCycles(8);  
+}
+
+void RL_L(CPU& cpu) {
+    uint8_t value = cpu.L;
+    bool carryout = value & 0x80; 
+    value = (value << 1) | (cpu.getCarryFlag() ? 1 : 0);  
+    cpu.L = value;
+
+    cpu.setZeroFlag(value == 0); 
+    cpu.setSubtractFlag(false);  
+    cpu.setHalfCarryFlag(false);  
+    cpu.setCarryFlag(carryout);  
+
+    cpu.PC += 2; 
+    cpu.updateCycles(8);  
+}
+void RL_bracket_HL(CPU& cpu) {
+    uint8_t value = cpu.getHL();  // Read the value from the address [HL]
+    bool carryout = value & 0x80;
+    value = (value << 1) | (cpu.getCarryFlag() ? 1 : 0);
+    cpu.setHL(value);  // Write the result back to the memory at [HL]
+
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    
+    cpu.PC += 2;
+    cpu.updateCycles(16);  // [HL] takes 16 cycles
+}
+
+void RL_A(CPU& cpu) {
+    uint8_t value = cpu.A;
+    bool carryout = value & 0x80;
+    value = (value << 1) | (cpu.getCarryFlag() ? 1 : 0);
+    cpu.A = value;
+
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+
+
+
+
+
+
+
+void RR_B(CPU& cpu) {
+    uint8_t value = cpu.B;
+    bool carryin = cpu.getCarryFlag();
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryin ? 0x80 : 0);
+    cpu.B = value;
+
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void RR_C(CPU& cpu) {
+    uint8_t value = cpu.C;
+    bool carryin = cpu.getCarryFlag();
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryin ? 0x80 : 0);
+    cpu.C = value;
+
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void RR_D(CPU& cpu) {
+    uint8_t value = cpu.D;
+    bool carryin = cpu.getCarryFlag();
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryin ? 0x80 : 0);
+    cpu.D = value;
+
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void RR_E(CPU& cpu) {
+    uint8_t value = cpu.E;
+    bool carryin = cpu.getCarryFlag();
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryin ? 0x80 : 0);
+    cpu.E = value;
+
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void RR_H(CPU& cpu) {
+    uint8_t value = cpu.H;
+    bool carryin = cpu.getCarryFlag();
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryin ? 0x80 : 0);
+    cpu.H = value;
+
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void RR_L(CPU& cpu) {
+    uint8_t value = cpu.L;
+    bool carryin = cpu.getCarryFlag();
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryin ? 0x80 : 0);
+    cpu.L = value;
+
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void RR_bracket_HL(CPU& cpu) {
+    uint8_t value = cpu.getHL();  // Read the value from the address [HL]
+    bool carryin = cpu.getCarryFlag();
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryin ? 0x80 : 0);
+    cpu.setHL(value);  // Write the result back to the memory at [HL]
+
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    
+    cpu.PC += 2;
+    cpu.updateCycles(16);  // [HL] takes 16 cycles
+}
+
+void RR_A(CPU& cpu) {
+    uint8_t value = cpu.A;
+    bool carryin = cpu.getCarryFlag();
+    bool carryout = value & 0x01;
+    value = (value >> 1) | (carryin ? 0x80 : 0);
+    cpu.A = value;
+
+    cpu.setZeroFlag(value == 0);
+    cpu.setSubtractFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setCarryFlag(carryout);
+    
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SLA_B(CPU& cpu) {
+    uint8_t value = cpu.B;  // Get the current value of register B
+    uint8_t result = value << 1;
+    cpu.setCarryFlag(value & 0x80);  // Set carry if MSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.B = result;
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+
+}
+
+void SLA_C(CPU& cpu) {
+    uint8_t value = cpu.C;  // Get the current value of register B
+    uint8_t result = value << 1;
+    cpu.setCarryFlag(value & 0x80);  // Set carry if MSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.C = result;
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+
+}
+void SLA_D(CPU& cpu) {
+    uint8_t value = cpu.D;  // Get the current value of register B
+    uint8_t result = value << 1;
+    cpu.setCarryFlag(value & 0x80);  // Set carry if MSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.D = result;
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+
+}
+void SLA_E(CPU& cpu) {
+    uint8_t value = cpu.E;  // Get the current value of register B
+    uint8_t result = value << 1;
+    cpu.setCarryFlag(value & 0x80);  // Set carry if MSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.E = result;
+    cpu.PC+= 2;
+    cpu.updateCycles(8);
+
+}
+void SLA_H(CPU& cpu) {
+    uint8_t value = cpu.H;  // Get the current value of register H
+    uint8_t result = value << 1;
+    cpu.setCarryFlag(value & 0x80);  // Set carry if MSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.H = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SLA_L(CPU& cpu) {
+    uint8_t value = cpu.L;  // Get the current value of register L
+    uint8_t result = value << 1;
+    cpu.setCarryFlag(value & 0x80);  // Set carry if MSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.L = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SLA_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();  // Get memory address from HL
+    uint8_t value = cpu.read8(address);  // Read value from memory
+    uint8_t result = value << 1;
+    cpu.setCarryFlag(value & 0x80);  // Set carry if MSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.writeMemory(address, result);  // Write updated value back to memory
+    cpu.PC += 2;
+    cpu.updateCycles(16);  // Takes longer to access memory
+}
+
+void SLA_A(CPU& cpu) {
+    uint8_t value = cpu.A;  // Get the current value of register A
+    uint8_t result = value << 1;
+    cpu.setCarryFlag(value & 0x80);  // Set carry if MSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.A = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+void SRA_B(CPU& cpu) {
+    uint8_t value = cpu.B;  // Get the current value of register B
+    uint8_t result = value >> 1;  // Perform an arithmetic shift right
+    cpu.setCarryFlag(value & 0x01);  // Set carry if the LSB is 1
+    cpu.setZeroFlag(result == 0);  // Set zero if the result is 0
+    cpu.setHalfCarryFlag(false);  // No effect on half-carry
+    cpu.setSubtractFlag(false);  // No effect on subtract flag
+    cpu.B = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRA_C(CPU& cpu) {
+    uint8_t value = cpu.C;  // Get the current value of register C
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);  // Set carry if the LSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.C = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRA_D(CPU& cpu) {
+    uint8_t value = cpu.D;  // Get the current value of register D
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);  // Set carry if the LSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.D = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRA_E(CPU& cpu) {
+    uint8_t value = cpu.E;  // Get the current value of register E
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);  // Set carry if the LSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.E = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRA_H(CPU& cpu) {
+    uint8_t value = cpu.H;  // Get the current value of register H
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);  // Set carry if the LSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.H = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRA_L(CPU& cpu) {
+    uint8_t value = cpu.L;  // Get the current value of register L
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);  // Set carry if the LSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.L = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRA_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();  // Get memory address from HL
+    uint8_t value = cpu.read8(address);  // Read value from memory
+    uint8_t result = value >> 1;  // Perform arithmetic shift right
+    cpu.setCarryFlag(value & 0x01);  // Set carry if the LSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.writeMemory(address, result);  // Write the result back to memory
+    cpu.PC += 2;
+    cpu.updateCycles(16);  // Takes longer to access memory
+}
+
+void SRA_A(CPU& cpu) {
+    uint8_t value = cpu.A;  // Get the current value of register A
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);  // Set carry if the LSB is 1
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.A = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+void SWAP_B(CPU& cpu) {
+    uint8_t value = cpu.B;
+    uint8_t result = (value << 4) | (value >> 4);  // Swap the nibbles
+    cpu.setZeroFlag(result == 0);  // Set zero flag if the result is 0
+    cpu.setCarryFlag(false);  // No carry generated
+    cpu.setHalfCarryFlag(false);  // No half-carry
+    cpu.setSubtractFlag(false);  // No subtraction
+    cpu.B = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SWAP_C(CPU& cpu) {
+    uint8_t value = cpu.C;
+    uint8_t result = (value << 4) | (value >> 4);  // Swap the nibbles
+    cpu.setZeroFlag(result == 0);
+    cpu.setCarryFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.C = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SWAP_D(CPU& cpu) {
+    uint8_t value = cpu.D;
+    uint8_t result = (value << 4) | (value >> 4);  // Swap the nibbles
+    cpu.setZeroFlag(result == 0);
+    cpu.setCarryFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.D = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SWAP_E(CPU& cpu) {
+    uint8_t value = cpu.E;
+    uint8_t result = (value << 4) | (value >> 4);  // Swap the nibbles
+    cpu.setZeroFlag(result == 0);
+    cpu.setCarryFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.E = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SWAP_H(CPU& cpu) {
+    uint8_t value = cpu.H;
+    uint8_t result = (value << 4) | (value >> 4);  // Swap the nibbles
+    cpu.setZeroFlag(result == 0);
+    cpu.setCarryFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.H = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SWAP_L(CPU& cpu) {
+    uint8_t value = cpu.L;
+    uint8_t result = (value << 4) | (value >> 4);  // Swap the nibbles
+    cpu.setZeroFlag(result == 0);
+    cpu.setCarryFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.L = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SWAP_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();  // Get memory address from HL
+    uint8_t value = cpu.read8(address);  // Read value from memory
+    uint8_t result = (value << 4) | (value >> 4);  // Swap the nibbles
+    cpu.setZeroFlag(result == 0);
+    cpu.setCarryFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.writeMemory(address, result);  // Write the result back to memory
+    cpu.PC += 2;
+    cpu.updateCycles(16);  // Takes longer to access memory
+}
+
+void SWAP_A(CPU& cpu) {
+    uint8_t value = cpu.A;
+    uint8_t result = (value << 4) | (value >> 4);  // Swap the nibbles
+    cpu.setZeroFlag(result == 0);
+    cpu.setCarryFlag(false);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.A = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+void SRL_B(CPU& cpu) {
+    uint8_t value = cpu.B;
+    uint8_t result = value >> 1;  // Perform logical shift right
+    cpu.setCarryFlag(value & 0x01);  // Set carry if the LSB is 1
+    cpu.setZeroFlag(result == 0);  // Set zero flag if the result is 0
+    cpu.setHalfCarryFlag(false);  // No effect on half-carry
+    cpu.setSubtractFlag(false);  // No effect on subtract flag
+    cpu.B = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRL_C(CPU& cpu) {
+    uint8_t value = cpu.C;
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.C = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRL_D(CPU& cpu) {
+    uint8_t value = cpu.D;
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.D = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRL_E(CPU& cpu) {
+    uint8_t value = cpu.E;
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.E = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRL_H(CPU& cpu) {
+    uint8_t value = cpu.H;
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.H = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRL_L(CPU& cpu) {
+    uint8_t value = cpu.L;
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.L = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void SRL_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();
+    uint8_t value = cpu.read8(address);  // Read value from memory
+    uint8_t result = value >> 1;  // Perform logical shift right
+    cpu.setCarryFlag(value & 0x01);
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.writeMemory(address, result);  // Write the result back to memory
+    cpu.PC += 2;
+    cpu.updateCycles(16);  // Takes longer to access memory
+}
+
+void SRL_A(CPU& cpu) {
+    uint8_t value = cpu.A;
+    uint8_t result = value >> 1;
+    cpu.setCarryFlag(value & 0x01);
+    cpu.setZeroFlag(result == 0);
+    cpu.setHalfCarryFlag(false);
+    cpu.setSubtractFlag(false);
+    cpu.A = result;
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+void BIT_0_B(CPU& cpu) {
+    uint8_t value = cpu.B;
+    bool bitSet = (value & 0x01) != 0;  // Check if bit 0 is set
+    cpu.setZeroFlag(!bitSet);  // Set zero flag if bit 0 is 0
+    cpu.setHalfCarryFlag(true);  // Always set Half Carry flag for BIT instructions
+    cpu.setSubtractFlag(false);  // No subtraction
+    cpu.setCarryFlag(false);  // Carry flag is unaffected
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_0_C(CPU& cpu) {
+    uint8_t value = cpu.C;
+    bool bitSet = (value & 0x01) != 0;
+    cpu.setZeroFlag(!bitSet);
+    cpu.setHalfCarryFlag(true);
+    cpu.setSubtractFlag(false);
+    cpu.setCarryFlag(false);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_0_D(CPU& cpu) {
+    uint8_t value = cpu.D;
+    bool bitSet = (value & 0x01) != 0;
+    cpu.setZeroFlag(!bitSet);
+    cpu.setHalfCarryFlag(true);
+    cpu.setSubtractFlag(false);
+    cpu.setCarryFlag(false);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_0_E(CPU& cpu) {
+    uint8_t value = cpu.E;
+    bool bitSet = (value & 0x01) != 0;
+    cpu.setZeroFlag(!bitSet);
+    cpu.setHalfCarryFlag(true);
+    cpu.setSubtractFlag(false);
+    cpu.setCarryFlag(false);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_0_H(CPU& cpu) {
+    uint8_t value = cpu.H;
+    bool bitSet = (value & 0x01) != 0;
+    cpu.setZeroFlag(!bitSet);
+    cpu.setHalfCarryFlag(true);
+    cpu.setSubtractFlag(false);
+    cpu.setCarryFlag(false);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_0_L(CPU& cpu) {
+    uint8_t value = cpu.L;
+    bool bitSet = (value & 0x01) != 0;
+    cpu.setZeroFlag(!bitSet);
+    cpu.setHalfCarryFlag(true);
+    cpu.setSubtractFlag(false);
+    cpu.setCarryFlag(false);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_0_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();
+    uint8_t value = cpu.read8(address);  // Read value from memory
+    bool bitSet = (value & 0x01) != 0;
+    cpu.setZeroFlag(!bitSet);
+    cpu.setHalfCarryFlag(true);
+    cpu.setSubtractFlag(false);
+    cpu.setCarryFlag(false);
+    cpu.PC += 2;
+    cpu.updateCycles(12);  // Takes longer due to memory access
+}
+
+void BIT_0_A(CPU& cpu) {
+    cpu.BIT(0, cpu.A);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+// Repeat the same for BIT 1 to 7
+
+void BIT_1_B(CPU& cpu) {
+    cpu.BIT(1, cpu.B);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_1_C(CPU& cpu) {
+    cpu.BIT(1, cpu.C);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_1_D(CPU& cpu) {
+    cpu.BIT(1, cpu.D);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_1_E(CPU& cpu) {
+    cpu.BIT(1, cpu.E);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_1_H(CPU& cpu) {
+    cpu.BIT(1, cpu.H);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_1_L(CPU& cpu) {
+    cpu.BIT(1, cpu.L);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+void BIT_1_bracket_HL(CPU& cpu) {
+    uint16_t address = cpu.getHL();
+    uint8_t value = cpu.read8(address);
+    bool bitSet = (value & 0x02) != 0;
+    cpu.setZeroFlag(!bitSet);
+    cpu.setHalfCarryFlag(true);
+    cpu.setSubtractFlag(false);
+    cpu.setCarryFlag(false);
+    cpu.PC += 2;
+    cpu.updateCycles(12);  // Memory access takes longer
+}
+
+void BIT_1_A(CPU& cpu) {
+    cpu.BIT(1, cpu.A);
+    cpu.PC += 2;
+    cpu.updateCycles(8);
+}
+
+
+
 void SET_1_H(CPU& cpu) {
     uint8_t t = cpu.H |= (1<<1);
     cpu.H = t;
@@ -2201,54 +3206,8 @@ void SET_3_C(CPU& cpu) {
     cpu.updateCycles(8);
 }
 
-void RL_B(CPU& cpu ) {
-    uint8_t bit7 = (cpu.B >> 7) & 1;
-    cpu.B = (cpu.B << 1) | cpu.getCarryFlag();
-    cpu.setCarryFlag(bit7);
-
-    if (cpu.getZeroFlag() == 0) {
-        cpu.setZeroFlag(true);
-    } else {
-        cpu.setZeroFlag(false);
-    }
-
-    cpu.setSubtractFlag(false);
-    cpu.setHalfCarryFlag(false);
 
 
-    cpu.PC+=2;
-    cpu.updateCycles(8);
-}
-
-void SLA_B(CPU& cpu) {
-    uint8_t value = cpu.B;  // Get the current value of register B
-
-
-    // Shift the value left by 1 bit
-    uint8_t result = value << 1;
-
-
-    // Set the Carry flag to the bit that was shifted out
-    cpu.setCarryFlag(value & 0x80);  // Set carry if MSB is 1
-
-
-    // Set the Zero flag if the result is 0
-    cpu.setZeroFlag(result == 0);
-   
-    // Clear the Sign and Half Carry flags (SLA doesn't affect these flags)
-    cpu.setHalfCarryFlag(false);
-    cpu.setSubtractFlag(false);
-
-
-    // Store the result back in register B
-    cpu.B = result;
-    cpu.PC+= 2;
-
-
-    // Update cycles (SLA takes 8 cycles)
-    cpu.updateCycles(8);
-
-}
 void RES_2_L(CPU& cpu) {
     cpu.L &= ~(1 << 2);
     cpu.PC+= 2;
@@ -2259,61 +3218,4 @@ void BIT_7_H (CPU& cpu) {
     cpu.BIT(7, cpu.H);
     cpu.PC+=2;
     cpu.updateCycles(8);
-}
-
-
-void RLC_B(CPU& cpu) {
-    cpu.PC+= 2;
-    cpu.updateCycles(8);
-}
-void RLC_C(CPU& cpu) {
-    cpu.PC+= 2;
-    cpu.updateCycles(8);
-}
-void RLC_D(CPU& cpu) {
-    cpu.PC+= 2;
-    cpu.updateCycles(8);
-}
-void RLC_E(CPU& cpu) {
-    cpu.PC+= 2;
-    cpu.updateCycles(8);
-}
-void RLC_H(CPU& cpu) {
-    cpu.PC+= 2;
-    cpu.updateCycles(8);
-}   
-void RLC_L(CPU& cpu) {
-    cpu.PC+= 2;
-    cpu.updateCycles(8);
-}
-void RLC_bracket_HL(CPU& cpu) {
-    cpu.PC+= 2;
-    cpu.updateCycles(16);
-}
-void RLC_A(CPU& cpu) {
-
-}
-void RRC_B(CPU& cpu) {
-
-}
-void RRC_C(CPU& cpu) {
-
-}
-void RRC_D(CPU& cpu) {
-
-}
-void RRC_E(CPU& cpu) {
-
-}
-void RRC_H(CPU& cpu) {
-
-}
-void RRC_L(CPU& cpu) {
-
-}
-void RRC_bracket_HL(CPU& cpu) {
-
-}
-void RRC_A(CPU& cpu){
-
 }

@@ -327,29 +327,289 @@ void CPU::initPreOpcodeTable() {
     prefixedOpcodeTable[0x0E] = RRC_bracket_HL;
     prefixedOpcodeTable[0x0F] = RRC_A;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    prefixedOpcodeTable[0xDD] = SET_3_L;
-    prefixedOpcodeTable[0xD9] = SET_3_C;
-    prefixedOpcodeTable[0xC9] = SET_1_C;
-    prefixedOpcodeTable[0xFF] = SET_7_A;
-    prefixedOpcodeTable[0xCC] = SET_1_H;
     prefixedOpcodeTable[0x10] = RL_B;
+    prefixedOpcodeTable[0x11] = RL_C;
+    prefixedOpcodeTable[0x12] = RL_D;
+    prefixedOpcodeTable[0x13] = RL_E;
+    prefixedOpcodeTable[0x14] = RL_H;
+    prefixedOpcodeTable[0x15] = RL_L;
+    prefixedOpcodeTable[0x16] = RL_bracket_HL;
+    prefixedOpcodeTable[0x17] = RL_A;
+    prefixedOpcodeTable[0x18] = RR_B;
+    prefixedOpcodeTable[0x19] = RR_C;
+    prefixedOpcodeTable[0x1A] = RR_D;
+    prefixedOpcodeTable[0x1B] = RR_E;
+    prefixedOpcodeTable[0x1C]  = RR_H;
+    prefixedOpcodeTable[0x1D] = RR_L;
+    prefixedOpcodeTable[0x1E] = RR_bracket_HL;
+    prefixedOpcodeTable[0x1F] = RR_A;
+
     prefixedOpcodeTable[0x20] = SLA_B;
+    prefixedOpcodeTable[0x21] = SLA_C;
+    prefixedOpcodeTable[0x22] = SLA_D;
+    prefixedOpcodeTable[0x23] = SLA_E;
+    prefixedOpcodeTable[0x24] = SLA_H;
+    prefixedOpcodeTable[0x25] = SLA_L;
+    prefixedOpcodeTable[0x26] = SLA_bracket_HL;
+    prefixedOpcodeTable[0x27] = SLA_A;
+    prefixedOpcodeTable[0x28] = SRA_B;
+    prefixedOpcodeTable[0x29] = SRA_C;
+    prefixedOpcodeTable[0x2A] = SRA_D;
+    prefixedOpcodeTable[0x2B] = SRA_E;
+    prefixedOpcodeTable[0x2C] = SRA_H;
+    prefixedOpcodeTable[0x2D] = SRA_L;
+    prefixedOpcodeTable[0x2E] = SRA_bracket_HL;
+    prefixedOpcodeTable[0x2F] = SRA_A;
+
+
+    prefixedOpcodeTable[0x30] = SWAP_B;
+    prefixedOpcodeTable[0x31] = SWAP_C;
+    prefixedOpcodeTable[0x32] = SWAP_D;
+    prefixedOpcodeTable[0x33] = SWAP_E;
+    prefixedOpcodeTable[0x34] = SWAP_H;
+    prefixedOpcodeTable[0x35] = SWAP_L;
+    prefixedOpcodeTable[0x36] = SWAP_bracket_HL;
+    prefixedOpcodeTable[0x37] = SWAP_A;
+    prefixedOpcodeTable[0x38] = SRL_B;
+    prefixedOpcodeTable[0x39] = SRL_C;
+    prefixedOpcodeTable[0x3A] = SRL_D;
+    prefixedOpcodeTable[0x3B] = SRL_E;
+    prefixedOpcodeTable[0x3C] = SRL_H;
+    prefixedOpcodeTable[0x3D] = SRL_L;
+    prefixedOpcodeTable[0x3E] = SRL_bracket_HL;
+    prefixedOpcodeTable[0x3F] = SRL_A;
+
+
+    prefixedOpcodeTable[0x40] = BIT_0_B;
+    prefixedOpcodeTable[0x41] = BIT_0_C;
+    prefixedOpcodeTable[0x42] = BIT_0_D;
+    prefixedOpcodeTable[0x43] = BIT_0_E;
+    prefixedOpcodeTable[0x44] = BIT_0_H;
+    prefixedOpcodeTable[0x45] = BIT_0_L;
+    prefixedOpcodeTable[0x46] = BIT_0_bracket_HL;
+    prefixedOpcodeTable[0x47] = BIT_0_A;
+    prefixedOpcodeTable[0x48] = BIT_1_B;
+    prefixedOpcodeTable[0x49] = BIT_1_C;
+    prefixedOpcodeTable[0x4A] = BIT_1_D;
+    prefixedOpcodeTable[0x4B] = BIT_1_E;
+    prefixedOpcodeTable[0x4C] = BIT_1_H;
+    prefixedOpcodeTable[0x4D] = BIT_1_L;
+    prefixedOpcodeTable[0x4E] = BIT_1_bracket_HL;
+    prefixedOpcodeTable[0x4F] = BIT_1_A;
+
+    // Prefixed Opcode Table for BIT 2
+    prefixedOpcodeTable[0x50] = BIT_2_B;
+    prefixedOpcodeTable[0x51] = BIT_2_C;
+    prefixedOpcodeTable[0x52] = BIT_2_D;
+    prefixedOpcodeTable[0x53] = BIT_2_E;
+    prefixedOpcodeTable[0x54] = BIT_2_H;
+    prefixedOpcodeTable[0x55] = BIT_2_L;
+    prefixedOpcodeTable[0x56] = BIT_2_bracket_HL;
+    prefixedOpcodeTable[0x57] = BIT_2_A;
+    prefixedOpcodeTable[0x58] = BIT_3_B;
+    prefixedOpcodeTable[0x59] = BIT_3_C;
+    prefixedOpcodeTable[0x5A] = BIT_3_D;
+    prefixedOpcodeTable[0x5B] = BIT_3_E;
+    prefixedOpcodeTable[0x5C] = BIT_3_H;
+    prefixedOpcodeTable[0x5D] = BIT_3_L;
+    prefixedOpcodeTable[0x5E] = BIT_3_bracket_HL;
+    prefixedOpcodeTable[0x5F] = BIT_3_A;
+
+
+    // Prefixed Opcode Table for BIT 4
+    prefixedOpcodeTable[0x60] = BIT_4_B;
+    prefixedOpcodeTable[0x61] = BIT_4_C;
+    prefixedOpcodeTable[0x62] = BIT_4_D;
+    prefixedOpcodeTable[0x63] = BIT_4_E;
+    prefixedOpcodeTable[0x64] = BIT_4_H;
+    prefixedOpcodeTable[0x65] = BIT_4_L;
+    prefixedOpcodeTable[0x66] = BIT_4_bracket_HL;
+    prefixedOpcodeTable[0x67] = BIT_4_A;
+    prefixedOpcodeTable[0x68] = BIT_5_B;
+    prefixedOpcodeTable[0x69] = BIT_5_C;
+    prefixedOpcodeTable[0x6A] = BIT_5_D;
+    prefixedOpcodeTable[0x6B] = BIT_5_E;
+    prefixedOpcodeTable[0x6C] = BIT_5_H;
+    prefixedOpcodeTable[0x6D] = BIT_5_L;
+    prefixedOpcodeTable[0x6E] = BIT_5_bracket_HL;
+    prefixedOpcodeTable[0x6F] = BIT_5_A;
+
+    // Prefixed Opcode Table for BIT 6
+    prefixedOpcodeTable[0x70] = BIT_6_B;
+    prefixedOpcodeTable[0x71] = BIT_6_C;
+    prefixedOpcodeTable[0x72] = BIT_6_D;
+    prefixedOpcodeTable[0x73] = BIT_6_E;
+    prefixedOpcodeTable[0x74] = BIT_6_H;
+    prefixedOpcodeTable[0x75] = BIT_6_L;
+    prefixedOpcodeTable[0x76] = BIT_6_bracket_HL;
+    prefixedOpcodeTable[0x77] = BIT_6_A;
+    prefixedOpcodeTable[0x78] = BIT_7_B;
+    prefixedOpcodeTable[0x79] = BIT_7_C;
+    prefixedOpcodeTable[0x7A] = BIT_7_D;
+    prefixedOpcodeTable[0x7B] = BIT_7_E;
     prefixedOpcodeTable[0x7C] = BIT_7_H;
+    prefixedOpcodeTable[0x7D] = BIT_7_L;
+    prefixedOpcodeTable[0x7E] = BIT_7_bracket_HL;
+    prefixedOpcodeTable[0x7F] = BIT_7_A;
+
+    // Prefixed Opcode Table for RES 0
+    prefixedOpcodeTable[0x80] = RES_0_B;
+    prefixedOpcodeTable[0x81] = RES_0_C;
+    prefixedOpcodeTable[0x82] = RES_0_D;
+    prefixedOpcodeTable[0x83] = RES_0_E;
+    prefixedOpcodeTable[0x84] = RES_0_H;
+    prefixedOpcodeTable[0x85] = RES_0_L;
+    prefixedOpcodeTable[0x86] = RES_0_bracket_HL;
+    prefixedOpcodeTable[0x87] = RES_0_A;
+    prefixedOpcodeTable[0x88] = RES_1_B;
+    prefixedOpcodeTable[0x89] = RES_1_C;
+    prefixedOpcodeTable[0x8A] = RES_1_D;
+    prefixedOpcodeTable[0x8B] = RES_1_E;
+    prefixedOpcodeTable[0x8C] = RES_1_H;
+    prefixedOpcodeTable[0x8D] = RES_1_L;
+    prefixedOpcodeTable[0x8E] = RES_1_bracket_HL;
+    prefixedOpcodeTable[0x8F] = RES_1_A;
+
+
+
+    // Prefixed Opcode Table for RES 2
+    prefixedOpcodeTable[0x90] = RES_2_B;
+    prefixedOpcodeTable[0x91] = RES_2_C;
+    prefixedOpcodeTable[0x92] = RES_2_D;
+    prefixedOpcodeTable[0x93] = RES_2_E;
+    prefixedOpcodeTable[0x94] = RES_2_H;
     prefixedOpcodeTable[0x95] = RES_2_L;
+    prefixedOpcodeTable[0x96] = RES_2_bracket_HL;
+    prefixedOpcodeTable[0x97] = RES_2_A;
+    prefixedOpcodeTable[0x98] = RES_3_B;
+    prefixedOpcodeTable[0x99] = RES_3_C;
+    prefixedOpcodeTable[0x9A] = RES_3_D;
+    prefixedOpcodeTable[0x9B] = RES_3_E;
+    prefixedOpcodeTable[0x9C] = RES_3_H;
+    prefixedOpcodeTable[0x9D] = RES_3_L;
+    prefixedOpcodeTable[0x9E] = RES_3_bracket_HL;
+    prefixedOpcodeTable[0x9F] = RES_3_A;
+
+    // Prefixed Opcode Table for RES 4
+    prefixedOpcodeTable[0xA0] = RES_4_B;
+    prefixedOpcodeTable[0xA1] = RES_4_C;
+    prefixedOpcodeTable[0xA2] = RES_4_D;
+    prefixedOpcodeTable[0xA3] = RES_4_E;
+    prefixedOpcodeTable[0xA4] = RES_4_H;
+    prefixedOpcodeTable[0xA5] = RES_4_L;
+    prefixedOpcodeTable[0xA6] = RES_4_bracket_HL;
+    prefixedOpcodeTable[0xA7] = RES_4_A;
+
+    // Prefixed Opcode Table for RES 5
+    prefixedOpcodeTable[0xA8] = RES_5_B;
+    prefixedOpcodeTable[0xA9] = RES_5_C;
+    prefixedOpcodeTable[0xAA] = RES_5_D;
+    prefixedOpcodeTable[0xAB] = RES_5_E;
+    prefixedOpcodeTable[0xAC] = RES_5_H;
+    prefixedOpcodeTable[0xAD] = RES_5_L;
+    prefixedOpcodeTable[0xAE] = RES_5_bracket_HL;
+    prefixedOpcodeTable[0xAF] = RES_5_A;
+
+    // Prefixed Opcode Table for RES 6
+    prefixedOpcodeTable[0xB0] = RES_6_B;
+    prefixedOpcodeTable[0xB1] = RES_6_C;
+    prefixedOpcodeTable[0xB2] = RES_6_D;
+    prefixedOpcodeTable[0xB3] = RES_6_E;
+    prefixedOpcodeTable[0xB4] = RES_6_H;
+    prefixedOpcodeTable[0xB5] = RES_6_L;
+    prefixedOpcodeTable[0xB6] = RES_6_bracket_HL;
+    prefixedOpcodeTable[0xB7] = RES_6_A;
+
+    // Prefixed Opcode Table for RES 7
+    prefixedOpcodeTable[0xB8] = RES_7_B;
+    prefixedOpcodeTable[0xB9] = RES_7_C;
+    prefixedOpcodeTable[0xBA] = RES_7_D;
+    prefixedOpcodeTable[0xBB] = RES_7_E;
+    prefixedOpcodeTable[0xBC] = RES_7_H;
+    prefixedOpcodeTable[0xBD] = RES_7_L;
+    prefixedOpcodeTable[0xBE] = RES_7_bracket_HL;
+    prefixedOpcodeTable[0xBF] = RES_7_A;
+
+    // Prefixed Opcode Table for SET 0
+    prefixedOpcodeTable[0xC0] = SET_0_B;
+    prefixedOpcodeTable[0xC1] = SET_0_C;
+    prefixedOpcodeTable[0xC2] = SET_0_D;
+    prefixedOpcodeTable[0xC3] = SET_0_E;
+    prefixedOpcodeTable[0xC4] = SET_0_H;
+    prefixedOpcodeTable[0xC5] = SET_0_L;
+    prefixedOpcodeTable[0xC6] = SET_0_bracket_HL;
+    prefixedOpcodeTable[0xC7] = SET_0_A;
+
+    // Prefixed Opcode Table for SET 1
+    prefixedOpcodeTable[0xC8] = SET_1_B;
+    prefixedOpcodeTable[0xC9] = SET_1_C;
+    prefixedOpcodeTable[0xCA] = SET_1_D;
+    prefixedOpcodeTable[0xCB] = SET_1_E;
+    prefixedOpcodeTable[0xCC] = SET_1_H;
+    prefixedOpcodeTable[0xCD] = SET_1_L;
+    prefixedOpcodeTable[0xCE] = SET_1_bracket_HL;
+    prefixedOpcodeTable[0xCF] = SET_1_A;
+        
+    // Prefixed Opcode Table for SET 2
+    prefixedOpcodeTable[0xD0] = SET_2_B;
+    prefixedOpcodeTable[0xD1] = SET_2_C;
+    prefixedOpcodeTable[0xD2] = SET_2_D;
+    prefixedOpcodeTable[0xD3] = SET_2_E;
+    prefixedOpcodeTable[0xD4] = SET_2_H;
+    prefixedOpcodeTable[0xD5] = SET_2_L;
+    prefixedOpcodeTable[0xD6] = SET_2_bracket_HL;
+    prefixedOpcodeTable[0xD7] = SET_2_A;
+    prefixedOpcodeTable[0xD8] = SET_3_B;
+    prefixedOpcodeTable[0xD9] = SET_3_C;
+    prefixedOpcodeTable[0xDA] = SET_3_D;
+    prefixedOpcodeTable[0xDB] = SET_3_E;
+    prefixedOpcodeTable[0xDC] = SET_3_H;
+    prefixedOpcodeTable[0xDD] = SET_3_L;
+    prefixedOpcodeTable[0xDE] = SET_3_bracket_HL;
+    prefixedOpcodeTable[0xDF] = SET_3_A;
+
+
+    // Prefixed Opcode Table for SET 4
+    prefixedOpcodeTable[0xE0] = SET_4_B;
+    prefixedOpcodeTable[0xE1] = SET_4_C;
+    prefixedOpcodeTable[0xE2] = SET_4_D;
+    prefixedOpcodeTable[0xE3] = SET_4_E;
+    prefixedOpcodeTable[0xE4] = SET_4_H;
+    prefixedOpcodeTable[0xE5] = SET_4_L;
+    prefixedOpcodeTable[0xE6] = SET_4_bracket_HL;
+    prefixedOpcodeTable[0xE7] = SET_4_A;
+
+    // Prefixed Opcode Table for SET 5
+    prefixedOpcodeTable[0xE8] = SET_5_B;
+    prefixedOpcodeTable[0xE9] = SET_5_C;
+    prefixedOpcodeTable[0xEA] = SET_5_D;
+    prefixedOpcodeTable[0xEB] = SET_5_E;
+    prefixedOpcodeTable[0xEC] = SET_5_H;
+    prefixedOpcodeTable[0xED] = SET_5_L;
+    prefixedOpcodeTable[0xEE] = SET_5_bracket_HL;
+    prefixedOpcodeTable[0xEF] = SET_5_A;
+
+    // Prefixed Opcode Table for SET 6
+    prefixedOpcodeTable[0xF0] = SET_6_B;
+    prefixedOpcodeTable[0xF1] = SET_6_C;
+    prefixedOpcodeTable[0xF2] = SET_6_D;
+    prefixedOpcodeTable[0xF3] = SET_6_E;
+    prefixedOpcodeTable[0xF4] = SET_6_H;
+    prefixedOpcodeTable[0xF5] = SET_6_L;
+    prefixedOpcodeTable[0xF6] = SET_6_bracket_HL;
+    prefixedOpcodeTable[0xF7] = SET_6_A;
+
+    // Prefixed Opcode Table for SET 7
+    prefixedOpcodeTable[0xF8] = SET_7_B;
+    prefixedOpcodeTable[0xF9] = SET_7_C;
+    prefixedOpcodeTable[0xFA] = SET_7_D;
+    prefixedOpcodeTable[0xFB] = SET_7_E;
+    prefixedOpcodeTable[0xFC] = SET_7_H;
+    prefixedOpcodeTable[0xFD] = SET_7_L;
+    prefixedOpcodeTable[0xFE] = SET_7_bracket_HL;
+    prefixedOpcodeTable[0xFF] = SET_7_A;
+
+    
 }
 
 
@@ -705,9 +965,9 @@ void CPU::BIT(uint8_t bit, uint8_t reg) {
 
 
     setZeroFlag(!isBitSet); 
-
     setSubtractFlag(false);
     setHalfCarryFlag(true);
+    
 
 
 }

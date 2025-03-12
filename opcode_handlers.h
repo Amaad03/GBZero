@@ -370,18 +370,11 @@ void CP_A_n8(CPU& cpu);
 
 // RST $38
 void RST_38(CPU& cpu);
-void SET_7_A(CPU& cpu);
-void SET_3_L(CPU&  cpu);
-void SET_1_C(CPU& cpu);
-void SET_1_H(CPU& cpu);
-void SET_3_C(CPU& cpu);
 
 
 
-void RES_2_L(CPU& cpu);
 
-void SLA_B(CPU& cpu);
-void RL_B(CPU& cpu);
+
 
 void RLC_B(CPU& cpu);
 void RLC_C(CPU& cpu);
@@ -402,8 +395,294 @@ void RRC_A(CPU& cpu);
 
 
 
+void RL_B(CPU& cpu);
+void RL_C(CPU& cpu);
+void RL_D(CPU& cpu);
+void RL_E(CPU& cpu);
+void RL_H(CPU& cpu);
+void RL_L(CPU& cpu);
+void RL_bracket_HL(CPU& cpu);
+void RL_A(CPU& cpu);
+void RR_B(CPU& cpu);
+void RR_C(CPU& cpu);
+void RR_D(CPU& cpu);
+void RR_E(CPU& cpu);
+void RR_H(CPU& cpu);
+void RR_L(CPU& cpu);
+void RR_bracket_HL(CPU& cpu);
+void RR_A(CPU& cpu);
+
+void SLA_B(CPU& cpu);
+void SLA_C(CPU& cpu);
+void SLA_D(CPU& cpu);
+void SLA_E(CPU& cpu);
+void SLA_H(CPU& cpu);
+void SLA_L(CPU& cpu);
+void SLA_bracket_HL(CPU& cpu);
+void SLA_A(CPU& cpu);
+void SRA_B(CPU& cpu);
+void SRA_C(CPU& cpu);
+void SRA_D(CPU& cpu);
+void SRA_E(CPU& cpu);
+void SRA_H(CPU& cpu);
+void SRA_L(CPU& cpu);
+void SRA_bracket_HL(CPU& cpu);
+void SRA_A(CPU& cpu);
+
+// SWAP Instructions
+void SWAP_B(CPU& cpu);
+void SWAP_C(CPU& cpu);
+void SWAP_D(CPU& cpu);
+void SWAP_E(CPU& cpu);
+void SWAP_H(CPU& cpu);
+void SWAP_L(CPU& cpu);
+void SWAP_bracket_HL(CPU& cpu);
+void SWAP_A(CPU& cpu);
+
+// SRL Instructions
+void SRL_B(CPU& cpu);
+void SRL_C(CPU& cpu);
+void SRL_D(CPU& cpu);
+void SRL_E(CPU& cpu);
+void SRL_H(CPU& cpu);
+void SRL_L(CPU& cpu);
+void SRL_bracket_HL(CPU& cpu);
+void SRL_A(CPU& cpu);
+
+// BIT Instructions
+void BIT_0_B(CPU& cpu);
+void BIT_0_C(CPU& cpu);
+void BIT_0_D(CPU& cpu);
+void BIT_0_E(CPU& cpu);
+void BIT_0_H(CPU& cpu);
+void BIT_0_L(CPU& cpu);
+void BIT_0_bracket_HL(CPU& cpu);
+void BIT_0_A(CPU& cpu);
+void BIT_1_B(CPU& cpu);
+void BIT_1_C(CPU& cpu);
+void BIT_1_D(CPU& cpu);
+void BIT_1_E(CPU& cpu);
+void BIT_1_H(CPU& cpu);
+void BIT_1_L(CPU& cpu);
+void BIT_1_bracket_HL(CPU& cpu);
+void BIT_1_A(CPU& cpu);
+
+// BIT Instructions for BIT 2
+void BIT_2_B(CPU& cpu);
+void BIT_2_C(CPU& cpu);
+void BIT_2_D(CPU& cpu);
+void BIT_2_E(CPU& cpu);
+void BIT_2_H(CPU& cpu);
+void BIT_2_L(CPU& cpu);
+void BIT_2_bracket_HL(CPU& cpu);
+void BIT_2_A(CPU& cpu);
+void BIT_3_B(CPU& cpu);
+void BIT_3_C(CPU& cpu);
+void BIT_3_D(CPU& cpu);
+void BIT_3_E(CPU& cpu);
+void BIT_3_H(CPU& cpu);
+void BIT_3_L(CPU& cpu);
+void BIT_3_bracket_HL(CPU& cpu);
+void BIT_3_A(CPU& cpu);
 
 
+
+// BIT Instructions for BIT 4
+void BIT_4_B(CPU& cpu);
+void BIT_4_C(CPU& cpu);
+void BIT_4_D(CPU& cpu);
+void BIT_4_E(CPU& cpu);
+void BIT_4_H(CPU& cpu);
+void BIT_4_L(CPU& cpu);
+void BIT_4_bracket_HL(CPU& cpu);
+void BIT_4_A(CPU& cpu);
+void BIT_5_B(CPU& cpu);
+void BIT_5_C(CPU& cpu);
+void BIT_5_D(CPU& cpu);
+void BIT_5_E(CPU& cpu);
+void BIT_5_H(CPU& cpu);
+void BIT_5_L(CPU& cpu);
+void BIT_5_bracket_HL(CPU& cpu);
+void BIT_5_A(CPU& cpu);
+
+void BIT_6_B(CPU& cpu);
+void BIT_6_C(CPU& cpu);
+void BIT_6_D(CPU& cpu);
+void BIT_6_E(CPU& cpu);
+void BIT_6_H(CPU& cpu);
+void BIT_6_L(CPU& cpu);
+void BIT_6_bracket_HL(CPU& cpu);
+void BIT_6_A(CPU& cpu);
+void BIT_7_B(CPU& cpu);
+void BIT_7_C(CPU& cpu);
+void BIT_7_D(CPU& cpu);
+void BIT_7_E(CPU& cpu);
+void BIT_7_H(CPU& cpu);
+void BIT_7_L(CPU& cpu);
+void BIT_7_bracket_HL(CPU& cpu);
+void BIT_7_A(CPU& cpu);
+
+// RES Instructions for RES 0
+void RES_0_B(CPU& cpu);
+void RES_0_C(CPU& cpu);
+void RES_0_D(CPU& cpu);
+void RES_0_E(CPU& cpu);
+void RES_0_H(CPU& cpu);
+void RES_0_L(CPU& cpu);
+void RES_0_bracket_HL(CPU& cpu);
+void RES_0_A(CPU& cpu);
+void RES_1_B(CPU& cpu);
+void RES_1_C(CPU& cpu);
+void RES_1_D(CPU& cpu);
+void RES_1_E(CPU& cpu);
+void RES_1_H(CPU& cpu);
+void RES_1_L(CPU& cpu);
+void RES_1_bracket_HL(CPU& cpu);
+void RES_1_A(CPU& cpu);
+
+
+// RES Instructions for RES 2
+void RES_2_B(CPU& cpu);
+void RES_2_C(CPU& cpu);
+void RES_2_D(CPU& cpu);
+void RES_2_E(CPU& cpu);
+void RES_2_H(CPU& cpu);
+void RES_2_L(CPU& cpu);
+void RES_2_bracket_HL(CPU& cpu);
+void RES_2_A(CPU& cpu);
+
+// RES Instructions for RES 3
+void RES_3_B(CPU& cpu);
+void RES_3_C(CPU& cpu);
+void RES_3_D(CPU& cpu);
+void RES_3_E(CPU& cpu);
+void RES_3_H(CPU& cpu);
+void RES_3_L(CPU& cpu);
+void RES_3_bracket_HL(CPU& cpu);
+void RES_3_A(CPU& cpu);
+
+
+
+// RES Instructions for RES 4
+void RES_4_B(CPU& cpu);
+void RES_4_C(CPU& cpu);
+void RES_4_D(CPU& cpu);
+void RES_4_E(CPU& cpu);
+void RES_4_H(CPU& cpu);
+void RES_4_L(CPU& cpu);
+void RES_4_bracket_HL(CPU& cpu);
+void RES_4_A(CPU& cpu);
+
+// RES Instructions for RES 5
+void RES_5_B(CPU& cpu);
+void RES_5_C(CPU& cpu);
+void RES_5_D(CPU& cpu);
+void RES_5_E(CPU& cpu);
+void RES_5_H(CPU& cpu);
+void RES_5_L(CPU& cpu);
+void RES_5_bracket_HL(CPU& cpu);
+void RES_5_A(CPU& cpu);
+
+// RES Instructions for RES 6
+void RES_6_B(CPU& cpu);
+void RES_6_C(CPU& cpu);
+void RES_6_D(CPU& cpu);
+void RES_6_E(CPU& cpu);
+void RES_6_H(CPU& cpu);
+void RES_6_L(CPU& cpu);
+void RES_6_bracket_HL(CPU& cpu);
+void RES_6_A(CPU& cpu);
+
+// RES Instructions for RES 7
+void RES_7_B(CPU& cpu);
+void RES_7_C(CPU& cpu);
+void RES_7_D(CPU& cpu);
+void RES_7_E(CPU& cpu);
+void RES_7_H(CPU& cpu);
+void RES_7_L(CPU& cpu);
+void RES_7_bracket_HL(CPU& cpu);
+void RES_7_A(CPU& cpu);
+
+
+// SET Instructions for SET 0
+void SET_0_B(CPU& cpu);
+void SET_0_C(CPU& cpu);
+void SET_0_D(CPU& cpu);
+void SET_0_E(CPU& cpu);
+void SET_0_H(CPU& cpu);
+void SET_0_L(CPU& cpu);
+void SET_0_bracket_HL(CPU& cpu);
+void SET_0_A(CPU& cpu);
+
+// SET Instructions for SET 1
+void SET_1_B(CPU& cpu);
+void SET_1_C(CPU& cpu);
+void SET_1_D(CPU& cpu);
+void SET_1_E(CPU& cpu);
+void SET_1_H(CPU& cpu);
+void SET_1_L(CPU& cpu);
+void SET_1_bracket_HL(CPU& cpu);
+void SET_1_A(CPU& cpu);
+
+// SET Instructions for SET 2
+void SET_2_B(CPU& cpu);
+void SET_2_C(CPU& cpu);
+void SET_2_D(CPU& cpu);
+void SET_2_E(CPU& cpu);
+void SET_2_H(CPU& cpu);
+void SET_2_L(CPU& cpu);
+void SET_2_bracket_HL(CPU& cpu);
+void SET_2_A(CPU& cpu);
+
+// SET Instructions for SET 3
+void SET_3_B(CPU& cpu);
+void SET_3_C(CPU& cpu);
+void SET_3_D(CPU& cpu);
+void SET_3_E(CPU& cpu);
+void SET_3_H(CPU& cpu);
+void SET_3_L(CPU& cpu);
+void SET_3_bracket_HL(CPU& cpu);
+void SET_3_A(CPU& cpu);
+
+
+// SET Instructions for SET 4
+void SET_4_B(CPU& cpu);
+void SET_4_C(CPU& cpu);
+void SET_4_D(CPU& cpu);
+void SET_4_E(CPU& cpu);
+void SET_4_H(CPU& cpu);
+void SET_4_L(CPU& cpu);
+void SET_4_bracket_HL(CPU& cpu);
+void SET_4_A(CPU& cpu);
+
+// SET Instructions for SET 5
+void SET_5_B(CPU& cpu);
+void SET_5_C(CPU& cpu);
+void SET_5_D(CPU& cpu);
+void SET_5_E(CPU& cpu);
+void SET_5_H(CPU& cpu);
+void SET_5_L(CPU& cpu);
+void SET_5_bracket_HL(CPU& cpu);
+void SET_5_A(CPU& cpu);
+// SET Instructions for SET 6
+void SET_6_B(CPU& cpu);
+void SET_6_C(CPU& cpu);
+void SET_6_D(CPU& cpu);
+void SET_6_E(CPU& cpu);
+void SET_6_H(CPU& cpu);
+void SET_6_L(CPU& cpu);
+void SET_6_bracket_HL(CPU& cpu);
+void SET_6_A(CPU& cpu);
+
+// SET Instructions for SET 7
+void SET_7_B(CPU& cpu);
+void SET_7_C(CPU& cpu);
+void SET_7_D(CPU& cpu);
+void SET_7_E(CPU& cpu);
+void SET_7_H(CPU& cpu);
+void SET_7_L(CPU& cpu);
+void SET_7_bracket_HL(CPU& cpu);
+void SET_7_A(CPU& cpu);
 
 #endif // OPCODE_HANDLERS_H
 
