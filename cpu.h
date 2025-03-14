@@ -1,10 +1,11 @@
 #ifndef CPU_H
 #define CPU_H
+
 #include <stdint.h>
 #include "opcode_handlers.h" 
 #include <iostream>
 #include "memory.h"
-
+#include "ppu.h"
 typedef void (*OpcodeHandler)(CPU& cpu);
 
 class CPU {
@@ -17,6 +18,7 @@ public:
 
     uint16_t PC, SP;   // Program counter and stack pointer
     Memory& memory;    // Reference to memory
+    PPU& ppu;
     uint32_t cycleCount; // Cycle count for instruction execution
     bool interruptsEnabled;
     bool isStopped;
@@ -25,7 +27,7 @@ public:
     uint8_t interruptEnable;
 
 
-    CPU(Memory& mem);
+    CPU(Memory& mem, PPU& ppu);
 
 
     void reset();

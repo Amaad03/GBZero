@@ -56,7 +56,7 @@ void DEC_L(CPU& cpu);
 void LD_L_n8(CPU& cpu);
 void CPL(CPU& cpu);
 //-------------------------
-void JR_NZ_e8(CPU& cpu);
+void JR_NC_e8(CPU& cpu);
 void LD_SP_n16(CPU& cpu);
 void LD_HL_minus_A(CPU& cpu);
 void INC_SP(CPU& cpu);

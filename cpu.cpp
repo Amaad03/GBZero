@@ -3,10 +3,9 @@
 #include <iostream>
 #include <iomanip>
 
-CPU::CPU(Memory& mem) 
+CPU::CPU(Memory& mem, PPU& ppu) 
     : A(0), F(0), B(0), C(0), D(0), E(0), H(0), L(0), 
-      PC(0x0000), SP(0xFFFE), memory(mem),
-      
+      PC(0x0000), SP(0xFFFE), memory(mem), ppu(ppu),
       cycleCount(0), interruptsEnabled(false), isStopped(false), interruptsEnableNextInstructions(false) ,  interruptFlags(0x00), interruptEnable(0x00){
     reset();
     initOpcodeTable();
@@ -51,7 +50,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x1F] = RRA; //0x1F
 
     //----------------------------
-    opcodeTable[0x20] = JR_NZ_e8;
+    opcodeTable[0x20] = JR_NC_e8;
     opcodeTable[0x21] = LD_HL_n16;
     opcodeTable[0x22] = LD_HLplus_A;
     opcodeTable[0x23] = INC_HL;
@@ -68,7 +67,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x2E] = LD_L_n8;
     opcodeTable[0x2F] = CPL;
     //------------------------
-    opcodeTable[0x30] = JR_NZ_e8;   // 0x30 - JR NZ, e8
+    opcodeTable[0x30] = JR_NC_e8;   // 0x30 - JR NZ, e8
     opcodeTable[0x31] = LD_SP_n16;  // 0x31 - LD SP, n16
     opcodeTable[0x32] = LD_HL_minus_A; // 0x32 - LD (HL-), A
     opcodeTable[0x33] = INC_SP;     // 0x33 - INC SP
@@ -613,7 +612,7 @@ void CPU::reset() {
     memory.write(0xFF50, 0x01);
     PC = 0x0100; 
     A = 0x01; 
-    F = 0xB0; 
+    F = 0xb0;  // Clear Z flag (F = 0x70 means Z = 0, N = 0, H = 0, C = 0)
     B = 0x00;
     C = 0x13;
     D = 0x00;
@@ -685,8 +684,10 @@ void CPU::executeNextInstruction() {
 
 
 void CPU::updateCycles(uint32_t cycles) {
-    cycleCount += cycles;
-   
+    cycleCount += cycles; // Update the CPU's cycle counter
+
+    // No need to check if ppu is nullptr because it's a reference
+    ppu.step(cycles);
 }
 
 
@@ -958,3 +959,5 @@ void CPU::SET_n_HL(CPU& cpu, uint8_t bit) {
     cpu.write16(address, value);       
     cpu.PC += 2;
     cpu.updateCycles(16); 
+
+}

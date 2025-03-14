@@ -187,7 +187,8 @@ void RLA(CPU& cpu) { //double check
 }
 
 void JR_e8(CPU& cpu) {
-    int8_t offset = cpu.read8(cpu.PC + 1);
+    uint8_t r8 = cpu.read8(cpu.PC + 1);
+    int8_t offset = static_cast<int8_t>(r8);  
     cpu.PC += 2 + offset; 
     cpu.updateCycles(12);
 }
@@ -255,18 +256,28 @@ void RRA(CPU& cpu) {
 
 
 
-void JR_NZ_e8(CPU& cpu) {
-
+void JR_NZ_e8(CPU& cpu) { //0x20
     uint8_t r8 = cpu.read8(cpu.PC + 1);  
+    std::cout << "Z Flag: " << (cpu.getZeroFlag() ? "Set" : "Not Set") << std::endl;
+    std::cout << "r8 value before :  " << std::hex << (int)r8 << std::endl;
     int8_t offset = static_cast<int8_t>(r8);  
-    if (cpu.getZeroFlag()) {
-        cpu.PC += offset;  
+    cpu.PC += 2;  
+    std::cout << "Current PC: " << std::hex << (int)cpu.PC << ", Offset: " << std::hex << (int)offset << std::endl;
+    
+    if (!cpu.getZeroFlag()) {  // Jump if Zero flag is NOT set (NZ condition)
+        cpu.PC += offset;  // Jump executed
+        std::cout << "Jumping to: " << std::hex << (int)cpu.PC << std::endl;
         cpu.updateCycles(12);  
     } else {
-        cpu.PC += 2;  
+    
+        // No jump, just increment PC to next instruction
         cpu.updateCycles(8);  
     }
 }
+
+
+
+
 void LD_HL_n16(CPU& cpu) { 
     cpu.setHL(cpu.read16(cpu.PC+1));
     cpu.PC += 3; 
@@ -330,23 +341,24 @@ void DAA(CPU& cpu) {
 }
 
 void JRZ_e8(CPU& cpu) {
-
-    int8_t offset = cpu.read8(cpu.PC + 1); 
+    int8_t r8 = cpu.read8(cpu.PC + 1);  // Read the signed 8-bit offset
+    int8_t offset = static_cast<int8_t>(r8);  
     std::cout << "Offset: " << (int)offset << std::endl;
-
-    cpu.PC += 2;
-    std::cout << "PC after skipping opcode and offset: " << std::hex << cpu.PC << std::endl;
-
+    std::cout << "PC before opcode and offset: " << std::hex << cpu.PC << std::endl;
+    cpu.PC += 2;  
+    // Check if the Zero flag is set
     if(!cpu.getZeroFlag()) {
-        cpu.PC += offset; 
+        cpu.PC += offset;  // Jump if Zero flag is set
 
         std::cout << "Jump taken. New PC: " << std::hex << cpu.PC << std::endl;
-        cpu.updateCycles(12);  
+        cpu.updateCycles(12);  // 12 cycles for a jump
     } else {
+         // Skip the instruction
         std::cout << "Jump not taken. PC: " << std::hex << cpu.PC << std::endl;
-        cpu.updateCycles(8);  
+        cpu.updateCycles(8);  // 8 cycles if jump is not taken
     }
 }
+
 
 
 void ADD_HL_HL(CPU& cpu) {
@@ -408,7 +420,17 @@ void CPL(CPU& cpu) {
     cpu.PC++;
     cpu.updateCycles(4);
 }
-
+void JR_NC_e8(CPU& cpu) {
+    uint8_t r8 = cpu.read8(cpu.PC+1);
+    int8_t offset = static_cast<int8_t>(r8);
+    cpu.PC+=2;
+    if(!cpu.getZeroFlag()) {
+        cpu.PC+= offset;
+        cpu.updateCycles(12);
+    } else {
+        cpu.updateCycles(8);
+    }
+}
 void LD_SP_n16(CPU& cpu) {
     uint16_t value = cpu.read16(cpu.PC+1);  
     cpu.SP = value; 
@@ -476,13 +498,16 @@ void SCF(CPU& cpu) {
 }
 
 void JR_C_e8(CPU& cpu) {
+    uint8_t r8 = cpu.read8(cpu.PC + 1);
+    int8_t offset = static_cast<int8_t>(r8);  
     cpu.PC += 2;  
-    if ((cpu.F & (1 << cpu.getCarryFlag())) != 0) { 
-        int8_t offset = cpu.read8(cpu.PC + 1); 
+
+    if (!cpu.getCarryFlag()) { 
+        
         cpu.PC += offset;  
         cpu.updateCycles(12);  
     } else {
-       
+        
         cpu.updateCycles(8);  
     }
 }
@@ -1662,7 +1687,7 @@ void POP_BC(CPU& cpu) {
 void JP_NZ_a16(CPU& cpu) {
     if (!cpu.getZeroFlag()) {
         // Jump is taken: set PC to the 16-bit address
-        uint16_t address = cpu.read16(cpu.PC);
+        uint16_t address = cpu.read16(cpu.PC+1);
         cpu.PC = address;
         cpu.updateCycles(16);  // 16 cycles if jump is taken
     } else {
@@ -1763,29 +1788,20 @@ void CALL_Z_a16(CPU& cpu) {
 }
 
 void CALL_a16(CPU& cpu) {
-    uint16_t returnAddress = cpu.PC + 3; // Calculate return address (PC + 3 bytes for CALL instruction)
-    uint16_t address = cpu.read16(cpu.PC + 1); // Read the 16-bit address from the operand
+    uint16_t  address = cpu.read16(cpu.PC += 1);
 
-    // Check if the address is 0x0061
-    if (address == 0x0061) {
-        // Handle the call to 0x0061
-        std::cout << "[DEBUG] CALL to 0x0061 detected. Handling special case..." << std::endl;
+    cpu.push16(cpu.PC+3);
 
-        // Push the return address onto the stack
-        cpu.push16(returnAddress);
-
-        // Set PC to 0x0061
-        cpu.PC = address;
-
-        // Update cycles (assuming 24 cycles for CALL)
-        cpu.updateCycles(24);
-    } else {
-        // Handle normal CALL instruction
-        cpu.push16(returnAddress);
-        cpu.PC = address;
-        cpu.updateCycles(24);
-    }
+    cpu.PC = address;
+    
+    // Update cycles: CALL instruction takes 6 cycles
+    cpu.updateCycles(24);
+    
+    std::cout << "CALL a16 - Address: " << std::hex << address << std::endl;
+    std::cout << "New PC: " << std::hex << cpu.PC << std::endl;
+    std::cout << "SP after push: " << std::hex << cpu.SP << std::endl;
 }
+
 void ADC_A_n8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);
     uint8_t carry = cpu.getCarryFlag() ? 1 : 0;
@@ -1941,7 +1957,8 @@ void RST_18(CPU& cpu) {
 }
 void LDH_a8_A(CPU& cpu) {
     uint8_t addr = cpu.read8(cpu.PC + 1);
-    cpu.writeMemory(0xFF00 + addr, cpu.A);  // Write A to the address [0xFF00 + addr]
+    std::cout << "Address Value: " << +addr << std::endl;
+    cpu.memory.write(0xFF00 + addr, cpu.A);  // Write A to the address [0xFF00 + addr]
     cpu.PC += 2;
     cpu.updateCycles(12);
 }
@@ -2031,9 +2048,10 @@ void RST_28(CPU& cpu) {
 }
 
 void LDH_A_a8(CPU& cpu) {
+
     cpu.updateCycles(4);
     uint8_t addr = cpu.read8(cpu.PC + 1);
-    cpu.A = cpu.read8(0xFF00 + addr);  // Load the value from [0xFF00 + addr] into A
+    cpu.A = cpu.read8(0xFF00 + addr);  
     cpu.PC += 2;
     cpu.updateCycles(8);
 }
@@ -2124,14 +2142,15 @@ void Elephant_I(CPU& cpu) {
 
 void CP_A_n8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);
-    std::cout << "A before CP: " << std::hex << (int)cpu.A << std::endl;
-    std::cout << "Value to compare: " << std::hex << (int)value << std::endl;
-
+ 
+   
     uint8_t result = cpu.A - value;
-    cpu.setZeroFlag(result == 0);
+ 
+    cpu.setZeroFlag(result);
     cpu.setSubtractFlag(true);
     cpu.setHalfCarryFlag((cpu.A & 0x0F) < (value & 0x0F));
     cpu.setCarryFlag(cpu.A < value);
+    std::cout << "Z Flag: " << (cpu.getZeroFlag() ? "Set" : "Not Set") << std::endl;
 
     std::cout << "Z flag after CP: " << cpu.getZeroFlag() << std::endl;
 
