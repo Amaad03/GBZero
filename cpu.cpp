@@ -612,7 +612,7 @@ void CPU::reset() {
     memory.write(0xFF50, 0x01);
     PC = 0x0100; 
     A = 0x01; 
-    F = 0xb0;  // Clear Z flag (F = 0x70 means Z = 0, N = 0, H = 0, C = 0)
+    F = 0x00;  // Clear Z flag (F = 0x70 means Z = 0, N = 0, H = 0, C = 0)
     B = 0x00;
     C = 0x13;
     D = 0x00;
@@ -795,9 +795,10 @@ uint16_t CPU::pop16() {
 
 void CPU::push16(uint16_t value) {
  
+    memory.write(SP -1, (value >> 8)); 
+    memory.write(SP-2, value & 0xFF);  
+    
     SP -= 2;
-    memory.write(SP, value & 0xFF);  
-    memory.write(SP + 1, (value >> 8) & 0xFF); 
 }
 uint8_t CPU::read8(uint16_t addr) {
     return memory.read(addr);

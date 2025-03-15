@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     CPU cpu(memory, ppu);
     // Initialize the CPU
     cpu.reset();
-    cpu.memory.loadROM("Dr. Mario (World).gb");
+    cpu.memory.loadROM("cpu_instrs.gb");
 
     // Initialize SDL2 and set up graphics
     ppu.initializeSDL();  // Initialize SDL and create a window

@@ -256,25 +256,22 @@ void RRA(CPU& cpu) {
 
 
 
-void JR_NZ_e8(CPU& cpu) { //0x20
-    uint8_t r8 = cpu.read8(cpu.PC + 1);  
-    std::cout << "Z Flag: " << (cpu.getZeroFlag() ? "Set" : "Not Set") << std::endl;
-    std::cout << "r8 value before :  " << std::hex << (int)r8 << std::endl;
-    int8_t offset = static_cast<int8_t>(r8);  
-    cpu.PC += 2;  
-    std::cout << "Current PC: " << std::hex << (int)cpu.PC << ", Offset: " << std::hex << (int)offset << std::endl;
-    
-    if (!cpu.getZeroFlag()) {  // Jump if Zero flag is NOT set (NZ condition)
-        cpu.PC += offset;  // Jump executed
-        std::cout << "Jumping to: " << std::hex << (int)cpu.PC << std::endl;
-        cpu.updateCycles(12);  
+void JR_NZ_e8(CPU& cpu) {
+    // Fetch the offset (e8) from PC + 1
+    uint8_t r8 = cpu.read8(cpu.PC + 1);
+    int8_t offset = static_cast<int8_t>(r8);
+
+    // Increment PC by 2 (1 for opcode, 1 for offset)
+    cpu.PC += 2;
+
+    // Check the Zero Flag
+    if (!cpu.getZeroFlag()) { // Jump if Zero Flag is NOT set (NZ condition)
+        cpu.PC += offset;// Jump executed
+        cpu.updateCycles(12); // 12 cycles if jump is taken
     } else {
-    
-        // No jump, just increment PC to next instruction
-        cpu.updateCycles(8);  
+        cpu.updateCycles(8); // 8 cycles if jump is not taken
     }
 }
-
 
 
 
@@ -1755,7 +1752,7 @@ void RET(CPU& cpu) {
 
     uint16_t returnAddress = cpu.pop16();
     cpu.PC = returnAddress;
-    
+
     cpu.updateCycles(16);
     printf("RET executed. Return address: 0x%04X, Setting PC to: 0x%04X\n", returnAddress, cpu.PC);
 
@@ -1788,16 +1785,19 @@ void CALL_Z_a16(CPU& cpu) {
 }
 
 void CALL_a16(CPU& cpu) {
-    uint16_t  address = cpu.read16(cpu.PC += 1);
+    cpu.PC+=3;
+    uint16_t targetAddress = cpu.read16(cpu.PC + 1);
+    uint16_t returnAddress = cpu.PC; 
 
-    cpu.push16(cpu.PC+3);
+    cpu.push16(returnAddress);
+    cpu.PC = targetAddress;
 
-    cpu.PC = address;
     
     // Update cycles: CALL instruction takes 6 cycles
     cpu.updateCycles(24);
     
-    std::cout << "CALL a16 - Address: " << std::hex << address << std::endl;
+    std::cout << "CALL a16 - target Address: " << std::hex << targetAddress << std::endl;
+    std::cout << "CALL a16 - ret Address: " << std::hex << returnAddress << std::endl;
     std::cout << "New PC: " << std::hex << cpu.PC << std::endl;
     std::cout << "SP after push: " << std::hex << cpu.SP << std::endl;
 }
@@ -2146,7 +2146,7 @@ void CP_A_n8(CPU& cpu) {
    
     uint8_t result = cpu.A - value;
  
-    cpu.setZeroFlag(result);
+    cpu.setZeroFlag(result == 0);
     cpu.setSubtractFlag(true);
     cpu.setHalfCarryFlag((cpu.A & 0x0F) < (value & 0x0F));
     cpu.setCarryFlag(cpu.A < value);
