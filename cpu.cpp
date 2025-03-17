@@ -636,7 +636,8 @@ void UNIMPLEMENTED(CPU& cpu) {
 void CPU::executeOpcode(uint8_t opcode) {
     std::cout << "Executing opcode: 0x" << std::hex << static_cast<int>(opcode) 
               << " at PC: 0x" << std::hex << static_cast<int>(PC) << std::endl;
-    
+    std::cout<<"Th SP is: 0x" << std::hex <<static_cast<int>(SP) << std::endl;
+    std::cout<<"the hl value is: "<< std::hex <<static_cast<int>(getHL()) << std::endl;
     if (opcode == 0xCB) {
         uint8_t prefixedByte = memory.read(PC+1); 
         std::cout << "Prefixed Opcode: 0xCB 0x" << std::hex << static_cast<int>(prefixedByte) << std::endl;
@@ -784,22 +785,27 @@ void CPU::decrement16(uint8_t& high, uint8_t& low) {
 }
 
 uint16_t CPU::pop16() {
-    uint8_t low = memory.read(SP);
-    uint8_t high = memory.read(SP + 1);
-    SP += 2;  
-    return (high << 8) | low;
+    uint8_t low = memory.read(SP);        // Read low byte first
+    uint8_t high = memory.read(SP + 1);   // Read high byte next
+    SP += 2;  // Increment SP AFTER reading
 
+    uint16_t result = (high << 8) | low;
+    std::cout << "[DEBUG] Popped " << std::hex << result << " from stack at SP: " << (SP - 2) << std::endl;
+
+    return result;
 }
+
 
 
 
 void CPU::push16(uint16_t value) {
- 
-    memory.write(SP -1, (value >> 8)); 
-    memory.write(SP-2, value & 0xFF);  
-    
-    SP -= 2;
+    SP -= 2;  // Decrement SP BEFORE writing to memory
+    memory.write(SP, value & 0xFF);         // Low byte at SP
+    memory.write(SP + 1, (value >> 8) & 0xFF);  // High byte at SP+1
+
+    std::cout << "[DEBUG] Pushed " << std::hex << value << " to stack at SP: " << SP << std::endl;
 }
+
 uint8_t CPU::read8(uint16_t addr) {
     return memory.read(addr);
 }
@@ -848,7 +854,7 @@ void CPU::setDE(uint16_t value) {
 }
 
 void CPU::setHL(uint16_t value) { 
-    H = (value & 0xFF00>> 8); 
+    H = (value >> 8) & 0xFF;  
     L = value & 0xFF; 
 }
 

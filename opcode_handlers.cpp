@@ -1749,12 +1749,10 @@ void RET_Z(CPU& cpu) {
 }
 void RET(CPU& cpu) {
 
-
     uint16_t returnAddress = cpu.pop16();
     cpu.PC = returnAddress;
-
+    
     cpu.updateCycles(16);
-    printf("RET executed. Return address: 0x%04X, Setting PC to: 0x%04X\n", returnAddress, cpu.PC);
 
 }
 
@@ -1785,22 +1783,23 @@ void CALL_Z_a16(CPU& cpu) {
 }
 
 void CALL_a16(CPU& cpu) {
-    cpu.PC+=3;
+    
     uint16_t targetAddress = cpu.read16(cpu.PC + 1);
-    uint16_t returnAddress = cpu.PC; 
+    uint16_t returnAddress = cpu.PC+3; 
 
     cpu.push16(returnAddress);
+ 
     cpu.PC = targetAddress;
 
     
     // Update cycles: CALL instruction takes 6 cycles
     cpu.updateCycles(24);
     
-    std::cout << "CALL a16 - target Address: " << std::hex << targetAddress << std::endl;
-    std::cout << "CALL a16 - ret Address: " << std::hex << returnAddress << std::endl;
-    std::cout << "New PC: " << std::hex << cpu.PC << std::endl;
-    std::cout << "SP after push: " << std::hex << cpu.SP << std::endl;
+
 }
+//0b8f
+//9800
+
 
 void ADC_A_n8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);
@@ -1964,9 +1963,11 @@ void LDH_a8_A(CPU& cpu) {
 }
 
 void POP_HL(CPU& cpu) {
+    
     uint16_t hl = cpu.pop16();
     cpu.setHL(hl);
     cpu.PC += 1;
+  
     cpu.updateCycles(12);
 }
 
@@ -1980,6 +1981,7 @@ void PUSH_HL(CPU& cpu) {
     uint16_t hl = cpu.getHL();
     cpu.push16(hl);
     cpu.PC += 1;
+
     cpu.updateCycles(16);
 }
 
