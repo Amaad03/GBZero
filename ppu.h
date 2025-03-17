@@ -6,54 +6,53 @@
 #include <cstdint>
 #include <SDL2/SDL.h>
 
-class PPU { 
+class PPU {
 public:
-    PPU(Memory& memory); // Constructor
-    ~PPU();              // Destructor
 
-    void step(unsigned int cycles); // Step through the PPU for a certain number of cycles
-    void renderFrame();             // Render the current frame
+    uint8_t LCDControlRegister = 0;
+    uint8_t SCYRegister = 0;        // Scroll Y
+    uint8_t SCXRegister = 0;        // Scroll X
+    uint8_t BGPRegister = 0;        // Background Palette
+    uint8_t OBP0Register = 0;      // Object Palette 0 (Sprites)
+    uint8_t OBP1Register = 0;      // Object Palette 1 (Sprites)
+
+
+    uint32_t framebuffer[160*144];
+
+
+    uint8_t currentScanline = 0;
+    uint8_t currentMode = 0;
+
+    std::array<uint32_t, 4> bgPalette;  
+    std::array<uint32_t, 4> spritePalette0;
+    std::array<uint32_t, 4> spritePalette1; 
+
+    // SDL2 members
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
     SDL_Texture* texture = nullptr;
-    void initializeSDL(); // Initialize SDL and create window/renderer
-private:
-    // Reference to memory
-    Memory& memory;
-
-    // PPU Registers
-    uint8_t& LCDC; // LCD Control (0xFF40)
-    uint8_t& STAT; // LCD Status (0xFF41)
-    uint8_t& SCY;  // Scroll Y (0xFF42)
-    uint8_t& SCX;  // Scroll X (0xFF43)
-    uint8_t& LY;   // LCD Y Coordinate (0xFF44)
-    uint8_t& LYC;  // LY Compare (0xFF45)
-    uint8_t& BGP;  // Background Palette (0xFF47)
-    uint8_t& OBP0; // Object Palette 0 (0xFF48)
-    uint8_t& OBP1; // Object Palette 1 (0xFF49)
-    uint8_t& WY;   // Window Y Position (0xFF4A)
-    uint8_t& WX;   // Window X Position (0xFF4B)
-
-    // Internal state
-    unsigned int clock = 0;       // Track cycles for PPU timing
-    uint8_t currentScanline = 0;  // Current scanline being rendered
-    std::array<uint8_t, 160 * 144> framebuffer; // Framebuffer for the final image
-
-    // SDL resources
 
 
-    // Helper functions
 
-    void renderScanline(); // Render the current scanline
-    void renderSpritesLine(uint8_t scanline); // Render sprites for the current scanline
-    void updateLCDStatus(); // Update the LCD status
+    void reset();
+    void renderScanline();
+    void renderSprites();
+    void step(int cycles);
+    void updatePalettes();
 
-    // Utility functions
-    bool isBackgroundEnabled() const;
-    bool isWindowEnabled() const;
-    uint8_t getBackgroundTileData(uint8_t x, uint8_t y) const;
-    uint8_t getWindowTileData(uint8_t x, uint8_t y) const;
-    uint8_t getColor(uint8_t colorId, uint8_t palette) const;
+    void initializeSDL();
+    void renderFrame();
+
+
+    private:
+    // Helper methods
+    uint8_t getColor(uint8_t colorID, bool isSprite);
 };
+
+
+
+
+
+
 
 #endif // PPU_H
