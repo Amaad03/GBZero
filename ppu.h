@@ -5,19 +5,34 @@
 #include <array>
 #include <cstdint>
 #include <SDL2/SDL.h>
+#include "cpu.h"
+
 
 class PPU {
 public:
 
-    uint8_t LCDControlRegister = 0;
-    uint8_t SCYRegister = 0;        // Scroll Y
-    uint8_t SCXRegister = 0;        // Scroll X
-    uint8_t BGPRegister = 0;        // Background Palette
-    uint8_t OBP0Register = 0;      // Object Palette 0 (Sprites)
-    uint8_t OBP1Register = 0;      // Object Palette 1 (Sprites)
+         
+    Memory& memory;
+    CPU& cpu;
+    
+    
 
+    uint8_t& LCDC; // LCD Control (0xFF40)
+    uint8_t& STAT; // LCD Status (0xFF41)
+    uint8_t& SCY;  // Scroll Y (0xFF42)
+    uint8_t& SCX;  // Scroll X (0xFF43)
+    uint8_t& LY;   // LCD Y Coordinate (0xFF44)
+    uint8_t& LYC;  // LY Compare (0xFF45)
+    uint8_t& BGP;  // Background Palette (0xFF47)
+    uint8_t& OBP0; // Object Palette 0 (0xFF48)
+    uint8_t& OBP1; // Object Palette 1 (0xFF49)
+    uint8_t& WY;   // Window Y Position (0xFF4A)
+    uint8_t& WX;   // Window X Position (0xFF4B)
 
     uint32_t framebuffer[160*144];
+
+    PPU(CPU& cpu, Memory& memory);
+    ~PPU(); 
 
 
     uint8_t currentScanline = 0;
@@ -35,15 +50,17 @@ public:
 
 
     void reset();
-    void renderScanline();
-    void renderSprites();
+    void renderScanline(uint8_t currentScanline);
+    void renderSprites(uint8_t currentScanline);
     void step(int cycles);
     void updatePalettes();
-
+    void clearFramebuffer();
     void initializeSDL();
     void renderFrame();
-
-
+    void updateLCDStatus();
+    uint8_t calculatePixelColor(uint8_t, uint8_t y);
+    uint8_t getSpritePixelColor(uint8_t x, uint8_t y);
+    uint8_t getBackgroundPixelColor(uint8_t x, uint8_t y);
     private:
     // Helper methods
     uint8_t getColor(uint8_t colorID, bool isSprite);

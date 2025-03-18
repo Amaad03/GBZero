@@ -21,10 +21,7 @@ class Memory {
         uint8_t io_registers[0x80]; // IO Registers
         uint8_t ie;               // Interrupt Enable Register
         
-        uint8_t bootROM[256];         // Boot ROM (256 bytes)
-        bool bootROMUnmapped;     // Flag to track whether Boot ROM is disabled          // Interrupt Enable Register
-    
-        
+     
         uint8_t currentROMBank; // Current ROM bank (default to 1)
 
         uint8_t currentRAMBank; // Current RAM bank (default to 0)
@@ -39,8 +36,7 @@ class Memory {
         void loadROM(const std::string& romFilename);
         uint8_t read(uint16_t addr);
         void write(uint16_t addr, uint8_t value);
-        void loadBootROM(const std::string& bootROMPath);
-        void disableBootROM();
+  
 
     private:
 

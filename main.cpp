@@ -6,48 +6,50 @@
 #include "ppu.h"
 
 const int SCALE_FACTOR = 3; // Increase or decrease to scale the screen
+const int CYCLES_PER_FRAME = 70224; // Total CPU cycles per frame (154 scanlines × 456 cycles)
+const int FRAME_RATE = 60; // Target frame rate (60 FPS)
+const int FRAME_DELAY = 1000 / FRAME_RATE; // Delay per frame in milliseconds
 
 int main(int argc, char* argv[]) {
     // Initialize memory, PPU, and CPU
     Memory memory;
-    PPU ppu(memory); // Pass memory to the PPU constructor
-    CPU cpu(memory, ppu);
+    CPU cpu(memory);
+    PPU ppu(cpu, memory); 
+
+
+
     // Initialize the CPU
     cpu.reset();
-    cpu.memory.loadROM("Red.gb");
-
-    // Initialize SDL2 and set up graphics
-    ppu.initializeSDL();  // Initialize SDL and create a window
-
+    cpu.memory.loadROM("roms/cpu_instrs.gb"); 
+    cpu.dumpROMHeader();
+    ppu.initializeSDL();
     // Resize window based on the scaling factor
     int windowWidth = 160 * SCALE_FACTOR;
     int windowHeight = 144 * SCALE_FACTOR;
-
-    // Resize the SDL window to the new resolution
     SDL_SetWindowSize(ppu.window, windowWidth, windowHeight);
 
     bool running = true;
     SDL_Event e;
 
+   
+
     while (running) {
-        // Handle SDL events (e.g., window close)
+    
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 running = false;
             }
+            // Handle key presses for input (optional)
+            // Example: if (e.type == SDL_KEYDOWN) { ... }
         }
     
-        // Execute the next CPU instruction and get the number of cycles it took
-        cpu.executeNextInstruction();
-        
-        // Step the PPU by the number of cycles the CPU just executed
-        //ppu.step(cycles);
+     
+       cpu.executeNextInstruction();
+     
     
-        // Render the graphics to the screen with scaling
+  
         ppu.renderFrame();
-    
-        // Delay to maintain ~60 FPS
-        SDL_Delay(16);  // ~60 FPS (adjust based on your emulator's speed)
+        SDL_Delay(FRAME_DELAY);
     }
 
     // Clean up and quit SDL2

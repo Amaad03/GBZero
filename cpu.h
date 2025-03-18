@@ -8,6 +8,8 @@
 #include "ppu.h"
 typedef void (*OpcodeHandler)(CPU& cpu);
 
+class PPU;
+
 class CPU {
 public:
 
@@ -18,7 +20,9 @@ public:
 
     uint16_t PC, SP;   // Program counter and stack pointer
     Memory& memory;    // Reference to memory
-    PPU& ppu;
+    PPU* ppu = nullptr; 
+
+
     uint32_t cycleCount; // Cycle count for instruction execution
     bool interruptsEnabled;
     bool isStopped;
@@ -27,7 +31,9 @@ public:
     uint8_t interruptEnable;
 
 
-    CPU(Memory& mem, PPU& ppu);
+    CPU(Memory& mem);
+
+    void setPPU(PPU& ppuRef);  // Function to set the PPU reference
 
 
     void reset();

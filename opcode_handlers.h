@@ -47,7 +47,7 @@ void INC_H(CPU& cpu);
 void DEC_H(CPU& cpu);
 void LD_H_d8(CPU& cpu);
 void DAA(CPU& cpu);
-void JRZ_e8(CPU& cpu);
+void JR_Z_e8(CPU& cpu);
 void ADD_HL_HL(CPU& cpu);
 void LD_A_HLplus(CPU& cpu);
 void DEC_HL(CPU& cpu);

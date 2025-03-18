@@ -13,6 +13,7 @@ void NOP(CPU& cpu) {
     cpu.PC++; 
     cpu.updateCycles(4);
     
+    
 }
 
 void LD_BC_d16(CPU& cpu) { 
@@ -257,22 +258,25 @@ void RRA(CPU& cpu) {
 
 
 void JR_NZ_e8(CPU& cpu) {
-    // Fetch the offset (e8) from PC + 1
+
     uint8_t r8 = cpu.read8(cpu.PC + 1);
     int8_t offset = static_cast<int8_t>(r8);
 
-    // Increment PC by 2 (1 for opcode, 1 for offset)
+    // Print the value of offset
+    std::cout << "Offset value: " << static_cast<int>(offset) << std::endl;
+
     cpu.PC += 2;
 
-    // Check the Zero Flag
-    if (!cpu.getZeroFlag()) { // Jump if Zero Flag is NOT set (NZ condition)
-        cpu.PC += offset;// Jump executed
-        cpu.updateCycles(12); // 12 cycles if jump is taken
+    if (!cpu.getZeroFlag()) {
+        cpu.PC += offset; 
+        cpu.updateCycles(12); 
+
     } else {
-        cpu.updateCycles(8); // 8 cycles if jump is not taken
+        
+        cpu.updateCycles(8); 
+
     }
 }
-
 
 
 void LD_HL_n16(CPU& cpu) { 
@@ -337,22 +341,20 @@ void DAA(CPU& cpu) {
     cpu.updateCycles(4);  
 }
 
-void JRZ_e8(CPU& cpu) {
-    int8_t r8 = cpu.read8(cpu.PC + 1);  // Read the signed 8-bit offset
+void JR_Z_e8(CPU& cpu) {
+    int8_t r8 = cpu.read8(cpu.PC + 1); 
     int8_t offset = static_cast<int8_t>(r8);  
-    std::cout << "Offset: " << (int)offset << std::endl;
-    std::cout << "PC before opcode and offset: " << std::hex << cpu.PC << std::endl;
+  
     cpu.PC += 2;  
-    // Check if the Zero flag is set
-    if(!cpu.getZeroFlag()) {
-        cpu.PC += offset;  // Jump if Zero flag is set
+    std::cout << "Z Flag: " << (cpu.getZeroFlag() ? "Set" : "Not Set") << std::endl;
+  
+    if(cpu.getZeroFlag()) {
+        cpu.PC += offset;  
 
-        std::cout << "Jump taken. New PC: " << std::hex << cpu.PC << std::endl;
-        cpu.updateCycles(12);  // 12 cycles for a jump
+        cpu.updateCycles(12);  
     } else {
-         // Skip the instruction
-        std::cout << "Jump not taken. PC: " << std::hex << cpu.PC << std::endl;
-        cpu.updateCycles(8);  // 8 cycles if jump is not taken
+
+        cpu.updateCycles(8);  
     }
 }
 
@@ -557,7 +559,8 @@ void DEC_A(CPU& cpu) {
 
 
 void LD_A_n8(CPU& cpu) {
-    cpu.A = cpu.read8(cpu.PC + 1);
+    uint8_t value = cpu.read8(cpu.PC + 1);
+    cpu.A = value;
     cpu.PC += 2;  
     cpu.updateCycles(8);  
 }
@@ -1324,36 +1327,33 @@ void SBC_A_A(CPU& cpu) {
 }
 
 void AND_A_B(CPU& cpu) {
-    uint8_t  t =  cpu.A &= cpu.B;
+    cpu.A &= cpu.B;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(true);    
     cpu.setCarryFlag(false);  
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 
 
 void AND_A_C(CPU& cpu) {
-    uint8_t  t = cpu.A &= cpu.C;
+    cpu.A &= cpu.C;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(true);    
     cpu.setCarryFlag(false);  
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 
 
 void AND_A_D(CPU& cpu) {
-    uint8_t  t =  cpu.A &= cpu.D;
+    cpu.A &= cpu.D;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(true);    
     cpu.setCarryFlag(false);  
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
@@ -1361,222 +1361,205 @@ void AND_A_D(CPU& cpu) {
 
 
 void AND_A_E(CPU& cpu) {
-    uint8_t  t =  cpu.A &= cpu.E;
+    cpu.A &= cpu.E;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(true);    
-    cpu.setCarryFlag(false); 
-    cpu.A = t; 
+    cpu.setCarryFlag(false);  
     cpu.PC++;
     cpu.updateCycles(4);
 }
 
 void AND_A_H(CPU& cpu) {
-    uint8_t t = cpu.A &= cpu.H;
+    cpu.A &= cpu.H;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(true);    
-    cpu.setCarryFlag(false);
-    cpu.A = t; 
+    cpu.setCarryFlag(false); 
     cpu.PC++;
     cpu.updateCycles(4);
 }
 
 
 void AND_A_L(CPU& cpu) {
-    uint8_t t = cpu.A &= cpu.L;
+    cpu.A &= cpu.L;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(true);    
     cpu.setCarryFlag(false);  
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void AND_A_memHL(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.getHL());
-    uint8_t t = cpu.A &= value;
+    cpu.A &= value;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(true);
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(8);
 }
 void AND_A_A(CPU& cpu) {
-    uint8_t t = cpu.A &= cpu.A;
+    cpu.A &= cpu.A;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(true);    
     cpu.setCarryFlag(false);  
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void XOR_A_B(CPU& cpu) {
-    uint8_t t = cpu.A ^=cpu.B;
+    cpu.A ^=cpu.B;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);    
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void XOR_A_C(CPU& cpu) {
-    uint8_t t = cpu.A ^=cpu.C;
+    cpu.A ^=cpu.C;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);    
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void XOR_A_D(CPU& cpu) {
-    uint8_t t = cpu.A ^=cpu.D;
+    cpu.A ^=cpu.D;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);    
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void XOR_A_E(CPU& cpu) {
-    uint8_t t = cpu.A ^=cpu.E;
+    cpu.A ^=cpu.E;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);    
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void XOR_A_H(CPU& cpu) {
-    uint8_t t = cpu.A ^=cpu.H;
+    cpu.A ^=cpu.H;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);    
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void XOR_A_L(CPU& cpu) {
-    uint8_t t = cpu.A ^=cpu.L;
+    cpu.A ^=cpu.L;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);    
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void XOR_A_memHL(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.getHL());
-    uint8_t t =  cpu.A ^= value;
+    cpu.A ^= value;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);    
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void XOR_A_A(CPU& cpu) {
-    uint8_t t = cpu.A ^=cpu.A;
+    cpu.A ^=cpu.A;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);    
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 
 void OR_A_B(CPU& cpu) {
-    uint8_t t = cpu.A |= cpu.B;
+    cpu.A |= cpu.B;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void OR_A_C(CPU& cpu) {
-    uint8_t t = cpu.A |= cpu.C;
+    cpu.A |= cpu.C;
+    std::cout << "Z Flag: " << (cpu.getZeroFlag() ? "Set" : "Not Set") << std::endl;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
+
+    std::cout << "Z Flag: " << (cpu.getZeroFlag() ? "Set" : "Not Set") << std::endl;
+  
     cpu.updateCycles(4);
 }
 void OR_A_D(CPU& cpu) {
-    uint8_t t = cpu.A |= cpu.D;
+    cpu.A |= cpu.D;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void OR_A_E(CPU& cpu) {
-    uint8_t t = cpu.A |= cpu.E;
+    cpu.A |= cpu.E;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 
 
 void OR_A_H(CPU& cpu) {
-    uint8_t t = cpu.A |= cpu.H;
+    cpu.A |= cpu.H;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void OR_A_L(CPU& cpu) {
-    uint8_t t = cpu.A |= cpu.L;
+    cpu.A |= cpu.L;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 void OR_A_memHL(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.getHL());
-    uint8_t t  = cpu.A |= value;
+    cpu.A |= value;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
 
 void OR_A_A(CPU& cpu) {
-    uint8_t t = cpu.A |= cpu.A;
+    cpu.A |= cpu.A;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC++;
     cpu.updateCycles(4);
 }
@@ -1739,7 +1722,8 @@ void RST_00(CPU& cpu) {
 }
 void RET_Z(CPU& cpu) {
     if (cpu.getZeroFlag()) {
-        cpu.PC = cpu.pop16();
+        uint16_t returnAddress = cpu.pop16();
+        cpu.PC = returnAddress;
         cpu.updateCycles(20);
     } else {
         cpu.PC++;
@@ -1987,12 +1971,11 @@ void PUSH_HL(CPU& cpu) {
 
 void AND_A_n8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);
-    uint64_t t= cpu.A &= value;
+    cpu.A &= value;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(true);  // AND always produces half carry
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC += 2;
     cpu.updateCycles(8);
 }
@@ -2032,12 +2015,11 @@ void LD_a16_A(CPU& cpu) {
 
 void XOR_A_n8(CPU& cpu) {
     uint8_t value = cpu.read8(cpu.PC + 1);
-    uint8_t t = cpu.A ^= value;
+    cpu.A ^= value;
     cpu.setZeroFlag(cpu.A == 0);
     cpu.setSubtractFlag(false);
     cpu.setHalfCarryFlag(false);
     cpu.setCarryFlag(false);
-    cpu.A = t;
     cpu.PC += 2;
     cpu.updateCycles(8);
 }
@@ -2143,22 +2125,30 @@ void Elephant_I(CPU& cpu) {
 }
 
 void CP_A_n8(CPU& cpu) {
-    uint8_t value = cpu.read8(cpu.PC + 1);
- 
-   
+    uint8_t value = cpu.memory.read(cpu.PC + 1);
+    
     uint8_t result = cpu.A - value;
- 
-    cpu.setZeroFlag(result == 0);
-    cpu.setSubtractFlag(true);
-    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (value & 0x0F));
-    cpu.setCarryFlag(cpu.A < value);
     std::cout << "Z Flag: " << (cpu.getZeroFlag() ? "Set" : "Not Set") << std::endl;
+    // Set flags based on the result of the subtraction
+    cpu.setZeroFlag(result == 0);  // Set Zero Flag if result is 0
+    cpu.setSubtractFlag(true);  // Subtraction sets the N flag
+    cpu.setHalfCarryFlag((cpu.A & 0x0F) < (value & 0x0F));  // Half-carry occurs if lower nibbles subtract with borrow
+    cpu.setCarryFlag(cpu.A < value);  // Carry occurs if A is less than value (borrow)
 
+    // Debugging output for flags and result
+    std::cout << "Z Flag: " << (cpu.getZeroFlag() ? "Set" : "Not Set") << std::endl;
     std::cout << "Z flag after CP: " << cpu.getZeroFlag() << std::endl;
+    std::cout << "[DEBUG] CP: A = 0x" << std::hex << static_cast<int>(cpu.A)
+              << ", value = 0x" << static_cast<int>(value)
+              << ", result = 0x" << static_cast<int>(result)
+              << ", F = 0x" << static_cast<int>(cpu.F) << std::endl;
 
-    cpu.PC += 2;
-    cpu.updateCycles(8);
+    // Update the program counter and cycles
+    cpu.PC += 2;  // CP instruction is 2 bytes
+    cpu.updateCycles(8);  // CP instruction takes 8 cycles
 }
+
+
 void RST_38(CPU& cpu) {
     //std::cout << "[DEBUG] RST 38H: Pushing PC = 0x" << std::hex << cpu.PC << " onto stack at SP = 0x" << cpu.SP << std::endl;
     cpu.PC++;

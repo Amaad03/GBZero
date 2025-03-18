@@ -2,12 +2,13 @@
 #include "opcode_handlers.h"
 #include <iostream>
 #include <iomanip>
-
-CPU::CPU(Memory& mem, PPU& ppu) 
+#include "ppu.h"
+CPU::CPU(Memory& mem) 
     : A(0), F(0), B(0), C(0), D(0), E(0), H(0), L(0), 
-      PC(0x0000), SP(0xFFFE), memory(mem), ppu(ppu),
+      PC(0x0000), SP(0xFFFE), memory(mem),
       cycleCount(0), interruptsEnabled(false), isStopped(false), interruptsEnableNextInstructions(false) ,  interruptFlags(0x00), interruptEnable(0x00){
     reset();
+   
     initOpcodeTable();
     initPreOpcodeTable();
 }
@@ -50,7 +51,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x1F] = RRA; //0x1F
 
     //----------------------------
-    opcodeTable[0x20] = JR_NC_e8;
+    opcodeTable[0x20] = JR_NZ_e8;
     opcodeTable[0x21] = LD_HL_n16;
     opcodeTable[0x22] = LD_HLplus_A;
     opcodeTable[0x23] = INC_HL;
@@ -58,7 +59,7 @@ void CPU::initOpcodeTable() {
     opcodeTable[0x25] = DEC_H;
     opcodeTable[0x26] = LD_H_d8;
     opcodeTable[0x27] = DAA;
-    opcodeTable[0x28] = JRZ_e8;
+    opcodeTable[0x28] = JR_Z_e8;
     opcodeTable[0x29] = ADD_HL_HL;
     opcodeTable[0x2A] = LD_A_HLplus;
     opcodeTable[0x2B] =DEC_HL;
@@ -609,16 +610,17 @@ void CPU::initPreOpcodeTable() {
 
 
 void CPU::reset() {
-    memory.write(0xFF50, 0x01);
-    PC = 0x0100; 
+    //memory.write(0xFF50, 0x01);
+    
     A = 0x01; 
-    F = 0x00;  // Clear Z flag (F = 0x70 means Z = 0, N = 0, H = 0, C = 0)
+    F = 0xB0;  // Clear Z flag (F = 0x70 means Z = 0, N = 0, H = 0, C = 0)
     B = 0x00;
     C = 0x13;
     D = 0x00;
     E = 0xD8;
     H = 0x01;
     L = 0x4D;
+    PC = 0x0100; 
     SP = 0xFFFE;
     memory.ie = 0x00;
     cycleCount = 0;
@@ -638,6 +640,9 @@ void CPU::executeOpcode(uint8_t opcode) {
               << " at PC: 0x" << std::hex << static_cast<int>(PC) << std::endl;
     std::cout<<"Th SP is: 0x" << std::hex <<static_cast<int>(SP) << std::endl;
     std::cout<<"the hl value is: "<< std::hex <<static_cast<int>(getHL()) << std::endl;
+    std::cout<<"the BC value is: "<< std::hex <<static_cast<int>(getBC()) << std::endl;
+    std::cout<<"the AF value is: "<< std::hex <<static_cast<int>(getAF()) << std::endl;
+    std::cout<<"the F value is: 0x"<< std::hex << static_cast<int>(F)  << std::endl;
     if (opcode == 0xCB) {
         uint8_t prefixedByte = memory.read(PC+1); 
         std::cout << "Prefixed Opcode: 0xCB 0x" << std::hex << static_cast<int>(prefixedByte) << std::endl;
@@ -682,14 +687,18 @@ void CPU::executeNextInstruction() {
     executeOpcode(opcode);  
    
 }
+void CPU::setPPU(PPU& ppuRef) {
+    ppu = &ppuRef;
+}
 
 
 void CPU::updateCycles(uint32_t cycles) {
-    cycleCount += cycles; // Update the CPU's cycle counter
-
-    // No need to check if ppu is nullptr because it's a reference
-    ppu.step(cycles);
+    cycleCount += cycles;  
+    if (ppu) {  // Ensure PPU is set before using it
+        ppu->step(cycles);
+    }
 }
+
 
 
 void CPU::enableInterrupts() {
@@ -737,7 +746,7 @@ void CPU::setCarryFlag(bool value) {
 
 
 bool CPU::getZeroFlag() {
-    return (F & (1 << 7)) != 0;  
+    return (F & (1 << 7)) != 0;
 }
 
 bool CPU::getSubtractFlag() {
@@ -759,7 +768,7 @@ void CPU::increment8(uint8_t& reg) {
     uint8_t result = reg + 1;
     setZeroFlag(result == 0);  
     setSubtractFlag(false);   
-    setHalfCarryFlag((reg & 0x0F) == 0x0F); 
+    setHalfCarryFlag((reg & 0x0F) + 1 > 0x0F); 
     reg = result;
 }
 
@@ -767,7 +776,7 @@ void CPU::decrement8(uint8_t& reg) {
     uint8_t result = reg - 1;  
     setZeroFlag(result == 0);  
     setSubtractFlag(true);   
-    setHalfCarryFlag((reg & 0x0F) == 0x00); 
+    setHalfCarryFlag((reg & 0x0F) == 0x00);
     reg = result;
 }
 

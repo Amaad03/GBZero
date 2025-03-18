@@ -4,52 +4,19 @@
 
 
 Memory::Memory() {
-    // Initialize memory regions
-    rom.resize(0x200000); // 2MB ROM (max size)
-    ram.resize(0x8000);   // 32KB RAM (max size)
+    rom.resize(0x200000); 
+    ram.resize(0x8000);  
     std::fill(vram, vram + 0x2000, 0);
     std::fill(wram, wram + 0x2000, 0);
     std::fill(oam, oam + 0xA0, 0);
     std::fill(hram, hram + 0x7F, 0);
     ie = 0;
     ramEnabled = false;
-    std::fill(bootROM, bootROM + 256, 0);
-    bootROMUnmapped = false;
     currentROMBank = 1;
     currentRAMBank = 0;
     mbc1Mode = false;
     std::fill(io_registers, io_registers + 0x80, 0);
 }
-
-
-void Memory::loadBootROM(const std::string& bootROMPath) {
-    std::ifstream bootROMFile(bootROMPath, std::ios::binary);
-    if (!bootROMFile) {
-        throw std::runtime_error("Failed to load boot ROM: " + bootROMPath);
-    } else {
-        std::cout<<"boot rom loaded properly" << std::endl;
-    }
-
-    // Read the boot ROM into memory
-    bootROMFile.read(reinterpret_cast<char*>(bootROM), 256);
-    bootROMFile.close();
-
-    std::cout << "[DEBUG] Boot ROM loaded successfully." << std::endl;
-
-    // Debug: Print the first few bytes of the boot ROM
-    std::cout << "[DEBUG] First 16 bytes of boot ROM: ";
-    for (int i = 0; i < 256; ++i) {
-        //write(i, bootROM[i]);
-        printf("%02X ", bootROM[i]);
-    }
-    std::cout << std::endl;
-}
-void Memory::disableBootROM() {
-    bootROMUnmapped = true;
-    std::cout << "[DEBUG] Boot ROM unmapped. Switching to game ROM." << std::endl;
-}
-
-
 
 void Memory::loadROM(const std::string& filename) {
     std::ifstream romFile(filename, std::ios::binary);
@@ -70,41 +37,22 @@ void Memory::loadROM(const std::string& filename) {
     rom.resize(size);
     romFile.read(reinterpret_cast<char*>(rom.data()), size);
     romFile.close();
-    // Read file byte-by-byte
-    
 
     std::cout << "[DEBUG] ROM file size: " << size << " bytes." << std::endl;
     
-
-    
-    // Debugging: Print first 16 bytes
-    std::cout << "[DEBUG] First 16 bytes of ROM: ";
-    for (int i = 0; i < 256; ++i) {
-        //write(i, rom[i]);
-        printf("%02X ", rom[256+i]);
-    }
-    std::cout << std::endl;
-
-
-    mbcType = rom[0x147]; // Get MBC type
+    mbcType = rom[0x147]; 
 }
 
 
 
 uint8_t Memory::read(uint16_t addr) {
-    // Boot ROM (0x0000–0x00FF)
-    if (addr < 0x0100 && !bootROMUnmapped) {
-        std::cout << "[DEBUG] Reading from boot ROM at address 0x" << std::hex << static_cast<int>(addr)
-                  << ": 0x" << static_cast<int>(bootROM[addr]) << std::endl;
-        return bootROM[addr]; // Access boot ROM if it's still mapped
-    }
-
+  
     // Cartridge ROM (0x0000–0x7FFF)
     if (addr <= 0x7FFF) {
         if (addr <= 0x3FFF) {
-            return rom[addr]; // ROM Bank 0
+            return rom[addr];
         } else {
-            return rom[(currentROMBank * 0x4000) + (addr - 0x4000)]; // Switchable ROM Bank
+            return rom[(currentROMBank * 0x4000) + (addr - 0x4000)]; 
         }
     }
 
@@ -118,23 +66,21 @@ uint8_t Memory::read(uint16_t addr) {
         if (ramEnabled) {
             return ram[(currentRAMBank * 0x2000) + (addr - 0xA000)];
         } else {
-            return 0xFF; // RAM disabled
+            return 0xFF; 
         }
     }
 
     // Work RAM (0xC000–0xDFFF) and Echo RAM (0xE000–0xFDFF)
     if (addr >= 0xC000 && addr <= 0xFDFF) {
-        return wram[addr - 0xC000]; // Echo RAM mirrors WRAM
+        return wram[addr - 0xC000]; 
     }
-
     // Sprite Attribute Table (OAM, 0xFE00–0xFE9F)
     if (addr >= 0xFE00 && addr <= 0xFE9F) {
         return oam[addr - 0xFE00];
     }
-
     // Unusable Memory (0xFEA0–0xFEFF)
     if (addr >= 0xFEA0 && addr <= 0xFEFF) {
-        return 0xFF; // Unusable memory region
+        return 0xFF; 
     }
 
     // IO Registers (0xFF00–0xFF7F)
@@ -151,28 +97,20 @@ uint8_t Memory::read(uint16_t addr) {
     if (addr == 0xFFFF) {
         return ie;
     }
-
-    // Invalid memory access
     std::cout << "[DEBUG] Invalid memory access at address: 0x" << std::hex << addr << std::endl;
     return 0xFF;
 }
+
+
 void Memory::write(uint16_t addr, uint8_t value) {
-    // Handle MBC writes (ROM banking, RAM banking, etc.)
     if (addr <= 0x7FFF) {
         switch (mbcType) {
             case 1: handleMBC1Write(addr, value); break;
             case 2: handleMBC2Write(addr, value); break;
             case 3: handleMBC3Write(addr, value); break;
-            // Add more MBC types as needed
             default: break;
         }
-        return; // MBC writes don't affect other memory regions
-    }
-
-    if (addr == 0xFF50 ) {
-        bootROMUnmapped = true;
-        std::cout << "[DEBUG] Boot ROM unmapped. Switching to cartridge ROM." << std::endl;
-        return;
+        return; 
     }
 
     // Handle RAM writes
@@ -217,20 +155,22 @@ void Memory::write(uint16_t addr, uint8_t value) {
 
     // Handle I/O register writes (0xFF00-0xFF7F)
     if (addr >= 0xFF00 && addr <= 0xFF7F) {
-        // Special case: Writing to 0xFF50 disables the boot ROM
-        if (addr == 0xFF50 && value == 0x01) {
-            bootROMUnmapped = true; // Disable boot ROM
-            std::cout << "[DEBUG] Boot ROM unmapped." << std::endl;
+        if (addr == 0xFF40) {
+            io_registers[0x40] = value;
+        } else if (addr == 0xFF41) {
+            io_registers[0x41] = value;
         }
 
-        // Handle other I/O register writes
         handleIOWrite(addr, value);
         return;
     }
 
-    // Invalid memory write
+
     printf("[ERROR] Invalid memory write at address: 0x%04X\n", addr);
 }
+
+
+
 void Memory::handleMBC1Write(uint16_t addr, uint8_t value) {
     if (addr <= 0x1FFF) {
         // Enable/disable RAM
