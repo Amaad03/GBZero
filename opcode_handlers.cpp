@@ -12,12 +12,16 @@ void NOP(CPU& cpu) {
     std::cout << "[DEBUG] NOP executed" << std::endl;
     cpu.PC++; 
     cpu.updateCycles(4);
+    std::cout << "Z Flag: " << (cpu.getZeroFlag() ? "Set" : "Not Set") << std::endl;
+  
     
     
 }
 
 void LD_BC_d16(CPU& cpu) { 
-    cpu.setBC(cpu.read16(cpu.PC+1));
+    uint16_t value = cpu.read16(cpu.PC+1);
+    std::cout<<"the value is: "<< std::hex <<int(value) << std::endl;
+    cpu.setBC(value);
     cpu.PC += 3;  
     cpu.updateCycles(12);
 }
@@ -29,7 +33,8 @@ void LD_BC_A(CPU& cpu) {
 
 
 void INC_BC(CPU& cpu) {
-    cpu.setBC(cpu.getBC()+1); 
+    uint16_t bc = cpu.getBC();
+    cpu.setBC(bc + 1);
     cpu.PC++;
     cpu.updateCycles(8);
 }
@@ -258,16 +263,16 @@ void RRA(CPU& cpu) {
 
 
 void JR_NZ_e8(CPU& cpu) {
-
+   
     uint8_t r8 = cpu.read8(cpu.PC + 1);
     int8_t offset = static_cast<int8_t>(r8);
-
+    cpu.PC += 2;
     // Print the value of offset
     std::cout << "Offset value: " << static_cast<int>(offset) << std::endl;
 
-    cpu.PC += 2;
-
-    if (!cpu.getZeroFlag()) {
+    
+    
+    if (!cpu.getZeroFlag() ) {
         cpu.PC += offset; 
         cpu.updateCycles(12); 
 
@@ -2035,7 +2040,13 @@ void LDH_A_a8(CPU& cpu) {
 
     cpu.updateCycles(4);
     uint8_t addr = cpu.read8(cpu.PC + 1);
-    cpu.A = cpu.read8(0xFF00 + addr);  
+    std::cout<<"the add value is: "<< std::hex <<int(addr) << std::endl;
+    uint16_t address = 0xFF00 + addr;
+    std::cout<<"the add value is: "<< std::hex <<int(address) << std::endl;
+    uint8_t value = cpu.read8(address);
+    std::cout << "Value at " << std::hex << int(address) << ": 0x" << int(value) << std::endl;
+
+    cpu.A = value;
     cpu.PC += 2;
     cpu.updateCycles(8);
 }
@@ -2043,7 +2054,8 @@ void LDH_A_a8(CPU& cpu) {
 void POP_AF(CPU& cpu) {
 
     uint16_t af = cpu.pop16();
-    cpu.setAF(af);
+    cpu.A = (af >> 8) & 0xFF;
+    cpu.F = af & 0xF0;
     cpu.PC += 1;
     cpu.updateCycles(12);
 }

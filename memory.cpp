@@ -15,7 +15,9 @@ Memory::Memory() {
     currentROMBank = 1;
     currentRAMBank = 0;
     mbc1Mode = false;
-    std::fill(io_registers, io_registers + 0x80, 0);
+    std::fill_n(io_registers, 0x80, 0x00);
+
+    io_registers[0x44] = 0x00;
 }
 
 void Memory::loadROM(const std::string& filename) {
@@ -48,6 +50,9 @@ void Memory::loadROM(const std::string& filename) {
 uint8_t Memory::read(uint16_t addr) {
   
     // Cartridge ROM (0x0000–0x7FFF)
+    if (addr == 0xFF44) {
+        std::cout << "[DEBUG] Read from 0xFF44: 0x" << std::hex << int(io_registers[addr - 0xFF00]) << std::endl;
+    }
     if (addr <= 0x7FFF) {
         if (addr <= 0x3FFF) {
             return rom[addr];
@@ -85,6 +90,8 @@ uint8_t Memory::read(uint16_t addr) {
 
     // IO Registers (0xFF00–0xFF7F)
     if (addr >= 0xFF00 && addr <= 0xFF7F) {
+        std::cout << "[DEBUG] Read from I/O register 0x" << std::hex << addr
+                  << ": 0x" << int(io_registers[addr - 0xFF00]) << std::endl;
         return io_registers[addr - 0xFF00];
     }
 
@@ -112,7 +119,9 @@ void Memory::write(uint16_t addr, uint8_t value) {
         }
         return; 
     }
-
+    if (addr == 0xFF44) {
+        std::cout << "[DEBUG] Write to 0xFF44: 0x" << std::hex << int(value) << std::endl;
+    }
     // Handle RAM writes
     if (addr >= 0xA000 && addr <= 0xBFFF) {
         if (ramEnabled && !ram.empty()) {
@@ -155,16 +164,13 @@ void Memory::write(uint16_t addr, uint8_t value) {
 
     // Handle I/O register writes (0xFF00-0xFF7F)
     if (addr >= 0xFF00 && addr <= 0xFF7F) {
-        if (addr == 0xFF40) {
-            io_registers[0x40] = value;
-        } else if (addr == 0xFF41) {
-            io_registers[0x41] = value;
+        std::cout << "[DEBUG] Write to I/O register 0x" << std::hex << addr
+        << ": 0x" << int(value) << std::endl;
+        io_registers[addr - 0xFF00] = value;
+        return;
         }
 
-        handleIOWrite(addr, value);
-        return;
-    }
-
+  
 
     printf("[ERROR] Invalid memory write at address: 0x%04X\n", addr);
 }
@@ -231,7 +237,7 @@ void Memory::handleMBC3Write(uint16_t addr, uint8_t value) {
         // Implement RTC latching here
     }
 }
-
+/*
 void Memory::handleIOWrite(uint16_t addr, uint8_t value) {
     switch (addr) {
         case 0xFF04: // DIV register reset
@@ -248,6 +254,8 @@ void Memory::handleIOWrite(uint16_t addr, uint8_t value) {
             break;
     }
 }
+*/
+
 
 void Memory::performDMATransfer(uint8_t value) {
     uint16_t startAddress = value * 0x100; // 0x100 is 256 bytes per transfer

@@ -622,7 +622,9 @@ void CPU::reset() {
     L = 0x4D;
     PC = 0x0100; 
     SP = 0xFFFE;
+    
     memory.ie = 0x00;
+    memory.write(0xFF44, 0x91);
     cycleCount = 0;
     interruptsEnabled = false;
     isStopped = false;
@@ -641,6 +643,7 @@ void CPU::executeOpcode(uint8_t opcode) {
     std::cout<<"Th SP is: 0x" << std::hex <<static_cast<int>(SP) << std::endl;
     std::cout<<"the hl value is: "<< std::hex <<static_cast<int>(getHL()) << std::endl;
     std::cout<<"the BC value is: "<< std::hex <<static_cast<int>(getBC()) << std::endl;
+    std::cout<<"the DE value is: "<< std::hex <<static_cast<int>(getDE()) << std::endl;
     std::cout<<"the AF value is: "<< std::hex <<static_cast<int>(getAF()) << std::endl;
     std::cout<<"the F value is: 0x"<< std::hex << static_cast<int>(F)  << std::endl;
     if (opcode == 0xCB) {
@@ -853,7 +856,7 @@ uint16_t CPU::getAF() const {
 }
 
 void CPU::setBC(uint16_t value) { 
-    B = (value & 0xFF00>> 8) ; 
+    B = (value >> 8) & 0xFF;
     C = value & 0xFF; 
 }
 

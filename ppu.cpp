@@ -27,28 +27,41 @@ PPU::~PPU() {
 }
 
 void PPU::initializeSDL() {
+    // Check if SDL is already initialized
+    if (SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO) {
+        std::cerr << "SDL is already initialized!" << std::endl;
+        return;
+    }
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
         return;
     }
 
-    window = SDL_CreateWindow("Game Boy Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160 * 3, 144 * 3, SDL_WINDOW_SHOWN);
+    // Create a window with the original Game Boy screen size (160x144)
+    window = SDL_CreateWindow("Game Boy Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_SHOWN);
     if (!window) {
         std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         return;
     }
 
+    // Create a renderer for the window
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
         std::cerr << "Renderer could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         return;
     }
 
+    // Create a texture for the framebuffer
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 160, 144);
     if (!texture) {
         std::cerr << "Texture could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         return;
     }
+
+    // Clear the framebuffer and render it immediately
+    clearFramebuffer();
+    renderFrame();
 
     std::cout << "SDL initialized successfully!" << std::endl;
 }
@@ -60,7 +73,7 @@ void PPU::reset() {
 }
 
 void PPU::clearFramebuffer() {
-    std::fill_n(framebuffer, 160 * 144, 0xFFFFFFFF); 
+    std::fill_n(framebuffer, 160 * 144, 0xFFFFFFFF); // Fill with white
     std::cout << "Framebuffer cleared!" << std::endl;
 }
 
@@ -73,7 +86,6 @@ void PPU::renderScanline(uint8_t currentScanline) {
     for (int x = 0; x < 160; x++) {
         uint8_t color = calculatePixelColor(x, currentScanline);
         framebuffer[currentScanline * 160 + x] = bgPalette[color];
-        std::cout << "Pixel at (" << x << ", " << currentScanline << ") set to color " << (int)color << std::endl;
     }
 
     if (LCDC & 0x02) {
@@ -110,7 +122,7 @@ void PPU::renderSprites(uint8_t currentScanline) {
 void PPU::step(int cycles) {
     static int scanlineCounter = 0;
     scanlineCounter += cycles;
-    std::cout<<"the scanline counter value is : " << int(scanlineCounter ) << std::endl;
+
     if (scanlineCounter >= 456) {
         scanlineCounter -= 456;
         currentScanline++;
@@ -163,6 +175,7 @@ uint8_t PPU::getColor(uint8_t colorID, bool isSprite) {
         default: return 0xFF; // Default to white
     }
 }
+
 uint8_t PPU::calculatePixelColor(uint8_t x, uint8_t y) {
     uint8_t color = 0; // Default color (transparent)
 
@@ -190,23 +203,16 @@ uint8_t PPU::calculatePixelColor(uint8_t x, uint8_t y) {
 
     return color;
 }
-uint8_t PPU::getBackgroundPixelColor(uint8_t x, uint8_t y) {
-    // Determine which tile map to use
-    uint16_t tileMapAddress = (LCDC & 0x08) ? 0x1C00 : 0x1800; // Background tile map
-    if (y >= WY && x >= WX - 7) { // Window tile map
-        tileMapAddress = (LCDC & 0x40) ? 0x1C00 : 0x1800;
-    }
 
-    // Get the tile index from the tile map
+uint8_t PPU::getBackgroundPixelColor(uint8_t x, uint8_t y) {
+    uint16_t tileMapAddress = (LCDC & 0x08) ? 0x1C00 : 0x1800; // Background tile map
     uint8_t tileX = x / 8;
     uint8_t tileY = y / 8;
     uint8_t tileIndex = memory.vram[tileMapAddress + tileY * 32 + tileX];
 
-    // Get the tile data address
     uint16_t tileDataAddress = (LCDC & 0x10) ? 0x0000 : 0x1000;
     uint16_t tileAddress = tileDataAddress + tileIndex * 16 + (y % 8) * 2;
 
-    // Get the pixel color from the tile data
     uint8_t lowByte = memory.vram[tileAddress];
     uint8_t highByte = memory.vram[tileAddress + 1];
     uint8_t colorBit = 7 - (x % 8);
@@ -214,26 +220,20 @@ uint8_t PPU::getBackgroundPixelColor(uint8_t x, uint8_t y) {
 
     return color;
 }
+
 uint8_t PPU::getSpritePixelColor(uint8_t x, uint8_t y) {
     for (int i = 0; i < 40; i++) {
-        // Get sprite attributes from OAM
         uint8_t yPos = memory.oam[i * 4] - 16;
         uint8_t xPos = memory.oam[i * 4 + 1] - 8;
         uint8_t tileIndex = memory.oam[i * 4 + 2];
-        //uint8_t attributes = memory.oam[i * 4 + 3];
 
-        // Check if the sprite is at this position
         if (y >= yPos && y < yPos + 8 && x >= xPos && x < xPos + 8) {
-            // Get the tile data address
             uint16_t tileAddress = 0x8000 + tileIndex * 16 + (y - yPos) * 2;
-
-            // Get the pixel color from the tile data
             uint8_t lowByte = memory.vram[tileAddress];
             uint8_t highByte = memory.vram[tileAddress + 1];
             uint8_t colorBit = 7 - (x - xPos);
             uint8_t color = ((highByte >> colorBit) & 1) << 1 | ((lowByte >> colorBit) & 1);
 
-            // Check if the pixel is not transparent
             if (color != 0) {
                 return color;
             }
@@ -244,9 +244,17 @@ uint8_t PPU::getSpritePixelColor(uint8_t x, uint8_t y) {
 }
 
 void PPU::renderFrame() {
+    // Update the texture with the framebuffer data
     SDL_UpdateTexture(texture, nullptr, framebuffer, 160 * sizeof(uint32_t));
+
+    // Clear the renderer
     SDL_RenderClear(renderer);
+
+    // Copy the texture to the renderer
     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+
+    // Present the renderer (make the frame visible)
     SDL_RenderPresent(renderer);
+
     std::cout << "Frame rendered!" << std::endl;
 }

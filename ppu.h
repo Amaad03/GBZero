@@ -7,15 +7,10 @@
 #include <SDL2/SDL.h>
 #include "cpu.h"
 
-
 class PPU {
 public:
-
-         
     Memory& memory;
     CPU& cpu;
-    
-    
 
     uint8_t& LCDC; // LCD Control (0xFF40)
     uint8_t& STAT; // LCD Status (0xFF41)
@@ -29,25 +24,22 @@ public:
     uint8_t& WY;   // Window Y Position (0xFF4A)
     uint8_t& WX;   // Window X Position (0xFF4B)
 
-    uint32_t framebuffer[160*144];
+    uint32_t framebuffer[160 * 144]; // Framebuffer for the display
 
     PPU(CPU& cpu, Memory& memory);
-    ~PPU(); 
-
+    ~PPU();
 
     uint8_t currentScanline = 0;
     uint8_t currentMode = 0;
 
-    std::array<uint32_t, 4> bgPalette;  
-    std::array<uint32_t, 4> spritePalette0;
-    std::array<uint32_t, 4> spritePalette1; 
+    std::array<uint32_t, 4> bgPalette;       // Background palette colors
+    std::array<uint32_t, 4> spritePalette0;  // Sprite palette 0 colors
+    std::array<uint32_t, 4> spritePalette1;  // Sprite palette 1 colors
 
     // SDL2 members
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
     SDL_Texture* texture = nullptr;
-
-
 
     void reset();
     void renderScanline(uint8_t currentScanline);
@@ -58,18 +50,13 @@ public:
     void initializeSDL();
     void renderFrame();
     void updateLCDStatus();
-    uint8_t calculatePixelColor(uint8_t, uint8_t y);
+    uint8_t calculatePixelColor(uint8_t x, uint8_t y);
     uint8_t getSpritePixelColor(uint8_t x, uint8_t y);
     uint8_t getBackgroundPixelColor(uint8_t x, uint8_t y);
-    private:
+
+private:
     // Helper methods
     uint8_t getColor(uint8_t colorID, bool isSprite);
 };
-
-
-
-
-
-
 
 #endif // PPU_H
