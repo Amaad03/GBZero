@@ -613,7 +613,7 @@ void CPU::reset() {
     //memory.write(0xFF50, 0x01);
     
     A = 0x01; 
-    F = 0xB0;  // Clear Z flag (F = 0x70 means Z = 0, N = 0, H = 0, C = 0)
+    F = 0xB0;
     B = 0x00;
     C = 0x13;
     D = 0x00;
@@ -624,7 +624,8 @@ void CPU::reset() {
     SP = 0xFFFE;
     
     memory.ie = 0x00;
-    memory.write(0xFF44, 0x91);
+    //memory.write(0xFF44, 0x00);   
+    //memory.write(0xFF0F, 0xE1); 
     cycleCount = 0;
     interruptsEnabled = false;
     isStopped = false;
@@ -646,6 +647,9 @@ void CPU::executeOpcode(uint8_t opcode) {
     std::cout<<"the DE value is: "<< std::hex <<static_cast<int>(getDE()) << std::endl;
     std::cout<<"the AF value is: "<< std::hex <<static_cast<int>(getAF()) << std::endl;
     std::cout<<"the F value is: 0x"<< std::hex << static_cast<int>(F)  << std::endl;
+    uint8_t interrupt_flag = memory.read(0xFF0F);  
+    std::cout << "[DEBUG] Value at 0xFF0F: 0x"  << std::hex << static_cast<int>(interrupt_flag) << std::endl; 
+    
     if (opcode == 0xCB) {
         uint8_t prefixedByte = memory.read(PC+1); 
         std::cout << "Prefixed Opcode: 0xCB 0x" << std::hex << static_cast<int>(prefixedByte) << std::endl;
@@ -682,6 +686,7 @@ uint8_t CPU::fetch() {
 void CPU::executeNextInstruction() {
 
     if (interruptsEnabled) {
+        std::cout <<"interrupts enabled and will handle" << std::endl;
         handleInterrupts();
     }
 

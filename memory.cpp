@@ -17,7 +17,21 @@ Memory::Memory() {
     mbc1Mode = false;
     std::fill_n(io_registers, 0x80, 0x00);
 
-    io_registers[0x44] = 0x00;
+    io_registers[0xff] = 0x00;
+
+    io_registers[0x43] = 0x00;
+    io_registers[0x42] = 0x00;
+    io_registers[0x01] = 0x00;
+    io_registers[0x02] = 0x7e;
+    io_registers[0x4b] = 0x00;
+    io_registers[0x4a] = 0x00;
+    io_registers[0x06] = 0x00;
+    io_registers[0x07] = 0xf8;
+    io_registers[0x47] = 0xFC;
+    io_registers[0x48] = 0x00;
+    io_registers[0x49] = 0x00;
+    io_registers[0x44] = 0x00;   // This is FF44
+    io_registers[0x0F] = 0xE1;   // This is FF0F
 }
 
 void Memory::loadROM(const std::string& filename) {
@@ -48,16 +62,12 @@ void Memory::loadROM(const std::string& filename) {
 
 
 uint8_t Memory::read(uint16_t addr) {
-  
     // Cartridge ROM (0x0000–0x7FFF)
-    if (addr == 0xFF44) {
-        std::cout << "[DEBUG] Read from 0xFF44: 0x" << std::hex << int(io_registers[addr - 0xFF00]) << std::endl;
-    }
     if (addr <= 0x7FFF) {
         if (addr <= 0x3FFF) {
             return rom[addr];
         } else {
-            return rom[(currentROMBank * 0x4000) + (addr - 0x4000)]; 
+            return rom[(currentROMBank * 0x4000) + (addr - 0x4000)];
         }
     }
 
@@ -77,21 +87,24 @@ uint8_t Memory::read(uint16_t addr) {
 
     // Work RAM (0xC000–0xDFFF) and Echo RAM (0xE000–0xFDFF)
     if (addr >= 0xC000 && addr <= 0xFDFF) {
-        return wram[addr - 0xC000]; 
+        return wram[addr - 0xC000];
     }
+
     // Sprite Attribute Table (OAM, 0xFE00–0xFE9F)
     if (addr >= 0xFE00 && addr <= 0xFE9F) {
         return oam[addr - 0xFE00];
     }
+
     // Unusable Memory (0xFEA0–0xFEFF)
     if (addr >= 0xFEA0 && addr <= 0xFEFF) {
-        return 0xFF; 
+        return 0xFF;
     }
 
     // IO Registers (0xFF00–0xFF7F)
     if (addr >= 0xFF00 && addr <= 0xFF7F) {
-        std::cout << "[DEBUG] Read from I/O register 0x" << std::hex << addr
-                  << ": 0x" << int(io_registers[addr - 0xFF00]) << std::endl;
+        // Debugging
+        std::cout << "[DEBUG] Read from I/O register: 0x" << std::hex << addr
+                  << ", Value: 0x" << static_cast<int>(io_registers[addr - 0xFF00]) << std::endl;
         return io_registers[addr - 0xFF00];
     }
 
@@ -104,12 +117,14 @@ uint8_t Memory::read(uint16_t addr) {
     if (addr == 0xFFFF) {
         return ie;
     }
+
+    // Invalid memory access
     std::cout << "[DEBUG] Invalid memory access at address: 0x" << std::hex << addr << std::endl;
     return 0xFF;
 }
 
-
 void Memory::write(uint16_t addr, uint8_t value) {
+    // Cartridge ROM (0x0000–0x7FFF)
     if (addr <= 0x7FFF) {
         switch (mbcType) {
             case 1: handleMBC1Write(addr, value); break;
@@ -117,17 +132,15 @@ void Memory::write(uint16_t addr, uint8_t value) {
             case 3: handleMBC3Write(addr, value); break;
             default: break;
         }
-        return; 
+        return;
     }
-    if (addr == 0xFF44) {
-        std::cout << "[DEBUG] Write to 0xFF44: 0x" << std::hex << int(value) << std::endl;
-    }
+
     // Handle RAM writes
     if (addr >= 0xA000 && addr <= 0xBFFF) {
         if (ramEnabled && !ram.empty()) {
             ram[(currentRAMBank * 0x2000) + (addr - 0xA000)] = value;
         } else {
-            printf("[ERROR] Attempted to write to unallocated or disabled RAM at 0x%04X\n", addr);
+            std::cerr << "[ERROR] Attempted to write to unallocated or disabled RAM at 0x" << std::hex << addr << std::endl;
         }
         return;
     }
@@ -156,23 +169,22 @@ void Memory::write(uint16_t addr, uint8_t value) {
         return;
     }
 
-    // Handle Interrupt Enable Register write
+    // Handle Interrupt Enable Register write (0xFFFF)
     if (addr == 0xFFFF) {
         ie = value;
         return;
     }
 
-    // Handle I/O register writes (0xFF00-0xFF7F)
+    // Handle I/O register writes (0xFF00–0xFF7F)
     if (addr >= 0xFF00 && addr <= 0xFF7F) {
-        std::cout << "[DEBUG] Write to I/O register 0x" << std::hex << addr
-        << ": 0x" << int(value) << std::endl;
+        std::cout << "[DEBUG] Writing to I/O register: 0x" << std::hex << addr
+                  << ", Value: 0x" << static_cast<int>(value) << std::endl;
         io_registers[addr - 0xFF00] = value;
         return;
-        }
+    }
 
-  
-
-    printf("[ERROR] Invalid memory write at address: 0x%04X\n", addr);
+    // Handle invalid memory writes
+    std::cerr << "[ERROR] Invalid memory write at address: 0x" << std::hex << addr << std::endl;
 }
 
 

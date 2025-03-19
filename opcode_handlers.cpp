@@ -1945,7 +1945,8 @@ void RST_18(CPU& cpu) {
 }
 void LDH_a8_A(CPU& cpu) {
     uint8_t addr = cpu.read8(cpu.PC + 1);
-    std::cout << "Address Value: " << +addr << std::endl;
+    std::cout << "Address Value: " << int(addr) << std::endl;
+    std::cout << "value of A: " << int(cpu.A) << std::endl;
     cpu.memory.write(0xFF00 + addr, cpu.A);  // Write A to the address [0xFF00 + addr]
     cpu.PC += 2;
     cpu.updateCycles(12);

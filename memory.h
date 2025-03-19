@@ -21,7 +21,6 @@ class Memory {
         uint8_t io_registers[0x80]; // IO Registers
         uint8_t ie;               // Interrupt Enable Register
         
-     
         uint8_t currentROMBank; // Current ROM bank (default to 1)
 
         uint8_t currentRAMBank; // Current RAM bank (default to 0)

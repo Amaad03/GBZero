@@ -17,7 +17,7 @@ public:
     uint8_t B, C;  // BC register pair
     uint8_t D, E;  // DE register pair
     uint8_t H, L;  // HL register pair
-
+    
     uint16_t PC, SP;   // Program counter and stack pointer
     Memory& memory;    // Reference to memory
     PPU* ppu = nullptr; 
